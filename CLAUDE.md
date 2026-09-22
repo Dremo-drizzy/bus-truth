@@ -70,7 +70,7 @@ Accepted decisions (see `docs/decisions/`):
 
 ## Conventions
 
-- **Java 21 LTS**, current stable Spring Boot, Maven. Base package `io.github.Dremo_drizzy.bustruth.<module>`.
+- **Java 21 LTS**, current stable Spring Boot, Maven. Base package `io.github.dremo_drizzy.bustruth.<module>`.
 - Records for immutable domain objects. Constructor injection only — no field injection.
 - Kafka topics: `hfx.vehicle-positions`, `hfx.trip-updates`, `hfx.alerts`.
 - Database migrations: Flyway only. Never edit a migration that has already been applied — add a new one.

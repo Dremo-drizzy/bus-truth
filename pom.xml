@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Spring Boot's starter parent gives us dependency management (versions for
+         every Spring/Jackson/Kafka/test library) and sensible plugin defaults.
+         It does NOT force a module to be a Spring Boot app: spring-boot-maven-plugin
+         is only declared in <pluginManagement> here, so a module has to opt in. -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.1</version>
+        <relativePath/> <!-- resolve from the repository, not a parent directory -->
+    </parent>
+
+    <groupId>io.github.dremo_drizzy</groupId>
+    <artifactId>bus-truth</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>bus-truth</name>
+    <description>Measures how reliable Halifax Transit actually is</description>
+
+    <properties>
+        <java.version>21</java.version>
+    </properties>
+
+    <modules>
+        <module>common</module>
+        <module>collector</module>
+        <module>loader</module>
+        <module>processor</module>
+        <module>api</module>
+    </modules>
+
+</project>
