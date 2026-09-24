@@ -31,7 +31,7 @@ This is a portfolio project. **The owner (Daniel) must be able to explain and de
 6. **Decisions get recorded.** For any non-trivial choice, suggest a record in `docs/decisions/NNN-title.md` using the template below. Daniel writes it in his own words.
 7. **Decision logic gets unit tests** — anything that decides on-time, bunched, matched, ghost. Prefer real captured `.pb` fixtures over invented data.
 8. **Never commit secrets.** Config goes in environment variables; keep `.env.example` current.
-9. **Check understanding.** After finishing a task, ask Daniel two short questions about what was just built.
+9. **No check questions.** Don't quiz Daniel after a task. The explanations required by rule 2 are how he learns; the senior reviewer examines him at the end of each stage.
 10. **Commits:** one logical change each; imperative subject line; the body says *why*.
 
 ## Architecture — do not change without senior review
