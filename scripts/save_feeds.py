@@ -33,7 +33,12 @@ STATIC_URL = "https://gtfs.halifax.ca/static/google_transit.zip"
 
 POLL_SECONDS = 20
 STATUS_SECONDS = 300  # one "still alive" line every 5 minutes
-HTTP_TIMEOUT = 15  # per request; must stay below POLL_SECONDS
+# Per request, not per cycle: the three feeds are fetched one after another, so a
+# bad minute can take up to 3 x HTTP_TIMEOUT = 45s, longer than POLL_SECONDS. The
+# fixed-grid scheduler below skips ahead rather than trying to catch up, so the
+# effect is fewer snapshots that hour, not a backlog. Lower this to ~6s if keeping
+# the 20-second cadence during an outage matters more than tolerating a slow feed.
+HTTP_TIMEOUT = 15
 USER_AGENT = "bus-truth-saver/1.0 (+https://github.com/Dremo-drizzy/bus-truth)"
 
 # Paths are derived from this file's location, so the script works from any
