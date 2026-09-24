@@ -1,0 +1,51 @@
+name: CI
+
+# Every push on any branch, and every pull request into main. The PR trigger is
+# what lets a branch be judged before it is merged, not after.
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+# The job only reads the repository. Narrowing the token means a compromised
+# action in the build cannot push commits or publish releases.
+permissions:
+  contents: read
+
+# A second push to the same branch cancels the first run still in progress:
+# the older result is already out of date.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test
+    # A clean Linux machine every run — the point of CI: it has none of the
+    # state your laptop has accumulated.
+    runs-on: ubuntu-latest
+
+    steps:
+      # Clones the repo at the commit that triggered the run.
+      - name: Check out the repository
+        uses: actions/checkout@v7
+
+      # Installs the JDK. Temurin 21 matches java.version in the root pom, so CI
+      # compiles against the same API as your machine.
+      - name: Set up Java 21
+        uses: actions/setup-java@v6
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          # Caches ~/.m2/repository between runs, keyed on the pom files. Without
+          # it every run re-downloads Spring Boot's whole dependency tree.
+          cache: 'maven'
+
+      # The wrapper, not a preinstalled mvn: it pins the Maven version from
+      # .mvn/wrapper/maven-wrapper.properties, so CI and your laptop agree.
+      # mvnw is committed with its executable bit set (100755), which is why
+      # ./mvnw runs here directly.
+      # -B is batch mode: no ANSI colours or progress spinners, so the log stays
+      # readable. verify compiles, runs the tests and packages each module.
+      - name: Build and test
+        run: ./mvnw -B verify

@@ -1,0 +1,63 @@
+# --- Java / Maven ---------------------------------------------------------
+# Build output. Unanchored on purpose: matches collector/target/, api/target/,
+# and dbt's analytics/target/ too.
+target/
+*.class
+*.log
+hs_err_pid*
+# Maven release/versions plugin leftovers
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+release.properties
+# The wrapper is committed (mvnw, mvnw.cmd, .mvn/wrapper/*.properties);
+# only its downloaded jar, if a script ever fetches one, is not.
+.mvn/wrapper/maven-wrapper.jar
+
+# --- Node / Next.js (web/) --------------------------------------------------
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tsbuildinfo
+next-env.d.ts
+
+# --- Python (scripts/, gtfs-loader) ---------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- dbt (analytics/) -------------------------------------------------------
+dbt_packages/
+logs/
+
+# --- IDEs and OS --------------------------------------------------------------
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+.DS_Store
+Thumbs.db
+
+# --- Secrets ------------------------------------------------------------------
+# Real config lives in .env and never gets committed; .env.example is the
+# committed template with placeholders only.
+.env
+.env.*
+!.env.example
+
+# --- Data -------------------------------------------------------------------
+# Captured feeds and local database dumps. Anchored to the repo root so it
+# can't accidentally hide a source folder named data/ deeper in the tree.
+/data/

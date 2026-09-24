@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: loader
+
+server:
+  port: 8082
