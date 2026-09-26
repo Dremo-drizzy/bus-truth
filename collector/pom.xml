@@ -17,6 +17,35 @@
     <description>Polls the GTFS-Realtime feeds and publishes them to Kafka</description>
 
     <dependencies>
+        <!-- The shared domain records. This is what makes common a library rather
+             than an app: it goes on the classpath as a plain jar. -->
+        <dependency>
+            <groupId>io.github.dremo_drizzy</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Generated Java classes for the GTFS-Realtime protobuf schema: turns the
+             .pb bytes into FeedMessage/VehiclePosition/TripUpdate objects. Same
+             com.google.transit.realtime classes as the original Google artifact;
+             MobilityData maintains it now, and it tracks a current protobuf-java,
+             which the abandoned com.google.transit:0.0.4 (protobuf 2.6.1) does not. -->
+        <dependency>
+            <groupId>org.mobilitydata</groupId>
+            <artifactId>gtfs-realtime-bindings</artifactId>
+            <version>0.2.0</version>
+        </dependency>
+
+        <!-- Kafka producer/consumer support: KafkaTemplate and the JSON serializers
+             come from spring-kafka, which this starter brings in, plus the Boot
+             auto-configuration that reads the spring.kafka.* keys in application.yml.
+             spring-kafka on its own has the classes but no auto-configuration, so
+             nothing would be wired from config. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-kafka</artifactId>
+        </dependency>
+
         <!-- Spring MVC + embedded Tomcat. Needed so /actuator/health is served over
              HTTP; actuator on its own brings no web server. -->
         <dependency>

@@ -5,6 +5,7 @@
  * travel between collector, loader, processor and api. Nothing that knows about
  * Kafka, HTTP or the database belongs in this package.
  *
- * <p>Empty for now; Stage 2 adds the first records.
+ * <p>Stage 2 added the first four: VehiclePosition, TripUpdate, StopTimeUpdate and
+ * ServiceAlert.
  */
 package io.github.dremo_drizzy.bustruth.common;

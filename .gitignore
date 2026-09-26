@@ -61,3 +61,6 @@ Thumbs.db
 # Captured feeds and local database dumps. Anchored to the repo root so it
 # can't accidentally hide a source folder named data/ deeper in the tree.
 /data/
+# The collector's own scratch archive. Unanchored, because a relative
+# archive-dir lands under whichever module the process was started from.
+dev-archive/
