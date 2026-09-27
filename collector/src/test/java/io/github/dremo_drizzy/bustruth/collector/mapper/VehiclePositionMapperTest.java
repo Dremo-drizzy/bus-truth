@@ -8,18 +8,11 @@ import io.github.dremo_drizzy.bustruth.common.VehiclePosition;
 import java.io.IOException;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
- * Waiting on {@link VehiclePositionMapper}, which Daniel writes.
- *
- * <p>Remove the {@code @Disabled} below once the mapper is implemented; the tests
- * describe what it has to do. They are disabled rather than deleted so the
- * expectations are agreed before the code is written, and disabled rather than
- * failing so CI stays green in the meantime.
+ * What {@link VehiclePositionMapper} has to do, written before the mapper itself.
  */
-@Disabled("enable when VehiclePositionMapper is implemented")
 class VehiclePositionMapperTest {
 
     private static FeedMessage feed;

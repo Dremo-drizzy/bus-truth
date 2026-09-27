@@ -16,7 +16,9 @@ import java.time.Instant;
  * @param routeId            the route of that trip
  * @param directionId        0 or 1, the direction of travel along the route
  * @param startDate          the trip's service date as the agency sent it, "yyyyMMdd"
- * @param latitude           degrees north
+ * @param latitude           degrees north. Float, not Double, because GTFS-Realtime
+ *                           sends a 32-bit float — widening it would add digits the
+ *                           agency never reported
  * @param longitude          degrees east
  * @param bearing            degrees clockwise from true north
  * @param speed              metres per second
@@ -38,8 +40,8 @@ public record VehiclePosition(
         String routeId,
         Integer directionId,
         String startDate,
-        Double latitude,
-        Double longitude,
+        Float latitude,
+        Float longitude,
         Float bearing,
         Float speed,
         Double odometer,
