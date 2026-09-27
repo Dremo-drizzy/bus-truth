@@ -2,6 +2,7 @@ package io.github.dremo_drizzy.bustruth.collector.archive;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -55,13 +56,38 @@ public class RawArchiver {
         Path directory = root.resolve(feedName).resolve(DAY.format(now));
         Files.createDirectories(directory);
 
-        Path target = directory.resolve(TIME_OF_DAY.format(now) + ".pb.gz");
-        Path temporary = directory.resolve(target.getFileName() + ".tmp");
+        String timeOfDay = TIME_OF_DAY.format(now);
+        Path temporary = directory.resolve(timeOfDay + ".pb.gz.tmp");
         try (OutputStream out = new GZIPOutputStream(Files.newOutputStream(temporary))) {
             out.write(raw);
         }
-        Files.move(temporary, target,
-                StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-        return target;
+
+        // Two snapshots can land in the same second — a restart, or the saver script
+        // running alongside this service. Overwriting one would be silent data loss,
+        // and ADR-005 makes raw data the one thing that cannot be recreated, so a
+        // collision takes a -1, -2 ... suffix instead.
+        //
+        // The name is claimed with createFile, not by letting the move fail: on
+        // Windows ATOMIC_MOVE maps to MoveFileEx with MOVEFILE_REPLACE_EXISTING and
+        // quietly replaces the target, so it never reports a collision. createFile
+        // fails if the name exists on every platform, and it does so atomically,
+        // which also makes this correct when two processes race.
+        for (int attempt = 0; ; attempt++) {
+            Path target = directory.resolve(attempt == 0
+                    ? timeOfDay + ".pb.gz"
+                    : timeOfDay + "-" + attempt + ".pb.gz");
+            try {
+                Files.createFile(target);
+            } catch (FileAlreadyExistsException taken) {
+                if (attempt > 100) {
+                    throw taken;
+                }
+                continue;
+            }
+            // Replaces the empty file just reserved, never somebody else's snapshot.
+            Files.move(temporary, target,
+                    StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            return target;
+        }
     }
 }

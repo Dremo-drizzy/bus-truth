@@ -14,6 +14,9 @@ import org.junit.jupiter.api.io.TempDir;
 
 class RawArchiverTest {
 
+    @TempDir
+    Path sameSecondRoot;
+
     @Test
     void writesGzippedBytesUnderFeedAndUtcDate(@TempDir Path root) throws IOException {
         byte[] raw = Fixtures.rawBytes("vehicle-positions");
@@ -37,6 +40,29 @@ class RawArchiverTest {
             assertThat(in.readAllBytes())
                     .describedAs("the archive must round-trip to the exact bytes the agency sent")
                     .isEqualTo(raw);
+        }
+    }
+
+    @Test
+    void neverOverwritesAnExistingSnapshotFromTheSameSecond() throws IOException {
+        // Two snapshots in one second happen on a restart, or when the saver script
+        // runs alongside the collector. Losing one would be silent data loss in an
+        // archive that ADR-005 says must be kept.
+        RawArchiver archiver = new RawArchiver(sameSecondRoot);
+        byte[] first = Fixtures.rawBytes("alerts");
+        byte[] second = Fixtures.rawBytes("trip-updates");
+
+        Path a = archiver.archive("alerts", first);
+        Path b = archiver.archive("alerts", second);
+
+        assertThat(b).isNotEqualTo(a);
+        assertThat(a).exists();
+        assertThat(b).exists();
+        try (InputStream in = new GZIPInputStream(Files.newInputStream(a))) {
+            assertThat(in.readAllBytes()).isEqualTo(first);
+        }
+        try (InputStream in = new GZIPInputStream(Files.newInputStream(b))) {
+            assertThat(in.readAllBytes()).isEqualTo(second);
         }
     }
 
