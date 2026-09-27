@@ -105,4 +105,4 @@ Revisit if:
 
 ## Current stage
 
-**Phase A · Stage 0 — Setup.** Update this line at the start of each stage.
+**Phase A · Stage 2 — Collector.** Update this line at the start of each stage.
