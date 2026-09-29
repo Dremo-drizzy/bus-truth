@@ -64,6 +64,30 @@ wrong `spring.json.value.default.type` presents as "the loader runs and stores n
 `org.testcontainers:postgresql` does not resolve under Boot 4: Testcontainers 2.x renamed
 every module to `testcontainers-*`.
 
+## Carried forward: suffixed trip ids will break trip matching
+
+Live trip ids sometimes carry an `_N` suffix — `4659595_1`, `4660053_3` — the
+modified-trip variants of the same Modifications extension that leaves 43% of trip
+updates without a `trip.trip_id`. Two vehicles were observed on route 8 at the same
+moment, one on `4659595` and one on `4659595_1`.
+
+Measured against the archived static feed (2026-09-29, 9,239 trip ids in `trips.txt`, of
+which **none contains an underscore**):
+
+| feed | trip ids | suffixed `_N` | join to trips.txt | suffixed ids whose base id joins |
+|---|---|---|---|---|
+| vehicle positions | 114 | 5 (4.4%) | 109 (95.6%) | 5 / 5 |
+| trip updates | 406 | 6 (1.5%) | 398 (98.0%) | 6 / 6 |
+
+So a plain join on `trip_id` silently drops those trips, and a dropped trip looks exactly
+like a ghost bus — the metric would report a service failure that never happened. Stripping
+the suffix recovers the join in every observed case, but the fact that the trip was
+*modified* must be kept rather than erased: a modified trip may not follow the stop times
+its base id points at. Two trip-update ids failed to join for some other reason and are
+not yet explained.
+
+This belongs in the same decision record as the modified-trip handling.
+
 ## Known gap
 
 `scripts/save_feeds.py` runs continuously; the collector does not. Kafka therefore receives
