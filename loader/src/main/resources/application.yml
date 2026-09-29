@@ -43,3 +43,12 @@ spring:
 
 server:
   port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # /actuator/flyway lists the migrations that actually ran. Boot has no Flyway
+        # health indicator, so health can never report a migration problem: this
+        # endpoint is the only runtime answer to "did the schema get applied?".
+        include: health, flyway
