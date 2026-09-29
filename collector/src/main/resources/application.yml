@@ -2,6 +2,44 @@ spring:
   application:
     name: collector
 
+  kafka:
+    # The host listener from infra/docker-compose.yml. Containers would use
+    # kafka:9092; this service runs on the host during development.
+    bootstrap-servers: localhost:29092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # JacksonJsonSerializer is the Jackson 3 serializer. Spring Boot 4 defaults to
+      # Jackson 3 (tools.jackson), so the older JsonSerializer would pull in Jackson 2.
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+      properties:
+        # Without this, every message carries a __TypeId__ header naming the Java
+        # class. Consumers are not all Java, and the class name is not part of the
+        # data contract.
+        spring.json.add.type.headers: false
+
+  task:
+    scheduling:
+      pool:
+        # One thread per feed. The default is a single thread, which would run the
+        # three pollers one after another and undo their independence.
+        size: 3
+
 server:
   port: 8081
 
+bustruth:
+  collector:
+    poll-interval: 20s
+    http-timeout: 15s
+    # Deliberately NOT data/raw: scripts/save_feeds.py owns that archive, and two
+    # writers with different skip rules would make it impossible to reason about.
+    archive-dir: data/dev-archive
+    vehicle-positions:
+      url: https://gtfs.halifax.ca/realtime/Vehicle/VehiclePositions.pb
+      topic: hfx.vehicle-positions
+    trip-updates:
+      url: https://gtfs.halifax.ca/realtime/TripUpdate/TripUpdates.pb
+      topic: hfx.trip-updates
+    alerts:
+      url: https://gtfs.halifax.ca/realtime/Alert/Alerts.pb
+      topic: hfx.alerts

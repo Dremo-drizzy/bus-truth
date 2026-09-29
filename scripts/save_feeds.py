@@ -9,10 +9,12 @@ Standard library only. Runs until interrupted; failures are logged, never fatal.
     python scripts/save_feeds.py
 """
 
+import ctypes
 import gzip
 import hashlib
 import logging
 import os
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -33,6 +35,10 @@ STATIC_URL = "https://gtfs.halifax.ca/static/google_transit.zip"
 
 POLL_SECONDS = 20
 STATUS_SECONDS = 300  # one "still alive" line every 5 minutes
+# A cycle that hits every HTTP timeout takes ~45s (3 x HTTP_TIMEOUT), so anything
+# under that is a slow feed, not a gap. 120s means at least five cycles were lost,
+# which only happens when the process was suspended or blocked.
+GAP_SECONDS = 120
 # Per request, not per cycle: the three feeds are fetched one after another, so a
 # bad minute can take up to 3 x HTTP_TIMEOUT = 45s, longer than POLL_SECONDS. The
 # fixed-grid scheduler below skips ahead rather than trying to catch up, so the
@@ -191,7 +197,8 @@ def log_status(started: float, counters: dict) -> None:
     hours, remainder = divmod(int(uptime), 3600)
     minutes, seconds = divmod(remainder, 60)
     log.info(
-        "alive %02d:%02d:%02d | polls=%d saved=%d skipped=%d errors=%d | last=%s",
+        "alive %02d:%02d:%02d | polls=%d saved=%d skipped=%d errors=%d "
+        "gaps=%d missed=%d | last=%s",
         hours,
         minutes,
         seconds,
@@ -199,8 +206,37 @@ def log_status(started: float, counters: dict) -> None:
         counters["saved"],
         counters["skipped"],
         counters["errors"],
+        counters["gaps"],
+        counters["missed"],
         counters["last_saved"],
     )
+
+
+def keep_awake() -> None:
+    """Ask Windows not to sleep while the saver is running.
+
+    ES_SYSTEM_REQUIRED keeps the machine awake; ES_DISPLAY_REQUIRED is deliberately
+    left out so the screen can still turn off. The flag lives only as long as this
+    process, so the laptop sleeps normally again once the saver stops -- which is
+    why this belongs here rather than in the global power settings. No effect on
+    other platforms. Modern Standby machines may still sleep on lid close, so the
+    power-plan settings are a separate belt-and-braces fix.
+    """
+    if sys.platform != "win32":
+        return
+    es_continuous = 0x80000000
+    es_system_required = 0x00000001
+    try:
+        previous = ctypes.windll.kernel32.SetThreadExecutionState(
+            es_continuous | es_system_required
+        )
+    except Exception as error:  # noqa: BLE001 - never fatal
+        log.warning("keep-awake unavailable, the machine may sleep: %s", error)
+        return
+    if previous == 0:
+        log.warning("keep-awake was refused, the machine may sleep")
+    else:
+        log.info("keep-awake set: system stays awake, display may still sleep")
 
 
 # --- main loop -------------------------------------------------------------
@@ -209,17 +245,45 @@ def log_status(started: float, counters: dict) -> None:
 def main() -> None:
     configure_logging()
     log.info("saver starting | writing to %s | every %ds", RAW_DIR, POLL_SECONDS)
+    keep_awake()
 
     # Seed from disk so a restart does not duplicate the last snapshot.
     digests = {feed: last_saved_digest(feed) for feed in FEEDS}
-    counters = {"polls": 0, "saved": 0, "skipped": 0, "errors": 0, "last_saved": "-"}
+    counters = {
+        "polls": 0,
+        "saved": 0,
+        "skipped": 0,
+        "errors": 0,
+        "gaps": 0,
+        "missed": 0,
+        "last_saved": "-",
+    }
 
     started = time.monotonic()
     next_poll = started
     next_status = started + STATUS_SECONDS
+    last_cycle = started
 
     while True:
         try:
+            cycle_start = time.monotonic()
+            elapsed = cycle_start - last_cycle
+            if elapsed > GAP_SECONDS:
+                missed = max(int(elapsed // POLL_SECONDS) - 1, 0)
+                counters["gaps"] += 1
+                counters["missed"] += missed
+                log.warning(
+                    "GAP of %.0fs (~%d cycles lost) - the process was suspended or "
+                    "blocked; resuming",
+                    elapsed,
+                    missed,
+                )
+                # Start the status clock fresh. Advancing it by STATUS_SECONDS
+                # instead would emit one backlogged line per cycle until it caught
+                # up, which is what turned a sleep into a burst of alive lines.
+                next_status = cycle_start + STATUS_SECONDS
+            last_cycle = cycle_start
+
             now = datetime.now(timezone.utc)
             download_static_once_per_day(now, counters)
 
@@ -228,7 +292,7 @@ def main() -> None:
 
             if time.monotonic() >= next_status:
                 log_status(started, counters)
-                next_status += STATUS_SECONDS
+                next_status = time.monotonic() + STATUS_SECONDS
 
             # Schedule from a fixed grid rather than sleeping 20s after the work
             # finishes, so the interval does not drift by the request time. If a
