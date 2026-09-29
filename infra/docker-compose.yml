@@ -1,0 +1,103 @@
+# Local development infrastructure for Bus Truth.
+#
+#   docker compose -f infra/docker-compose.yml up -d
+#
+# Credentials come from the repo-root .env (copy .env.example first). Nothing in
+# this file contains a real secret.
+
+name: bus-truth
+
+services:
+
+  postgres:
+    image: postgres:18-alpine
+    container_name: bus-truth-postgres
+    restart: unless-stopped
+    # POSTGRES_USER / _PASSWORD / _DB. The image reads them on first start to
+    # create the superuser and the database.
+    env_file:
+      - ../.env
+    ports:
+      # host:container. The Java modules run on the host during development and
+      # reach the database at localhost:5432.
+      - "5432:5432"
+    volumes:
+      # Postgres 18 moved its data directory, so the image declares the volume at
+      # /var/lib/postgresql, not /var/lib/postgresql/data as older versions did.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      # $$ stops Compose interpolating the variable: the container's shell expands
+      # it, so the values stay in .env and never appear on the host.
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  kafka:
+    # Kafka 4.x runs in KRaft mode only: the brokers elect their own controller
+    # and ZooKeeper is gone. One container is both broker and controller here.
+    image: apache/kafka:4.3.1
+    container_name: bus-truth-kafka
+    restart: unless-stopped
+    ports:
+      # Only the host listener is published; 9092 and 9093 stay inside the network.
+      - "29092:29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      # Three listeners: PLAINTEXT for containers, CONTROLLER for the KRaft
+      # quorum, HOST for processes on your laptop.
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,HOST://:29092
+      # What a client is told to connect to after its first contact. The address
+      # has to be reachable from where that client runs, which is why the two
+      # names differ: "kafka" inside the network, "localhost" from the host.
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      # Single broker, so nothing can be replicated: every replication factor is 1.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # No rebalance delay: a single consumer starts immediately in development.
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      # Identifies this cluster's storage. Fixed so a restart reuses the volume.
+      CLUSTER_ID: NOlFiPrFQYuxACKrCjZrwQ
+    volumes:
+      # Must be the exact path the image declares as a VOLUME. Mounting the parent
+      # (/var/lib/kafka) does not work: Docker still creates a throwaway anonymous
+      # volume for the deeper path, and every restart starts from empty.
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 40s
+
+  kafka-ui:
+    # Browser view of topics and messages: useful for seeing that the collector
+    # really published something. kafbat is the maintained fork of provectus.
+    image: kafbat/kafka-ui:v1.3.0
+    container_name: bus-truth-kafka-ui
+    restart: unless-stopped
+    ports:
+      # 8080 is free: the Java services use 8081-8084.
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: bus-truth-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      DYNAMIC_CONFIG_ENABLED: "true"
+    depends_on:
+      kafka:
+        # Waits for the healthcheck to pass, not merely for the container to exist.
+        condition: service_healthy
+
+volumes:
+  # Named volumes, managed by Docker. The data survives `down` and is removed
+  # only by `down -v`.
+  postgres-data:
+  kafka-data:
