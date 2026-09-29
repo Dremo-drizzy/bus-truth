@@ -56,6 +56,9 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+# Local-only Spring profile, holding the development database password. The
+# committed application.yml gives that property no default on purpose.
+application-local.yml
 
 # --- Data -------------------------------------------------------------------
 # Captured feeds and local database dumps. Anchored to the repo root so it
