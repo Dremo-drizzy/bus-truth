@@ -2,5 +2,44 @@ spring:
   application:
     name: loader
 
+  datasource:
+    url: jdbc:postgresql://localhost:55432/${POSTGRES_DB:bustruth}
+    username: ${POSTGRES_USER:bustruth}
+    # No default, deliberately. A default password in a committed file is a password
+    # that reaches production by accident. Startup fails fast instead; local
+    # development supplies it through the git-ignored application-local.yml, which is
+    # activated with --spring.profiles.active=local.
+    password: ${POSTGRES_PASSWORD}
+
+  kafka:
+    # The host listener published by infra/docker-compose.yml.
+    bootstrap-servers: localhost:29092
+    consumer:
+      group-id: bustruth-loader
+      # A new consumer group reads the topic from the beginning. Combined with the
+      # idempotent insert, replaying a whole topic is safe and writes nothing new.
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # ErrorHandlingDeserializer wraps the real one. Without it a malformed payload
+      # throws before the listener is reached, where no listener error handler can
+      # catch it, and the container retries that offset forever: one bad message
+      # stops the partition for good.
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
+        # Required: the collector publishes with add.type.headers=false, so the
+        # message carries no class name and the consumer must be told what to build.
+        spring.json.value.default.type: io.github.dremo_drizzy.bustruth.common.VehiclePosition
+        spring.json.trusted.packages: io.github.dremo_drizzy.bustruth.common
+    listener:
+      # Commit the offset after each record's listener call returns, so the offset
+      # never moves ahead of the database write.
+      ack-mode: record
+
+  flyway:
+    # On by default once Flyway is on the classpath; stated because migrations
+    # running at startup is a decision, not an accident.
+    enabled: true
+
 server:
   port: 8082

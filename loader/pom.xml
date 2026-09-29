@@ -17,6 +17,57 @@
     <description>Consumes the Kafka topics and writes them idempotently to the Postgres raw tables</description>
 
     <dependencies>
+        <!-- The shared domain records: the loader consumes the same VehiclePosition
+             the collector publishes, so the shape is agreed in one place. -->
+        <dependency>
+            <groupId>io.github.dremo_drizzy</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Kafka consumer plus Boot's auto-configuration. spring-kafka alone carries
+             the classes but nothing would read the spring.kafka.* properties. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-kafka</artifactId>
+        </dependency>
+
+        <!-- JdbcClient and a connection pool. Plain SQL rather than JPA: the insert
+             needs ON CONFLICT DO NOTHING, which is native Postgres and exactly what
+             an ORM makes awkward. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Migrations, applied at startup. Three artifacts, and all three are
+             needed:
+               - flyway-core is the engine,
+               - flyway-database-postgresql because Flyway 10 split per-database
+                 support out of core,
+               - spring-boot-flyway because Boot 4 moved auto-configuration into
+                 per-technology modules. With only the first two, Flyway sits on the
+                 classpath and never runs: the application starts, reports healthy,
+                 and the database stays empty. Same shape as spring-kafka without
+                 spring-boot-starter-kafka. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
         <!-- Spring MVC + embedded Tomcat. Needed so /actuator/health is served over
              HTTP; actuator on its own brings no web server. -->
         <dependency>
@@ -35,10 +86,41 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- A real Postgres 18 for the tests. ON CONFLICT DO NOTHING is Postgres
+             syntax, so proving idempotency against H2 would prove nothing. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- testcontainers-postgresql, not postgresql: Testcontainers 2.x renamed
+             every module with a testcontainers- prefix, and Spring Boot 4 manages
+             the 2.x line. The old coordinate has no managed version here. -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <!-- Surefire runs *Test during `test`; the Testcontainers integration
+                 test is named *IT, so failsafe has to be bound for `verify` to run
+                 it. Without this the idempotency proof would silently never run. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Repackages the jar into an executable fat jar (java -jar loader.jar).
                  Right for an app; the reason common does NOT declare it. -->
             <plugin>
