@@ -52,6 +52,12 @@ Revisit if:
   checked against what the managed service actually does.
 - More brokers are needed to test replication behaviour realistically.
 
+Note: PostgreSQL is published on host port 55432, not 5432. This machine runs native
+PostgreSQL services that already hold 5432, and the clash is silent — the container
+starts, Docker reports the port mapped, and a client on the host quietly reaches the
+native server instead. It surfaced as "password authentication failed" for a role that
+demonstrably existed, because every psql check had been run inside the container.
+
 Note for future me: a volume must be mounted at the exact path the image declares as its
 volume. Mounting `/var/lib/kafka` instead of `/var/lib/kafka/data` left the named volume
 empty while Docker quietly created a throwaway anonymous volume for the real data path, and

@@ -18,9 +18,11 @@ services:
     env_file:
       - ../.env
     ports:
-      # host:container. The Java modules run on the host during development and
-      # reach the database at localhost:5432.
-      - "5432:5432"
+      # host:container. 55432 on the host, not 5432: this machine runs native
+      # PostgreSQL services that already own 5432, and a clash there is silent —
+      # the container starts, the port maps, and clients reach the wrong server.
+      # The Java modules reach this database at localhost:55432.
+      - "55432:5432"
     volumes:
       # Postgres 18 moved its data directory, so the image declares the volume at
       # /var/lib/postgresql, not /var/lib/postgresql/data as older versions did.
