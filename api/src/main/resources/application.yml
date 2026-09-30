@@ -2,5 +2,19 @@ spring:
   application:
     name: api
 
+  datasource:
+    # 55432, not 5432: native PostgreSQL services on this machine own 5432, and the
+    # clash is silent. See docs/stages/stage-3.md.
+    url: jdbc:postgresql://localhost:55432/${POSTGRES_DB:bustruth}
+    username: ${POSTGRES_USER:bustruth}
+    # No default, same as the loader: a default password in a committed file is a
+    # password that reaches production by accident. Local development supplies it
+    # through the git-ignored application-local.yml.
+    password: ${POSTGRES_PASSWORD}
+
+  # The api only reads. Migrations belong to the loader, which owns the schema.
+  flyway:
+    enabled: false
+
 server:
   port: 8084
