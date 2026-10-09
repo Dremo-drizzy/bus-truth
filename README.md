@@ -1,4 +1,5 @@
 # Bus Truth
+![Live map of Halifax Transit vehicles](docs/images/live-map.png)
 
 Bus Truth records Halifax Transit's live GTFS-Realtime feeds continuously and keeps every
 snapshot, so what the buses actually did can be compared against what was promised. This
