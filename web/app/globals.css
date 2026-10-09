@@ -55,9 +55,17 @@ body {
   min-height: 0;
 }
 
+/* Explicit width and height, not inset alone: maplibre-gl.css sets
+   .maplibregl-map { position: relative }, MapLibre adds that class to the container
+   at runtime, and because that stylesheet is imported after this one at equal
+   specificity it wins — so inset: 0 does nothing and the container collapses to
+   height 0. Measured in the browser: .map-wrap 921px tall, .map 0. Width and height
+   work under either position value. */
 .map {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 /* The two states that are not "buses on the map" have to be unmistakable, because
