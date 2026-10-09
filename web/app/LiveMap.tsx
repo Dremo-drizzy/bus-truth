@@ -1,7 +1,11 @@
 "use client";
 
-// maplibre-gl 6 has no default export: everything is a named export.
-import { GeoJSONSource, Map as MapLibreMap, NavigationControl } from "maplibre-gl";
+// maplibre-gl 5 exposes its API on the default export only: the named exports exist
+// in the type declarations but are undefined at runtime, so importing them compiles
+// and then throws "not a constructor" in the browser. Types are imported separately
+// because `import type` is erased.
+import maplibregl from "maplibre-gl";
+import type { GeoJSONSource } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -66,20 +70,20 @@ function describeAge(seconds: number | null): string {
 
 export default function LiveMap() {
   const container = useRef<HTMLDivElement | null>(null);
-  const map = useRef<MapLibreMap | null>(null);
+  const map = useRef<maplibregl.Map | null>(null);
   const [status, setStatus] = useState<Status>({ kind: "loading" });
 
   useEffect(() => {
     if (!container.current || map.current) return;
 
-    const created = new MapLibreMap({
+    const created = new maplibregl.Map({
       container: container.current,
       style: BASEMAP_STYLE,
       center: HALIFAX,
       zoom: 11,
       attributionControl: { compact: false },
     });
-    created.addControl(new NavigationControl(), "top-right");
+    created.addControl(new maplibregl.NavigationControl(), "top-right");
 
     created.on("load", () => {
       created.addSource("vehicles", {
