@@ -17,6 +17,27 @@
     <description>REST API serving the metric marts to the web app</description>
 
     <dependencies>
+        <!-- JdbcClient and a connection pool, same pattern as the loader: the live
+             query is SQL and stays SQL. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Generates the OpenAPI document and serves Swagger UI from the
+             controllers themselves, so the published contract cannot drift from the
+             code that answers it. Starter only, no custom configuration. -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+
         <!-- Spring MVC + embedded Tomcat. Serves /actuator/health now and the REST
              endpoints later; actuator on its own brings no web server. -->
         <dependency>
@@ -35,10 +56,45 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- A real PostgreSQL 18 for the integration test: the endpoint's whole job
+             is running one SQL statement, so testing it against another engine would
+             test something else. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
+    <properties>
+        <!-- springdoc is not managed by Spring Boot, so the version is pinned here.
+             The 3.x line is the one built for Spring Boot 4 / Framework 7; springdoc
+             2.x targets Boot 3 and fails at startup creating swaggerWebMvcConfigurer. -->
+        <springdoc.version>3.1.1</springdoc.version>
+    </properties>
 
     <build>
         <plugins>
+            <!-- Surefire runs *Test; the Testcontainers test is *IT, so failsafe has
+                 to be bound or it would silently never run. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Repackages the jar into an executable fat jar (java -jar api.jar).
                  Right for an app; the reason common does NOT declare it. -->
             <plugin>

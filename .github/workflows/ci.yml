@@ -49,3 +49,33 @@ jobs:
       # readable. verify compiles, runs the tests and packages each module.
       - name: Build and test
         run: ./mvnw -B verify
+
+  web:
+    name: Build the web app
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+
+      # Node 24, matching local development. cache: npm keys on the lockfile, so a
+      # run only re-downloads when dependencies actually change.
+      - name: Set up Node 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      # npm ci, not npm install: it installs exactly the committed lockfile and fails
+      # if package.json and the lockfile disagree, so CI cannot quietly build against
+      # different versions than a developer has.
+      - name: Install dependencies
+        run: npm ci
+        working-directory: web
+
+      # next build type-checks the whole app, so a TypeScript error fails here rather
+      # than being discovered by someone opening the page.
+      - name: Build
+        run: npm run build
+        working-directory: web
