@@ -105,4 +105,6 @@ Revisit if:
 
 ## Current stage
 
-**Phase A · Stage 2 — Collector.** Update this line at the start of each stage.
+**Phase A · Stage 4 — Live map. Scope frozen here.** Arrival detection, the
+trip-updates loader, the static GTFS loader and the dbt marts are not being built;
+see the README's "what I would do next".
