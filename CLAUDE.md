@@ -80,6 +80,12 @@ Accepted decisions (see `docs/decisions/`):
 - Database migrations: Flyway only. Never edit a migration that has already been applied — add a new one.
 - Frontend: Vite + React + React Router, TypeScript `strict`, MapLibre GL pinned to ^5.
 - Tests: JUnit 5 + AssertJ; Testcontainers for integration tests.
+- **Any test that boots the Spring context must set
+  `bustruth.collector.polling-enabled=false`.** The default is on, which is right for
+  production and wrong for a test: the three pollers otherwise fetch live data from
+  the agency and write rows underneath the test's own assertions. That is how CI
+  failed with 159 rows before a replay and 233 after, and it passed locally only
+  because a network call happened to be slow.
 - Git: one branch per stage, `stage-N-short-name`; a PR to `main` at the end of each stage.
 
 ## Data sources
