@@ -80,3 +80,33 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: web
+
+      # Chromium only. The suite checks rendering, console errors and layout width,
+      # none of which needs three engines, and each extra browser is a download and a
+      # third more wall-clock on every push.
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+        working-directory: web
+
+      # Loads all five pages in a real browser at 1280px and 400px, and fails on a
+      # console error, a failed request, a page stuck loading, or any horizontal
+      # overflow. This replaced a caveat: R7 shipped saying the pages had not been
+      # opened in a browser, so rendering and the no-sideways-scroll requirement were
+      # unverified. The API is served from responses captured against the real
+      # database, so no PostgreSQL is needed here.
+      - name: Smoke-test the pages
+        run: npm run test:e2e
+        working-directory: web
+
+      # The screenshots are the point of a failure: "it overflows at 400px" is an
+      # argument, a picture of it overflowing is not.
+      - name: Upload screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: page-screenshots
+          path: |
+            web/test-results/
+            web/playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore

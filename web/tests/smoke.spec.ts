@@ -1,0 +1,202 @@
+import { expect, test } from "@playwright/test";
+import type { Page, Route } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+/**
+ * Every page, loaded in a real browser, at 1280px and 400px.
+ *
+ * This suite exists to retire a caveat rather than to decorate the build. R7 shipped
+ * with "the pages have not been opened in a browser, so the rendering and the
+ * no-sideways-scroll requirement are unverified" — a claim about what had not been
+ * checked. These assertions check it, on every push.
+ *
+ * Three things are asserted for all five pages:
+ *
+ *   1. no console errors and no failed requests
+ *   2. `document.scrollWidth` never exceeds the viewport, so nothing scrolls sideways
+ *   3. the page reaches its loaded state and shows real content — not a spinner, not
+ *      an error panel
+ *
+ * The API is served from fixtures captured from the real API against the real
+ * database (`tests/fixtures/`), so the suite is deterministic and needs no PostgreSQL
+ * in CI. They are recorded responses, not invented ones: 67 routes, 679 arrivals on
+ * route 1, 243 vehicles. The one adjustment is the live map's timestamps, which are
+ * shifted to "now" at request time — the endpoint only returns the last ten minutes,
+ * so a recorded response would otherwise always render as "no recent data" and the
+ * map's live path would never be exercised.
+ */
+
+const fixture = (name: string): unknown =>
+  JSON.parse(
+    readFileSync(fileURLToPath(new URL(`./fixtures/${name}`, import.meta.url)), "utf8"),
+  );
+
+const COVERAGE = fixture("coverage.json");
+const ROUTES = fixture("routes.json");
+const ROUTES_PERFORMANCE = fixture("routes-performance.json");
+const ROUTE_ONE = fixture("route-1.json");
+const STOP = fixture("stop.json");
+const LIVE = fixture("vehicles-live.json") as {
+  generated_at: string;
+  newest_position_at: string;
+  features: { properties: { vehicle_timestamp: string } }[];
+};
+
+/** The live fixture with every timestamp moved to now, so the map sees fresh data. */
+function freshLive() {
+  const now = new Date();
+  const iso = now.toISOString();
+  return {
+    ...LIVE,
+    generated_at: iso,
+    newest_position_at: iso,
+    features: LIVE.features.map((feature, index) => ({
+      ...feature,
+      properties: {
+        ...feature.properties,
+        // Spread over the ten-minute window so the per-dot opacity ramp is exercised
+        // rather than every dot rendering identically.
+        vehicle_timestamp: new Date(now.getTime() - (index % 10) * 60_000).toISOString(),
+      },
+    })),
+  };
+}
+
+const json = (route: Route, body: unknown) =>
+  route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+
+/**
+ * Fixtures by default; the real API when BT_LIVE is set.
+ *
+ * CI has no PostgreSQL, so the committed responses are what make this suite
+ * deterministic there. Running it with BT_LIVE=1 against a local api and database
+ * proves the same pages against live numbers, which is the half a fixture cannot
+ * cover — the fixtures were captured from exactly that setup.
+ */
+const LIVE_API = process.env.BT_LIVE === "1";
+
+async function serveApi(page: Page) {
+  if (LIVE_API) return;
+  await page.route("**/api/coverage", (route) => json(route, COVERAGE));
+  await page.route("**/api/vehicles/live", (route) => json(route, freshLive()));
+  await page.route("**/api/routes/performance*", (route) => json(route, ROUTES_PERFORMANCE));
+  await page.route("**/api/routes/*/performance*", (route) => json(route, ROUTE_ONE));
+  await page.route("**/api/stops/*/reliability*", (route) => json(route, STOP));
+  await page.route("**/api/routes", (route) => json(route, ROUTES));
+}
+
+/** Console errors and failed requests, collected for the life of the page. */
+function watchForProblems(page: Page): string[] {
+  const problems: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") problems.push(`console: ${message.text()}`);
+  });
+  page.on("pageerror", (error) => problems.push(`uncaught: ${error.message}`));
+  page.on("requestfailed", (request) => {
+    // The basemap tiles come from a third party and are not this project's concern;
+    // a tile that fails to load is not a broken page.
+    if (!request.url().includes("openfreemap.org") && !request.url().includes("tiles")) {
+      problems.push(`request failed: ${request.url()}`);
+    }
+  });
+  return problems;
+}
+
+const PAGES = [
+  { name: "live map", path: "/", expect: /vehicles|no recent data|0 vehicles/i },
+  { name: "routes leaderboard", path: "/routes", expect: /on-time performance/i },
+  { name: "route detail", path: "/routes/1", expect: /by hour of the day/i },
+  { name: "stop reliability", path: "/stops/8640", expect: /by route|arrivals were derived/i },
+  { name: "method", path: "/about", expect: /how this is measured/i },
+];
+
+for (const subject of PAGES) {
+  test(`${subject.name} renders with no console errors and no sideways scroll`, async ({
+    page,
+  }, testInfo) => {
+    const problems = watchForProblems(page);
+    await serveApi(page);
+
+    await page.goto(subject.path);
+    await expect(page.getByText(subject.expect).first()).toBeVisible({ timeout: 15_000 });
+
+    // Never still loading once settled, and never an error panel — with one honest
+    // exception. Against the live API the map legitimately raises an alert when no
+    // positions have arrived in the last ten minutes, which is one of the three states
+    // it exists to distinguish. Running live with the collector replaying the archive
+    // rather than polling is exactly that case, so the alert is asserted to be that
+    // notice rather than asserted away.
+    await expect(page.getByText(/^Loading /)).toHaveCount(0);
+    if (LIVE_API && subject.path === "/") {
+      for (const alert of await page.getByRole("alert").all()) {
+        await expect(alert).toContainText(/no recent data|cannot reach the API/i);
+      }
+    } else {
+      await expect(page.getByRole("alert")).toHaveCount(0);
+    }
+
+    const overflow = await page.evaluate(() => ({
+      scrollWidth: document.documentElement.scrollWidth,
+      innerWidth: window.innerWidth,
+    }));
+    expect(
+      overflow.scrollWidth,
+      `${subject.name} scrolls sideways: content ${overflow.scrollWidth}px in a ${overflow.innerWidth}px viewport`,
+    ).toBeLessThanOrEqual(overflow.innerWidth);
+
+    await testInfo.attach(`${subject.name}-${testInfo.project.name}.png`, {
+      body: await page.screenshot({ fullPage: true }),
+      contentType: "image/png",
+    });
+
+    expect(problems, problems.join("\n")).toEqual([]);
+  });
+}
+
+test("the leaderboard shows a real percentage beside its arrival count", async ({ page }) => {
+  await serveApi(page);
+  await page.goto("/routes");
+
+  // A number from the API, not a placeholder: the fixture's best rankable route.
+  const table = page.locator("table").first();
+  await expect(table).toBeVisible();
+  await expect(table.locator("tbody tr").first()).toContainText(/%/);
+  await expect(table.locator("tbody tr").first()).toContainText(/of [\d,]+/);
+});
+
+test("a thin route is shown apart rather than ranked", async ({ page }) => {
+  test.skip(LIVE_API, "depends on the fixture's 13 unrankable routes");
+  await serveApi(page);
+  await page.goto("/routes");
+
+  // The fixture carries 13 routes with rankable: false. They must not sit in the main
+  // ranking, because a route seen once at 100% would otherwise top it.
+  await expect(page.getByRole("heading", { name: /too thinly observed to rank/i })).toBeVisible();
+});
+
+test("too few observations is said in words, not printed as a percentage", async ({ page }) => {
+  test.skip(LIVE_API, "depends on the fixture's 20 held-back stops");
+  await serveApi(page);
+  await page.goto("/routes/1");
+
+  // Route 1's fixture holds 20 stops held back below the ranking floor, and hourly
+  // buckets thin enough to trip the display threshold. Wherever that happens the page
+  // must say so rather than print a number from a handful of rows.
+  await expect(page.getByText(/20 further stops were left out/i)).toBeVisible();
+});
+
+test("the method page states the licence and that this is not official", async ({ page }) => {
+  await serveApi(page);
+  await page.goto("/about");
+
+  // first(): both statements appear twice, once in the page body and once in the
+  // footer that every page carries. Two is correct here, so the locator takes the
+  // first rather than the assertion demanding there be only one.
+  await expect(
+    page.getByText(/not an official Halifax Transit product/i).first(),
+  ).toBeVisible();
+  await expect(
+    page.getByText(/Contains information licenced under the Open Government Licence/i).first(),
+  ).toBeVisible();
+});
