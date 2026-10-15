@@ -50,9 +50,12 @@ export default function RoutesPage() {
         <section className="aside">
           <h2>Too thinly observed to rank</h2>
           <p className="muted">
-            {thin.length} {thin.length === 1 ? "route" : "routes"} had fewer than five
-            derived arrivals in this range. Their percentages are arithmetically true
-            and tell you nothing about the service, so they are not ranked.
+            {thin.length} {thin.length === 1 ? "route" : "routes"} had too few derived
+            arrivals in this range to hold a position. Each percentage below is
+            arithmetically true and tells you almost nothing about the service: where a
+            single bus moves the figure further than this project's own margin of
+            uncertainty, the number describes the sample rather than the route. The
+            arrival count is beside each one.
           </p>
           <RouteTable routes={thin} />
         </section>

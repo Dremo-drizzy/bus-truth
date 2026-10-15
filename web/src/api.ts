@@ -101,10 +101,18 @@ export type CoverageDay = {
  * Below this many observations a share is shown as "too few observations" rather than
  * as a number.
  *
- * Matches the api's own default for ranking, so the site and the API agree about what
- * counts as too thin. Arrival detection observes about 17.5% of scheduled stop-events,
- * so thin denominators are normal here rather than exceptional, and a page that prints
- * "0% on time" over two arrivals has published a false claim about a bus route.
+ * Five, for a measured reason rather than a round one (ADR-017). One observation moves
+ * a percentage by 100/n points, and this project already discloses that its headline
+ * figure moves 21 points on the arrival-moment definition alone. Below five arrivals a
+ * single bus swings the percentage further than that acknowledged uncertainty, so the
+ * number says more about the sample than the service.
+ *
+ * This is a lower bar than the API's ranking floor of twenty, and deliberately: showing
+ * a figure with its count is a weaker claim than ranking one route against another.
+ * Arrival detection observes about 17.5% of scheduled stop-events, so thin denominators
+ * are the normal case here — an hour of one route's service is often a handful of
+ * arrivals, and suppressing every one of those would leave the pages empty rather than
+ * honest.
  */
 export const TOO_FEW = 5;
 

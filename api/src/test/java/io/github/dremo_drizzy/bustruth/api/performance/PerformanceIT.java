@@ -186,10 +186,13 @@ class PerformanceIT {
                 .andExpect(jsonPath("$[0].on_time.of").value(100))
                 .andExpect(jsonPath("$[0].on_time.percent").value(90.0))
                 .andExpect(jsonPath("$[0].trips_observed").value(100))
-                .andExpect(jsonPath("$[1].route_id").value("1"))
-                .andExpect(jsonPath("$[1].on_time.count").value(7))
-                .andExpect(jsonPath("$[1].on_time.of").value(14))
-                .andExpect(jsonPath("$[1].on_time.percent").value(50.0))
+                // Only route 10 clears the floor of twenty, so the others sort below it
+                // by share: route 3 at 100% of one, route 1 at 50% of fourteen, route 2
+                // at 0% of two.
+                .andExpect(jsonPath("$[2].route_id").value("1"))
+                .andExpect(jsonPath("$[2].on_time.count").value(7))
+                .andExpect(jsonPath("$[2].on_time.of").value(14))
+                .andExpect(jsonPath("$[2].on_time.percent").value(50.0))
                 .andExpect(jsonPath("$[3].route_id").value("2"))
                 .andExpect(jsonPath("$[3].on_time.percent").value(0.0))
                 // Two observations, and the response says so rather than only "0%".
@@ -209,18 +212,20 @@ class PerformanceIT {
                 .andExpect(jsonPath("$.length()").value(4))
                 .andExpect(jsonPath("$[0].route_id").value("10"))
                 .andExpect(jsonPath("$[0].rankable").value(true))
-                .andExpect(jsonPath("$[1].route_id").value("1"))
-                .andExpect(jsonPath("$[1].rankable").value(true))
-                .andExpect(jsonPath("$[2].route_id").value("3"))
-                .andExpect(jsonPath("$[2].on_time.percent").value(100.0))
-                .andExpect(jsonPath("$[2].on_time.of").value(1))
+                // Route 1 has fourteen arrivals, so at the measured floor of twenty it
+                // cannot hold a position either: one bus would move it seven points.
+                .andExpect(jsonPath("$[1].route_id").value("3"))
+                .andExpect(jsonPath("$[1].rankable").value(false))
+                .andExpect(jsonPath("$[2].route_id").value("1"))
+                .andExpect(jsonPath("$[1].on_time.percent").value(100.0))
+                .andExpect(jsonPath("$[1].on_time.of").value(1))
                 .andExpect(jsonPath("$[2].rankable").value(false))
                 .andExpect(jsonPath("$[3].route_id").value("2"))
                 .andExpect(jsonPath("$[3].rankable").value(false));
     }
 
     @Test
-    @DisplayName("lowering the leaderboard threshold lets the thin route rank")
+    @DisplayName("lowering the leaderboard floor lets the thin route rank")
     void theLeaderboardThresholdIsOverridable() throws Exception {
         mockMvc.perform(get("/api/routes/performance")
                         .param("from", DAY_ONE.toString()).param("to", DAY_TWO.toString())
@@ -242,9 +247,9 @@ class PerformanceIT {
         mockMvc.perform(get("/api/routes/performance")
                         .param("from", DAY_ONE.toString()).param("to", DAY_TWO.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[1].route_id").value("1"))
-                .andExpect(jsonPath("$[1].median_delay_seconds").value(60))
-                .andExpect(jsonPath("$[1].p90_delay_seconds").value(600));
+                .andExpect(jsonPath("$[2].route_id").value("1"))
+                .andExpect(jsonPath("$[2].median_delay_seconds").value(60))
+                .andExpect(jsonPath("$[2].p90_delay_seconds").value(600));
     }
 
     @Test
@@ -270,13 +275,27 @@ class PerformanceIT {
     }
 
     @Test
-    @DisplayName("the worst-stops ranking excludes thinly observed stops, and says how many")
-    void worstStopsRespectsTheThreshold() throws Exception {
-        // Route 1's stops: 8184 has seven arrivals, 8185 two, 8186 five. At the default
-        // threshold of five, 8185 cannot be ranked — and the response reports that one
-        // stop was held back rather than presenting the ranking as complete.
+    @DisplayName("the default floor is the measured one, and it holds stops back")
+    void worstStopsAppliesTheMeasuredFloor() throws Exception {
+        // Route 1's stops have seven, five and two arrivals, so none clears the measured
+        // floor of twenty. The response returns an empty ranking and says how many stops
+        // it held back, rather than ranking three stops on a handful of observations and
+        // calling one of them the route's worst.
         mockMvc.perform(get("/api/routes/1/performance")
                         .param("from", DAY_ONE.toString()).param("to", DAY_TWO.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.min_arrivals_applied").value(20))
+                .andExpect(jsonPath("$.stops_below_threshold").value(3))
+                .andExpect(jsonPath("$.worst_stops.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("the floor is overridable, and the response states the one it used")
+    void theThresholdIsOverridable() throws Exception {
+        // At five, 8185's two arrivals are still held back; at one, everything ranks.
+        mockMvc.perform(get("/api/routes/1/performance")
+                        .param("from", DAY_ONE.toString()).param("to", DAY_TWO.toString())
+                        .param("minArrivals", "5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.min_arrivals_applied").value(5))
                 .andExpect(jsonPath("$.stops_below_threshold").value(1))
@@ -286,11 +305,7 @@ class PerformanceIT {
                 .andExpect(jsonPath("$.worst_stops[0].stop_name").value("Quinpool Rd"))
                 .andExpect(jsonPath("$.worst_stops[0].on_time.of").value(5))
                 .andExpect(jsonPath("$.worst_stops[1].stop_id").value("8184"));
-    }
 
-    @Test
-    @DisplayName("lowering the threshold admits the thin stop, and the response shows which")
-    void theThresholdIsOverridable() throws Exception {
         mockMvc.perform(get("/api/routes/1/performance")
                         .param("from", DAY_ONE.toString()).param("to", DAY_TWO.toString())
                         .param("minArrivals", "1"))

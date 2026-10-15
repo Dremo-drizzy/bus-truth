@@ -22,14 +22,23 @@ import org.springframework.web.server.ResponseStatusException;
 public class RoutesController {
 
     /**
-     * Below this many arrivals a stop is left out of the worst-stops ranking.
+     * How many arrivals a route or stop needs before it can take a position in a
+     * ranking.
      *
-     * <p>A presentation guard, not a judgement about service: sorting stops by a
-     * percentage over two observations ranks the stops with the fewest observations,
-     * not the least reliable ones. Overridable per request, and the value applied comes
-     * back in the response so the page can state it.
+     * <p>Twenty, and the number is measured rather than chosen (ADR-017). The test it
+     * has to pass: <b>one bus must not move the figure by more than the uncertainty
+     * this project already discloses.</b> The arrival-moment definition is worth 21
+     * percentage points (ADR-014), so a sample where a single observation swings the
+     * percentage further than that is reporting its own sample size. One arrival moves
+     * a percentage by 100/n points — 20 points at a floor of five, 10 at ten, 5 at
+     * twenty.
+     *
+     * <p>Twenty also keeps the leaderboard worth publishing: on 9 October, 37 of the
+     * 67 observed routes cleared it, against 23 at a floor of fifty. Overridable per
+     * request, and the value applied comes back in the response so the page can state
+     * it.
      */
-    private static final int DEFAULT_MIN_ARRIVALS = 5;
+    private static final int DEFAULT_MIN_ARRIVALS = 20;
 
     private static final int WORST_STOPS = 10;
 
