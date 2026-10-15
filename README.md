@@ -194,24 +194,46 @@ denominator so the frontend can say so instead of printing a number.
 
 ### The headline figure moves 21 points on our own definition of "arrived"
 
-The same 6,550 matched arrivals for 9 October 2026, compared against the same published
-schedule, with one internal setting changed — which position in a vehicle's trail is
-taken as the moment it arrived:
+The feed holds one stop number for minutes at a time, so each stop is reported as a
+**window** of positions rather than a moment. Taking the window's start or its end as
+the arrival gives two different answers from identical data:
 
-| | timed from the first sighting of the stop | timed from the last position before the bus moves on |
+| the same 6,550 arrivals, 9 October | window start | **window end** (used) |
 |---|---|---|
-| **on time** | **49.0%** | **70.2%** |
+| **on time** | 49.0% | **70.2%** |
 | early | 37.8% | 10.4% |
 | late | 13.1% | 19.4% |
 | 10th percentile delay | −475s | −63s |
 
-Nothing Halifax Transit did differs between those columns. The first setting puts a
-tenth of all arrivals more than eight minutes early and over half of all
-first-and-second-stop arrivals early by a median of nearly five minutes, which is a bus
-waiting at its origin terminus being counted as already arrived — so the second is the
-better rule, and the comparison is published because a reader who knows the figure is
-definition-sensitive can judge it, while one shown "70.2%" as a fact cannot. See
+Nothing Halifax Transit did differs between those columns. **The published figure is
+more sensitive to our own definition of "arrived" than to anything the buses did that
+day**, which is why both columns stay here permanently rather than only the one we use.
+
+The choice between them was settled by measurement, not taste. GTFS-Realtime has a
+field, `current_status`, that can say `STOPPED_AT` — the agency asserting a bus is *at*
+a stop instead of us inferring it. Halifax populates it on **0.40%** of positions, so it
+cannot be the rule: a detector built on it would measure the few vehicles that report it.
+But 0.40% is plenty to referee the two candidates. Where the agency does say
+`STOPPED_AT`, it falls a median **80% of the way through** the window, and scoring both
+definitions against those 597 windows:
+
+| definition | median error against the agency's own `STOPPED_AT` |
+|---|---|
+| **window end** | **61s late** |
+| window start | 544s early |
+
+So the window's end is nine times closer, and that is the definition in use. Its
+residual bias is late by about a minute — **named, not corrected**, because a
+correction factor inferred from a 0.40% subset would be a guess wearing a number's
+clothes. See
 [ADR-014](docs/decisions/014-the-arrival-rule-and-the-on-time-window.md).
+
+One figure in that story looked wrong and was worth checking rather than publishing:
+if the two definitions sit at opposite ends of a window that is minutes wide, the
+on-time medians should be minutes apart, and they differ by 74 seconds. The reason is
+that **50.6% of the windows that produce an arrival contain a single position**, so for
+half of all arrivals the two definitions are the same timestamp. The 21 points come
+almost entirely from the other half.
 
 ### The two sources number the same trip's stops differently
 

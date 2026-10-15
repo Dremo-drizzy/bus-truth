@@ -157,12 +157,92 @@ operates mid-route in a weaker form: with `current_stop_sequence` updating only 
 actual arrival by minutes. `LAST_BEFORE_ADVANCE` leaves a distribution shaped the way a
 bus network's should be — a slightly late median and a long late tail.
 
-Claude Code's recommendation, for Daniel to accept or reject: switch `ARRIVAL_MOMENT`
-to `LAST_BEFORE_ADVANCE`, and say plainly on the methodology page that the figure moved
-21 points when it changed. The second half matters more than the first. A reader who
-knows the number is editorially sensitive can judge it; one who is shown 70.2% as a
-fact cannot.
+## Settled by measurement: `ARRIVAL_MOMENT` is the end of the window
 
-Either way, this is the honest headline for the whole project: **the published on-time
-figure is more sensitive to our own definition of "arrived" than to anything Halifax
-Transit did on 9 October.**
+The senior reviewer refused to lock the constant on the strength of the comparison
+above, and was right to: both columns are endpoints of the same window, and neither
+being obviously better is not the same as one of them being correct. He proposed a
+third option that would not be an inference at all — GTFS-Realtime's `current_status`,
+which can say `STOPPED_AT`, the agency asserting the bus is *at* the stop rather than
+us deducing it — on condition that it be measured first rather than adopted because he
+suggested it.
+
+**It is measured, and it cannot be the rule.** Across 966,775 stored positions:
+
+| `current_status` | positions | share |
+|---|---|---|
+| field absent | 846,750 | 87.58% |
+| `INCOMING_AT` | 116,236 | 12.02% |
+| `STOPPED_AT` | 3,898 | **0.40%** |
+
+`IN_TRANSIT_TO` never appears explicitly; the GTFS-RT spec makes it the default when the
+field is absent, so the 87.58% is silence rather than an assertion. Read against derived
+arrivals the figure is worse still: of the 6,589 arrivals on 9 October, only **13
+(0.20%)** have any `STOPPED_AT` position at that stop. A rule built on it would measure
+the fraction of the fleet that reports it, which is the same mistake the original rule
+avoided by not using `currentStatus` in the first place.
+
+Checked against the archive rather than only the database, in case the collector's
+mapper was dropping the field: 24 snapshots from 9 October, 2,103 vehicle entities,
+86.78% absent / 12.84% `INCOMING_AT` / 0.38% `STOPPED_AT`. The database matches the
+protobuf, so the sparsity is the agency's.
+
+### But it is enough to referee the two endpoints
+
+0.40% is useless as a rule and perfectly adequate as ground truth. Where the agency
+does say `STOPPED_AT`, that is its own claim about when the bus was at the stop, and
+both candidate definitions can be scored against it.
+
+First, the shape of the problem, measured. Because the feed holds one stop sequence for
+minutes, each stop is reported as a *window* of positions:
+
+| | |
+|---|---|
+| stop windows containing an agency `STOPPED_AT` ping | 4,072 |
+| where that ping falls within the window | median **80% through**, mean 71%, p75 94% |
+
+The bus is at the stop near the **end** of its window, not its middle and not its
+start — which follows from the spec's own semantics: under `IN_TRANSIT_TO` the stop
+sequence names the stop being *approached*, so the window is the approach plus the
+dwell, and the arrival sits at its far end.
+
+Scored directly, on the 597 windows where a `STOPPED_AT` time and a full window are
+both available:
+
+| definition | median error | p90 | mean |
+|---|---|---|---|
+| **end of window** (`LAST_BEFORE_ADVANCE`) | **61s late** | 664s | 217s |
+| start of window (`FIRST_SIGHTING`) | **544s early** | 936s | 646s |
+
+**Decision: `ARRIVAL_MOMENT = LAST_BEFORE_ADVANCE`.** It is nine times closer to the
+agency's own assertion at the median. Its residual bias is **late by a median of 61
+seconds**, and that is stated rather than corrected: a correction factor derived from
+597 samples of a 0.40% subset would be a guess wearing a number's clothes, and an
+unmeasured correction is worse than a named bias.
+
+`FIRST_SIGHTING` stays implemented. The 21-point gap between them is a published
+finding, and anyone disputing the headline should be able to re-run the range the other
+way and see it.
+
+### One number that looked wrong and was not
+
+The two definitions differ by a whole window, and the median window is minutes wide — so
+the on-time medians should have been minutes apart, and they differ by 74 seconds
+(+9s against +83s). Checking that rather than publishing it resolved it: of 7,143
+windows that produced an arrival on 9 October, **3,612 — 50.6% — contain a single
+position.** For half of all arrivals the two definitions are the *same timestamp*, so
+the medians barely move while the tails move enormously (10th percentile delay −475s
+against −63s). The 21 points come almost entirely from the other half.
+
+The earlier figure of a 392-second median window measured only windows with more than
+one position, and both numbers are correct about different populations. Stating only the
+first would have made the rest of this record incoherent.
+
+### What the project says out loud
+
+This is the honest headline for the whole project, and it goes on the method page and
+in the README permanently, not as a footnote: **the published on-time figure moves 21
+percentage points on our own definition of "arrived" — further than anything Halifax
+Transit did on 9 October.** Both percentages stay side by side, with the chosen
+definition named in plain words. A reader who knows the figure is definition-sensitive
+can judge it; one shown 70.2% as a fact cannot.

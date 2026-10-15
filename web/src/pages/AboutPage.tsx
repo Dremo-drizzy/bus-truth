@@ -64,13 +64,66 @@ export default function AboutPage() {
         Publishing an invented arrival, or an invented cancellation, would be a false
         claim about a transit agency.
       </p>
+      <h2>The number this site is least sure about</h2>
       <p>
-        One consequence is worth stating plainly: the headline on-time figure is
-        sensitive to our own definition of the moment of arrival. Timing an arrival from
-        the first sighting of a stop rather than the last one before the bus moves on
-        changes the figure for the same day's data by about{" "}
-        <strong>21 percentage points</strong>. The site uses the second definition,
-        because the first counts a bus idling at its origin terminus as already arrived.
+        Because the feed holds one stop number for minutes, each stop arrives as a{" "}
+        <strong>window</strong> of positions rather than a moment. Taking that window's
+        start or its end as the arrival gives two different answers from the same data:
+      </p>
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">The same 6,550 arrivals, 9 October</th>
+              <th scope="col">Window start</th>
+              <th scope="col">Window end (used here)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">On time</th>
+              <td>49.0%</td>
+              <td>
+                <strong>70.2%</strong>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Early</th>
+              <td>37.8%</td>
+              <td>10.4%</td>
+            </tr>
+            <tr>
+              <th scope="row">Late</th>
+              <td>13.1%</td>
+              <td>19.4%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Nothing Halifax Transit did differs between those two columns.{" "}
+        <strong>
+          The figure on this site moves 21 percentage points on our own definition of
+          “arrived” — further than anything the buses did that day.
+        </strong>{" "}
+        Both columns are published for that reason, rather than only the one in use.
+      </p>
+      <p>
+        The choice between them was measured rather than argued. The realtime feed has a
+        field that can say <code>STOPPED_AT</code>: the agency stating a bus is at a
+        stop, instead of us inferring it. Halifax fills it in on{" "}
+        <strong>0.40%</strong> of positions, far too few to build the measurement on —
+        but enough to judge the two candidates against. Where the agency does say{" "}
+        <code>STOPPED_AT</code>, it lands a median 80% of the way through the window,
+        and against those 597 cases the window&rsquo;s <strong>end</strong> is a median{" "}
+        <strong>61 seconds late</strong> while its start is a median{" "}
+        <strong>544 seconds early</strong>. The end is roughly nine times closer, so
+        that is the definition this site uses.
+      </p>
+      <p>
+        Its remaining bias is about a minute late, and it is stated rather than
+        corrected: a correction worked out from 0.40% of the data would be a guess with
+        a number attached.
       </p>
 
       <h2>Matching an arrival to the schedule</h2>
