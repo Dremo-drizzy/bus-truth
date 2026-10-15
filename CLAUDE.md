@@ -114,6 +114,13 @@ Revisit if:
 
 ## Current stage
 
-**Phase A · Stage 4 — Live map. Scope frozen here.** Arrival detection, the
-trip-updates loader, the static GTFS loader and the dbt marts are not being built;
-see the README's "what I would do next".
+**Phase R · Stage R5 — scheduled vs actual.** Governed by `docs/BUILD-BRIEF.md` and
+`docs/BUILD-BRIEF-AMENDMENT.md`; where they disagree the amendment wins.
+
+Done: R0 (fresh repo) · R1 (batch, no queue) · R2 (static GTFS loaded) · R3 (trip-id
+join rule) · R4 (arrival detection, and why 17.5% is its ceiling) · R5 (on-time
+events). Next: R6 (API), R7 (web), R8 (ship).
+
+Everything marked **NEEDS DANIEL'S REVIEW** is still waiting on him: the arrival rule
+and the four constants (ADR-014), the trip-id join (ADR-013), the schedule match
+(ADR-015), and the README findings section.
