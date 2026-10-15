@@ -1,5 +1,3 @@
-"use client";
-
 // maplibre-gl 5 exposes its API on the default export only: the named exports exist
 // in the type declarations but are undefined at runtime, so importing them compiles
 // and then throws "not a constructor" in the browser. Types are imported separately
@@ -68,7 +66,7 @@ function describeAge(seconds: number | null): string {
   return `${Math.round(seconds / 60)} min ago`;
 }
 
-export default function LiveMap() {
+export default function LiveMapPage() {
   const container = useRef<HTMLDivElement | null>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const [status, setStatus] = useState<Status>({ kind: "loading" });
@@ -138,8 +136,9 @@ export default function LiveMap() {
 
     async function refresh() {
       try {
-        // Same origin: next.config proxies /api to the Spring service, so there is
-        // no CORS in play.
+        // Same origin: vite.config proxies /api to the Spring service in
+        // development and the two are served together in production, so there is
+        // no CORS in play either way.
         const response = await fetch("/api/vehicles/live", { cache: "no-store" });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const body = (await response.json()) as LiveResponse;
@@ -198,7 +197,7 @@ export default function LiveMap() {
   return (
     <>
       <header className="masthead">
-        <h1>Bus Truth — live map</h1>
+        <h1>Live map</h1>
         <span className="status">{summarise(status)}</span>
       </header>
 
