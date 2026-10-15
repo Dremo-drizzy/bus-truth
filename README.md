@@ -133,6 +133,39 @@ invented cancellations.
 percentage over eleven arrivals is not a percentage, and the API returns the
 denominator so the frontend can say so instead of printing a number.
 
+### The headline figure moves 21 points on our own definition of "arrived"
+
+The same 6,550 matched arrivals for 9 October 2026, compared against the same published
+schedule, with one internal setting changed — which position in a vehicle's trail is
+taken as the moment it arrived:
+
+| | timed from the first sighting of the stop | timed from the last position before the bus moves on |
+|---|---|---|
+| **on time** | **49.0%** | **70.2%** |
+| early | 37.8% | 10.4% |
+| late | 13.1% | 19.4% |
+| 10th percentile delay | −475s | −63s |
+
+Nothing Halifax Transit did differs between those columns. The first setting puts a
+tenth of all arrivals more than eight minutes early and over half of all
+first-and-second-stop arrivals early by a median of nearly five minutes, which is a bus
+waiting at its origin terminus being counted as already arrived — so the second is the
+better rule, and the comparison is published because a reader who knows the figure is
+definition-sensitive can judge it, while one shown "70.2%" as a fact cannot. See
+[ADR-014](docs/decisions/014-the-arrival-rule-and-the-on-time-window.md).
+
+### The two sources number the same trip's stops differently
+
+The live feed and the published zip agree on which stops a trip serves and disagree
+about their order: on 9 October they named the same stop for the same sequence number
+on only 78.5% of 6,525 matched arrivals, with the feed's number running one to three
+places ahead on the rest, because the feed's trip contains stops the published zip does
+not list. Matching an arrival to its scheduled time by sequence number — the obvious
+join — would have compared a fifth of all arrivals against a neighbouring stop's time, a
+median of 94 seconds out and up to 16 minutes, against a five-minute on-time window.
+The match is therefore made on the stop itself, and every row records the disagreement.
+See [ADR-015](docs/decisions/015-matching-an-arrival-to-its-published-time.md).
+
 ### Two further measured limits
 
 - **4.4% of live trip ids carry an `_N` suffix** from the agency's trip-modification

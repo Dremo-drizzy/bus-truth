@@ -123,3 +123,46 @@ Revisit if: the cause of the 17.5% resolves in favour of collection gaps, in whi
 case better collection raises coverage and the figure should be re-measured; or trip
 updates are loaded, which carry per-stop times for every stop of every trip and would
 replace inference with the agency's own numbers.
+
+## Addendum, Stage R5 — `ARRIVAL_MOMENT` is worth 21 points of on-time performance
+
+> **NEEDS DANIEL'S REVIEW** — measured by Claude Code while building R5. The choice
+> this addendum is about is his, and the numbers exist to inform it.
+
+The on-time comparison was run twice over the same 6,550 matched arrivals for
+9 October 2026, changing nothing but `ARRIVAL_MOMENT`:
+
+| | `FIRST_SIGHTING` (current) | `LAST_BEFORE_ADVANCE` |
+|---|---|---|
+| **on time** | **3,210 — 49.0%** | **4,595 — 70.2%** |
+| early | 2,479 — 37.8% | 684 — 10.4% |
+| late | 861 — 13.1% | 1,271 — 19.4% |
+| 10th percentile delay | −475s | −63s |
+| median delay | +9s | +83s |
+| 90th percentile delay | +368s | +510s |
+| mean delay | −10s | +175s |
+| early at a trip's first two stops | 54.2% (median −289s) | 4.2% |
+
+The headline figure this project exists to publish moves **21 percentage points** on
+identical data, because of an internal choice about which position in a trail counts as
+the arrival. Nothing the buses did differs between those two columns.
+
+The shape of the two distributions says which is the artefact. `FIRST_SIGHTING` puts a
+tenth of all arrivals more than **eight minutes early**, and over half of all
+first-and-second-stop arrivals early by a median of nearly five minutes. That is not
+early running; it is a bus sitting at its origin terminus already reporting the first
+stop, counted as having arrived there the moment it was first seen. The same mechanism
+operates mid-route in a weaker form: with `current_stop_sequence` updating only about
+6.8 times across a 38.3-stop trip, "first position reporting stop N" can precede the
+actual arrival by minutes. `LAST_BEFORE_ADVANCE` leaves a distribution shaped the way a
+bus network's should be — a slightly late median and a long late tail.
+
+Claude Code's recommendation, for Daniel to accept or reject: switch `ARRIVAL_MOMENT`
+to `LAST_BEFORE_ADVANCE`, and say plainly on the methodology page that the figure moved
+21 points when it changed. The second half matters more than the first. A reader who
+knows the number is editorially sensitive can judge it; one who is shown 70.2% as a
+fact cannot.
+
+Either way, this is the honest headline for the whole project: **the published on-time
+figure is more sensitive to our own definition of "arrived" than to anything Halifax
+Transit did on 9 October.**
