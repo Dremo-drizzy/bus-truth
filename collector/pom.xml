@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.dremo_drizzy</groupId>
+        <artifactId>bus-truth</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>collector</artifactId>
+    <packaging>jar</packaging>
+
+    <name>collector</name>
+    <description>Polls the GTFS-Realtime feeds and publishes them to Kafka</description>
+
+    <dependencies>
+        <!-- The shared domain records. This is what makes common a library rather
+             than an app: it goes on the classpath as a plain jar. -->
+        <dependency>
+            <groupId>io.github.dremo_drizzy</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <!-- Generated Java classes for the GTFS-Realtime protobuf schema: turns the
+             .pb bytes into FeedMessage/VehiclePosition/TripUpdate objects. Same
+             com.google.transit.realtime classes as the original Google artifact;
+             MobilityData maintains it now, and it tracks a current protobuf-java,
+             which the abandoned com.google.transit:0.0.4 (protobuf 2.6.1) does not. -->
+        <dependency>
+            <groupId>org.mobilitydata</groupId>
+            <artifactId>gtfs-realtime-bindings</artifactId>
+            <version>0.2.0</version>
+        </dependency>
+
+        <!-- JdbcClient and a connection pool. The collector now writes rows itself:
+             there is no queue between it and the database, because the analysis is
+             historical and a batch pipeline has nothing to decouple. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Migrations, applied at startup. All three are needed: the engine, the
+             per-database module Flyway 10 split out of core, and Boot 4's
+             auto-configuration module. Without spring-boot-flyway the engine sits on
+             the classpath and never runs — the app starts healthy and the database
+             stays empty. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
+        <!-- Spring MVC + embedded Tomcat. Needed so /actuator/health is served over
+             HTTP; actuator on its own brings no web server. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- JUnit 5, AssertJ, Mockito and Spring's test support. Test scope: on the
+             classpath for `mvn test`, left out of the packaged app jar. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- A real PostgreSQL 18 for the idempotency proof: ON CONFLICT DO NOTHING is
+             Postgres syntax, so proving it on another engine would prove nothing. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Surefire runs *Test and ignores *IT, so failsafe has to be bound or
+                 VehiclePositionWriterIT — the idempotency proof — would silently
+                 never run. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Repackages the jar into an executable fat jar (java -jar collector.jar).
+                 Right for an app; the reason common does NOT declare it. -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

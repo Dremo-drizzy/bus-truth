@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: collector
+
+  datasource:
+    # 55432, not 5432: native PostgreSQL services on this machine own 5432, and the
+    # clash is silent. See docs/stages/stage-3.md.
+    url: jdbc:postgresql://localhost:55432/${POSTGRES_DB:bustruth}
+    username: ${POSTGRES_USER:bustruth}
+    # No default, deliberately. A default password in a committed file is a password
+    # that reaches production by accident; local development supplies it through the
+    # git-ignored application-local.yml, activated with --spring.profiles.active=local.
+    password: ${POSTGRES_PASSWORD}
+
+  # The collector owns the schema now that the loader is gone.
+  flyway:
+    enabled: true
+
+
+  task:
+    scheduling:
+      pool:
+        # One thread per feed. The default is a single thread, which would run the
+        # three pollers one after another and undo their independence.
+        size: 3
+
+server:
+  port: 8081
+
+bustruth:
+  collector:
+    poll-interval: 20s
+    http-timeout: 15s
+    # Deliberately NOT data/raw: scripts/save_feeds.py owns that archive, and two
+    # writers with different skip rules would make it impossible to reason about.
+    archive-dir: data/dev-archive
+    vehicle-positions:
+      url: https://gtfs.halifax.ca/realtime/Vehicle/VehiclePositions.pb
+    trip-updates:
+      url: https://gtfs.halifax.ca/realtime/TripUpdate/TripUpdates.pb
+    alerts:
+      url: https://gtfs.halifax.ca/realtime/Alert/Alerts.pb

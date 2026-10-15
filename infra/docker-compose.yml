@@ -1,0 +1,46 @@
+# Local development infrastructure for Bus Truth: PostgreSQL only.
+#
+# Kafka and its UI were removed with the rescope. The analysis is historical, so
+# there is nothing for a queue to decouple; the collector writes rows itself. The
+# streaming version is tagged v1-streaming.
+#
+#   docker compose -f infra/docker-compose.yml up -d
+#
+# Credentials come from the repo-root .env (copy .env.example first). Nothing in
+# this file contains a real secret.
+
+name: bus-truth
+
+services:
+
+  postgres:
+    image: postgres:18-alpine
+    container_name: bus-truth-postgres
+    restart: unless-stopped
+    # POSTGRES_USER / _PASSWORD / _DB. The image reads them on first start to
+    # create the superuser and the database.
+    env_file:
+      - ../.env
+    ports:
+      # host:container. 55432 on the host, not 5432: this machine runs native
+      # PostgreSQL services that already own 5432, and a clash there is silent —
+      # the container starts, the port maps, and clients reach the wrong server.
+      # The Java modules reach this database at localhost:55432.
+      - "55432:5432"
+    volumes:
+      # Postgres 18 moved its data directory, so the image declares the volume at
+      # /var/lib/postgresql, not /var/lib/postgresql/data as older versions did.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      # $$ stops Compose interpolating the variable: the container's shell expands
+      # it, so the values stay in .env and never appear on the host.
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  # Named volumes, managed by Docker. The data survives `down` and is removed
+  # only by `down -v`.
+  postgres-data:

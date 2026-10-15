@@ -1,0 +1,114 @@
+:root {
+  --ink: #101418;
+  --muted: #5a6672;
+  --surface: #ffffff;
+  --line: #d9dee3;
+  --warn: #8a5a00;
+  --warn-surface: #fff6e5;
+  --down: #8a1f1f;
+  --down-surface: #fdecec;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  color: var(--ink);
+  background: var(--surface);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  align-items: baseline;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.masthead h1 {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.masthead .status {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.map-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Explicit width and height, not inset alone: maplibre-gl.css sets
+   .maplibregl-map { position: relative }, MapLibre adds that class to the container
+   at runtime, and because that stylesheet is imported after this one at equal
+   specificity it wins — so inset: 0 does nothing and the container collapses to
+   height 0. Measured in the browser: .map-wrap 921px tall, .map 0. Width and height
+   work under either position value. */
+.map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* The two states that are not "buses on the map" have to be unmistakable, because
+   both of them look like an empty map otherwise. */
+.notice {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  max-width: min(32rem, calc(100% - 2rem));
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid currentColor;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 12%);
+}
+
+.notice strong {
+  display: block;
+}
+
+.notice small {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.notice.quiet {
+  color: var(--warn);
+  background: var(--warn-surface);
+}
+
+.notice.down {
+  color: var(--down);
+  background: var(--down-surface);
+}
+
+footer {
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+footer a {
+  color: inherit;
+}
