@@ -1,51 +1,70 @@
 # Bus Truth
+
 ![Live map of Halifax Transit vehicles](docs/images/live-map.png)
 
-Bus Truth records Halifax Transit's live GTFS-Realtime feeds continuously and keeps every
-snapshot, so what the buses actually did can be compared against what was promised. This
-repository is the data pipeline that captures and serves that record: three protobuf feeds
-into Kafka, into PostgreSQL, out through a REST API onto a live map.
+Bus Truth measures how reliable Halifax Transit actually is. It records the agency's
+live GTFS-Realtime feeds every 20 seconds and keeps every snapshot forever, derives
+from those positions the moment each bus reached each stop, compares that against the
+timetable published for that day, and publishes the gap.
+
+Both sides of the comparison are the agency's own data. Nothing here is a survey or an
+estimate of how a journey felt.
 
 > Contains information licenced under the Open Government Licence – Halifax.
 
-## What this does and does not measure
+## What this measures, and what it cannot
 
-**It does:** capture all three realtime feeds every 20 seconds, archive the raw protobuf
-bytes permanently, load vehicle positions into PostgreSQL with a replay guarantee, serve
-the latest position per vehicle as GeoJSON, and draw them on a map that distinguishes "no
-buses running" from "no data arriving".
+**It measures:** on-time performance per route, per hour of the local day, per service
+date and per stop, against the schedule publication in force on that date; the delay
+distribution behind each percentage; and its own collection coverage, day by day.
 
-**It does not** compute on-time performance, bunching, ghost buses or prediction accuracy.
-Those need arrival detection — deciding, from a trail of positions, that a bus *arrived* at
-a stop — plus matching each trip to the published schedule. That work was scoped, measured,
-and then deliberately cut; the reasoning and the measurements are in
-[what I would do next](#what-i-would-do-next).
+**It cannot measure what the feed does not show, and that is the central limitation.**
+Halifax reports a bus's stop number about **6.8 times across a 38.3-stop trip**, so
+roughly **17.5%** of scheduled stop-events have an observed arrival. The other 82.5%
+were served and never mentioned. They are counted, never interpolated, and never
+reported as missed service.
 
-So this is **a working realtime data pipeline with 16 days of archived evidence**, not a
-transit-reliability dashboard. The findings below are what the archive supports today.
+Two further honest limits, both measured and both below in [data
+quality](#data-quality): the published figure moves **21 percentage points** on our own
+definition of the moment of arrival, and the two data sources disagree about stop
+numbering on **21.5%** of arrivals.
+
+Bunching, ghost buses and prediction accuracy are designed and not built. Prediction
+accuracy needs the trip-updates loader, which is sized and deferred for a measured
+reason — see [what is not built](#what-is-not-built).
 
 ## Architecture
 
 ```
-GTFS-RT feeds (3, every 20s) ─► collector (Java) ─► Kafka ─► loader (Java) ─► PostgreSQL
-                                     │                                            │
-                            archives raw .pb.gz                                    ▼
-                                                                  api (Spring Boot) ─► web (Next.js + MapLibre)
+gtfs.halifax.ca ──[HTTP, every 20s]──► collector (Java) ──► data/raw/*.pb.gz   the archive, forever
+                                            │
+                                            └────────────► PostgreSQL          raw_vehicle_positions
+static GTFS zip ──[Python]───────────────────────────────► PostgreSQL          gtfs_* tables
+
+PostgreSQL ──► processor (Java) ──► arrival_events ──► ontime_events
+                                                            │
+                                                api (Spring Boot)
+                                                            │
+                                      web (Vite + React + React Router)
 ```
+
+There is no queue. One was removed, with its reasoning kept: see
+[ADR-012](docs/decisions/012-replace-streaming-with-batch.md).
 
 | module | what it does |
 |---|---|
 | `common` | shared immutable records — the shapes the services agree on |
-| `collector` | polls the three feeds, decodes protobuf, publishes to Kafka, archives raw bytes |
-| `loader` | consumes Kafka, writes PostgreSQL idempotently |
-| `api` | REST + OpenAPI; serves the live positions as GeoJSON |
-| `web` | Next.js map, one dot per vehicle, faded by that vehicle's own age |
-| `scripts` | `save_feeds.py`, the standalone archiver that has run since 24 September |
-| `infra` | docker-compose: PostgreSQL 18, Kafka 4 in KRaft mode, Kafka UI |
-| `docs` | decision records, per-stage write-ups, defence notes |
+| `collector` | polls the three feeds, archives the raw bytes, writes `raw_*` tables, owns the Flyway schema, and replays the archive into the database |
+| `processor` | positions → `arrival_events` → `ontime_events`, re-runnable per date range |
+| `api` | six REST endpoints plus OpenAPI |
+| `web` | five pages: live map, leaderboard, route, stop, method |
+| `scripts` | `save_feeds.py` (the standalone archiver), `load_gtfs.py`, join and fixture checks |
+| `infra` | compose for local PostgreSQL, and the production stack |
+| `docs` | decision records, stage write-ups, deployment, defence notes |
 
-Design decisions are recorded in [docs/decisions](docs/decisions/) and each stage is written
-up in [docs/stages](docs/stages/), including what broke and why.
+Every non-trivial choice is recorded in [docs/decisions](docs/decisions/). The ones
+marked **NEEDS DANIEL'S REVIEW** were written to unblock the build and are still to be
+rewritten by their author.
 
 ## Running it
 
@@ -53,39 +72,79 @@ Requires Docker, JDK 21 and Node 24.
 
 ```bash
 cp .env.example .env                  # then set a local password
-
 docker compose -f infra/docker-compose.yml up -d --wait
 
 # PostgreSQL is published on 55432, not 5432 — see docs/stages/stage-3.md
 psql -h localhost -p 55432 -U bustruth -d bustruth
 
-# each service needs the password; local development uses a git-ignored
-# application-local.yml per module, activated with the "local" profile
-./mvnw -pl common -am install -DskipTests
-./mvnw -f collector/pom.xml spring-boot:run                               # :8081
-./mvnw -f loader/pom.xml    spring-boot:run -Dspring-boot.run.profiles=local  # :8082
-./mvnw -f api/pom.xml       spring-boot:run -Dspring-boot.run.profiles=local  # :8084
+export POSTGRES_PASSWORD=...          # no password has a default, anywhere
 
-cd web && npm ci && npm run dev                                           # :3000
+./mvnw -pl common -am install -DskipTests
+./mvnw -f collector/pom.xml spring-boot:run      # :8081 — polls, archives, migrates
+python scripts/load_gtfs.py                      # the published schedule
+./mvnw -f api/pom.xml spring-boot:run            # :8084
+
+cd web && npm ci && npm run dev                  # :5173, /api proxied to :8084
 ```
 
-The map is at `http://localhost:3000`, the API at `http://localhost:8084/api/vehicles/live`,
+Deriving the measurements for a date range, from positions already collected:
+
+```bash
+./mvnw -pl common,processor -am package -DskipTests
+java -jar processor/target/processor-0.1.0-SNAPSHOT.jar     --server.port=0 --from=2026-10-04 --to=2026-10-10     # detection, then on-time
+```
+
+If the database is emptier than the archive — which it will be, if collection ran
+before the database did — replay the archive through the live write path:
+
+```bash
+./mvnw -pl common,collector -am package -DskipTests
+java -jar collector/target/collector-0.1.0-SNAPSHOT.jar     --bustruth.collector.polling-enabled=false     --backfill-from=2026-10-04 --backfill-to=2026-10-10
+```
+
+The site is at `http://localhost:5173`, the API at `http://localhost:8084/api/coverage`,
 and its OpenAPI document at `http://localhost:8084/v3/api-docs`.
 
 Tests: `./mvnw verify` runs everything, including integration tests that start a real
-PostgreSQL 18 through Testcontainers, so Docker must be running.
+PostgreSQL 18 through Testcontainers, so Docker must be running. Any test that boots
+the Spring context must set `bustruth.collector.polling-enabled=false` — otherwise the
+pollers fetch live data and write rows underneath the test's own assertions, which is
+how CI once failed with 159 rows before a replay and 233 after.
+
+Deploying it: [docs/DEPLOY.md](docs/DEPLOY.md). PostgreSQL publishes no port there, and
+[ADR-016](docs/decisions/016-how-it-is-deployed.md) says why that is a property of the
+compose file rather than a value in it.
 
 ## Findings
 
-_Daniel writes this section._
+> **NEEDS DANIEL'S REVIEW** — written by Claude Code to unblock the build. Every number
+> here is measured and reproducible; the choice of what matters is his.
 
-<!-- Each finding: what was measured, the number, and why it matters. Candidates, all
-     measured from the archive and recorded in docs/stages/:
-       - 380 of 886 trip updates carry no trip_id
-       - the published delay field covers 34.8% of stop-time updates, 0% overnight
-       - alert content changed 0% across 180 consecutive polls
-       - 4.4% of live trip ids cannot join the published schedule
-       - currentStatus is present on 11 of 69 vehicles -->
+**Route 63 collapses after 21:00.** On 9 October it ran 29.2% on time across 24
+observed arrivals — the worst of the 54 routes with enough observations to rank — and
+its hourly breakdown shows where: 2 of 4 on time at 18:00, 3 of 6 at 19:00, 2 of 5 at
+20:00, then **0 of 5, 0 of 3 and 0 of 1** through to midnight. The failure is a time of
+day, not a route.
+
+**The best and worst routes by percentage are an artefact of how little we saw them.**
+Ranked on share alone, the top three routes that day had **eleven, four and two**
+observed arrivals and the bottom two had one each. Published that way the leaderboard
+would rank routes by their own sample size. This is why no percentage leaves the API
+without its denominator, and why the site says "too few observations" rather than
+printing a number from a handful of rows.
+
+**The agency's realtime feed and its published schedule disagree about their own
+trips.** They name the same stop for the same stop number on 78.5% of matched arrivals;
+on the rest the feed runs one to three places ahead, because its trips contain stops the
+published zip does not list. Both are the agency's own data, published weeks apart.
+
+**4.4% of live trip ids cannot join the schedule at all** without stripping a suffix
+the schedule has never used.
+
+**The honest headline is about us, not the buses.** The published on-time figure moves
+**21 percentage points** on an internal definition — which position in a vehicle's
+trail counts as the arrival — on identical data. Any single number from this project
+should be read with that in mind, which is why both columns are on the method page.
 
 ## Data quality
 
@@ -173,26 +232,45 @@ See [ADR-015](docs/decisions/015-matching-an-arrival-to-its-published-time.md).
   underscore. Stripping the suffix recovers the join in every observed case, and those
   arrivals are marked with lower confidence because the recovery rests on an
   unverified assumption. See [ADR-013](docs/decisions/013-trip-id-join-rule.md).
-- **The agency's own `delay` field is present on 34.8% of stop-time updates**, ranging
-  from 0% between 02:00 and 04:00 to about 70% late evening — so it cannot be used as a
-  fallback without introducing a bias that varies by time of day.
+- **`currentStatus`, which would say `STOPPED_AT`, is present on 11 of 69 vehicles.**
+  It is the field arrival detection would ideally use, and a rule built on it would
+  measure which buses report it rather than how the service ran — which is why
+  detection reads the stop sequence instead (ADR-014).
+- **Service alerts are near-static**: the content of the alerts feed changed on 0 of
+  180 consecutive polls, so it carries no signal at this sampling rate and is archived
+  rather than analysed.
 
-## What I would do next
+## What is not built
 
-**Arrival detection**, which is the piece that turns this pipeline into a reliability
-measure. From a vehicle's trail of positions, decide that it arrived at a stop, then compare
-that against the scheduled time to produce on-time performance, bunching and ghost-trip
-counts.
+**Bunching and ghost buses.** Both are designed and neither is built. Bunching needs
+the same `ontime_events` rows grouped by stop and headway, which is a SQL question
+rather than a new pipeline. Ghost buses — scheduled trips that never ran — are harder
+than they look: a trip absent from the feed is indistinguishable from a trip that ran
+while the collector was asleep, so the claim cannot be made honestly until coverage is
+high and continuous. That is the strongest argument for hosting it.
 
-It was cut for one honest reason: it is the stage where the judgement lives — how close
-counts as "at the stop", what to do when positions skip a stop entirely, how to handle the
-suffixed trip ids above — and a rushed version produces numbers that look authoritative and
-are wrong. Publishing "Route 1 is on time 62% of the time" with a flawed detector is worse
-than publishing nothing.
+**Prediction accuracy**, comparing the agency's own predicted arrival times against the
+observed ones. Deferred for a measured reason, and the reason is the design: keyed on
+`(trip_id, feed_timestamp, stop_sequence)`, trip updates write every stop-time update on
+every poll — about 34,000 rows per snapshot, 4,320 snapshots a day, which is unusable.
+Keyed instead on `(trip_id, stop_sequence, service_date, predicted_arrival_at)` with
+`on conflict do nothing`, a row is written only when the prediction *changes*: about
+6.1M rows a day, measured. Workable, still large, and that dedupe key would be the whole
+design. See [docs/stages/stage-3.md](docs/stages/stage-3.md).
 
-Also next: the trip-updates loader (the tables are designed and sized — 6.1M rows/day with
-the right dedupe key, measured, see [docs/stages/stage-3.md](docs/stages/stage-3.md)), the
-static GTFS loader, and dbt marts on top.
+The agency's own `delay` field is not a shortcut to it: it is present on 34.8% of
+stop-time updates, from 0% overnight to about 70% late evening, so using it as a
+fallback would introduce a bias that varies by time of day.
+
+**A deployment.** The compose stack, the images, the backup job and the security
+properties are written and validated; no host exists yet, so the brief's bar — the
+collector running unattended for 24 hours above 99% coverage — is unmet. On a laptop
+that sleeps it cannot be met, which is the point.
+
+**The decision records marked NEEDS DANIEL'S REVIEW**, and the answers in
+[docs/defence-notes.md](docs/defence-notes.md). Both are deliberate: the markers are a
+to-do list, and answers written by anyone but their author would make the file look
+finished when it is not.
 
 ## Attribution
 
