@@ -27,6 +27,11 @@ import org.springframework.jdbc.core.simple.JdbcClient;
  * depend on Kafka being up.
  */
 @SpringBootTest(properties = {
+        // Without this the application's three pollers start, fetch live Halifax
+        // data and insert rows between this test's two row counts — which is exactly
+        // how it failed in CI: 159 rows before the replay, 233 after, 74 of them
+        // nothing to do with the replay.
+        "bustruth.collector.polling-enabled=false",
         // application.yml deliberately leaves the password without a default;
         // @ServiceConnection overrides the datasource, but the placeholder still has
         // to resolve.

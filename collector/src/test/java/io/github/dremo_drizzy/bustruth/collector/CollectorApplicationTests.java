@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Import;
  * The empty test body is intentional — if startup fails, the test fails.
  */
 @SpringBootTest(properties = {
+        // A build should not reach out to the agency's servers.
+        "bustruth.collector.polling-enabled=false",
         // application.yml gives the password no default on purpose, and
         // @ServiceConnection replaces the datasource anyway, but the placeholder
         // still has to resolve for the context to build.

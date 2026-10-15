@@ -8,11 +8,17 @@ import io.github.dremo_drizzy.bustruth.common.ServiceAlert;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.util.List;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /** Polls the service alerts feed. */
 @Component
+// Polling is on unless switched off. A test that boots this application does not
+// want three schedulers fetching live data and writing rows underneath its
+// assertions, and an operator may want the service up without it collecting.
+@ConditionalOnProperty(prefix = "bustruth.collector", name = "polling-enabled",
+        matchIfMissing = true)
 public class ServiceAlertPoller extends FeedPoller<ServiceAlert> {
 
     private final CollectorProperties.Feed feed;

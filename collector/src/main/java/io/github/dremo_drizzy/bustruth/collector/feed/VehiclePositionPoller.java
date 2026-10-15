@@ -13,11 +13,17 @@ import java.net.http.HttpClient;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /** Polls the vehicle positions feed and writes it to PostgreSQL. */
 @Component
+// Polling is on unless switched off. A test that boots this application does not
+// want three schedulers fetching live data and writing rows underneath its
+// assertions, and an operator may want the service up without it collecting.
+@ConditionalOnProperty(prefix = "bustruth.collector", name = "polling-enabled",
+        matchIfMissing = true)
 public class VehiclePositionPoller extends FeedPoller<VehiclePosition> {
 
     private static final Logger log = LoggerFactory.getLogger(VehiclePositionPoller.class);
