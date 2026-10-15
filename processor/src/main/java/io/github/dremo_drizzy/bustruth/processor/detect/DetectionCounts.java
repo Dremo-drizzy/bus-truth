@@ -8,10 +8,13 @@ package io.github.dremo_drizzy.bustruth.processor.detect;
  * honest way to publish the first number is alongside the second.
  *
  * @param arrivalsDerived  arrivals emitted
- * @param stopsSkipped     stops the vehicle passed without being observed at them,
- *                         because its reported sequence jumped from N to beyond N+1.
- *                         Deliberately not interpolated: a stop nobody saw a bus at is
- *                         not an arrival, and inventing one would be inventing data
+ * @param stopsUnobserved  stops the bus served that the feed never reported. Halifax
+ *                         updates current_stop_sequence about 6.8 times across a
+ *                         38.3-stop trip, so the sequence jumps well past N+1 and the
+ *                         stops between are never mentioned. The bus called at them:
+ *                         this is not missed service, and publishing it as such would
+ *                         be a false claim about a transit agency. Not interpolated
+ *                         either, because an arrival nobody observed is not an arrival
  * @param trailsBroken     places where consecutive positions were further apart than
  *                         maxTrailGap, so nothing was derived across the gap
  * @param positionsIgnored positions with no stop sequence, which carry no information
@@ -19,7 +22,7 @@ package io.github.dremo_drizzy.bustruth.processor.detect;
  */
 public record DetectionCounts(
         int arrivalsDerived,
-        int stopsSkipped,
+        int stopsUnobserved,
         int trailsBroken,
         int positionsIgnored) {
 
@@ -30,14 +33,14 @@ public record DetectionCounts(
     public DetectionCounts plus(DetectionCounts other) {
         return new DetectionCounts(
                 arrivalsDerived + other.arrivalsDerived,
-                stopsSkipped + other.stopsSkipped,
+                stopsUnobserved + other.stopsUnobserved,
                 trailsBroken + other.trailsBroken,
                 positionsIgnored + other.positionsIgnored);
     }
 
     @Override
     public String toString() {
-        return "%,d arrivals derived, %,d stops skipped, %,d trails broken, %,d positions ignored"
-                .formatted(arrivalsDerived, stopsSkipped, trailsBroken, positionsIgnored);
+        return "%,d arrivals derived, %,d stops unobserved, %,d trails broken, %,d positions ignored"
+                .formatted(arrivalsDerived, stopsUnobserved, trailsBroken, positionsIgnored);
     }
 }

@@ -42,6 +42,7 @@ import org.springframework.stereotype.Component;
  * <p>It emits nothing for stops passed between N and M when the sequence jumps. Those
  * stops are counted, not interpolated. A stop nobody observed a bus at is not an
  * arrival, however likely it looks.
+ *
  */
 @Component
 public class PositionBasedDetector implements ArrivalDetector {
@@ -82,7 +83,7 @@ public class PositionBasedDetector implements ArrivalDetector {
         int ignored = trail.size() - usable.size();
 
         List<ArrivalEvent> arrivals = new ArrayList<>();
-        int skipped = 0;
+        int unobserved = 0;
         int broken = 0;
 
         // The first position reporting the current sequence, held until the sequence
@@ -129,11 +130,11 @@ public class PositionBasedDetector implements ArrivalDetector {
 
             // Stops between from and to were passed unobserved. Counted, never
             // interpolated.
-            skipped += Math.max(0, to - from - 1);
+            unobserved += Math.max(0, to - from - 1);
             firstAtSequence = current;
         }
 
-        counts = new DetectionCounts(arrivals.size(), skipped, broken, ignored);
+        counts = new DetectionCounts(arrivals.size(), unobserved, broken, ignored);
         return List.copyOf(arrivals);
     }
 

@@ -46,23 +46,68 @@ Why:
 | | |
 |---|---|
 | arrivals derived | 6,597 |
-| stops skipped (passed unobserved) | 39,725 |
+| stops unobserved (served, never reported by the feed) | 39,725 |
 | trails broken by the gap rule | 40 |
 | positions with no stop sequence | 0 |
 | scheduled stop-events for the trips observed | 37,567 |
 | **share of scheduled stop-events with a derived arrival** | **17.5%** |
+| stops the feed reports per trip, of 38.3 scheduled | **6.8 (17.8%)** |
 
 Confidence: 6,438 HIGH, 117 SUFFIXED_TRIP, 34 SPARSE_TRAIL.
 
-**The cause of the 17.5% is UNRESOLVED.** It was first attributed to the 20-second
-poll interval, and that attribution does not survive arithmetic: 6,597 jumps covering
-46,322 stop positions is an average of seven stops per jump, which at 20-second
-polling would mean a bus passing a stop every 2.9 seconds. Something is making the
-effective interval between usable observations much longer than 20 seconds, and the
-candidate explanations — collection gaps shorter than `MAX_TRAIL_GAP`, which are
-invisible in the trails-broken count, against a genuine sampling limit — lead to
-opposite conclusions about whether better collection would raise the figure. It is
-being measured rather than assumed.
+**The cause of the 17.5% is the feed's reporting granularity, and it is a ceiling.**
+
+Halifax reports `current_stop_sequence` correctly — it agrees exactly with the
+schedule's numbering — but it only *updates* it about seven times across a trip. One
+observed vehicle held "at stop 20" for eight minutes and then reported "at stop 34".
+The twelve stops in between were served and never mentioned.
+
+```sql
+with live as (
+    select regexp_replace(trip_id,'_\d+$','') as trip_id,
+           count(distinct current_stop_sequence) as sequences_reported
+    from raw_vehicle_positions
+    where vehicle_timestamp >= '2026-10-09' and vehicle_timestamp < '2026-10-10'
+    group by 1),
+sched as (
+    select trip_id, count(*) as stops_scheduled
+    from gtfs_stop_times where feed_version = '2026_08_August_20260806' group by 1)
+select round(avg(l.sequences_reported),1) as avg_sequences_the_feed_reports,
+       round(avg(s.stops_scheduled),1)    as avg_stops_in_the_trip
+from live l join sched s using (trip_id);
+--  6.8 sequences reported | 38.3 stops in the trip  ->  17.8% visible
+```
+
+**17.8% of stops are visible in the feed; the detector derives 17.5% of them.** Those
+two figures agreeing to three tenths of a point is the proof: the detector extracts
+very nearly everything the data source exposes, and the shortfall is a property of the
+feed rather than of this code. No change to the poll interval, the collection coverage
+or the rule can raise it — polling five times faster would fetch the same stale value
+five times as often.
+
+Four earlier explanations were tested and discarded, which is worth recording because
+each was plausible:
+
+| theory | disproved by |
+|---|---|
+| the 20-second poll interval is too coarse | vehicles report every 31s, and the feed holds one value for minutes |
+| collection gaps shorter than `MAX_TRAIL_GAP` | dense consecutive archive snapshots show the same jumps |
+| the database held only a fraction of the archive | true and worth fixing, but the same pattern appears in the archive itself |
+| the feed uses a different stop numbering | it matches the schedule exactly, 20 to 20 and 34 to 34 |
+
+A rule rejecting transitions above a plausible traversal rate
+(`MAX_STOPS_PER_MINUTE = 4`) was proposed and **withdrawn after testing**: on real
+data it classified 29 of 38 transitions as errors and broke four passing tests. Its
+premise was right — no bus passes fourteen stops in thirty-one seconds — but its
+conclusion was wrong, because the bus passed them over eight minutes and the feed
+reported it late. Filtering those transitions would discard true arrivals. No
+instantaneous-rate rule and no stale-sequence rule is present, deliberately.
+`MAX_TRAIL_GAP` is unaffected and remains mandatory.
+
+`stopsUnobserved` is named for what it is. Those stops were **served**, not missed; the
+feed simply never reported them. Publishing them as skipped would be a false claim
+about a transit agency, so nothing in the API or the frontend may present them as
+missed service.
 
 Note for the record: the 50% threshold this result was compared against was an
 invented number, not a measured one, and should not on its own block a stage.

@@ -91,13 +91,13 @@ class PositionBasedDetectorTest {
     }
 
     @Test
-    void skipsIntermediateStopsWhenTheSequenceJumps() throws IOException {
+    void countsStopsTheFeedNeverReportedWithoutInventingArrivals() throws IOException {
         List<VehiclePosition> trail = Trails.load("jumping-sequence.json");
         PositionBasedDetector detector = detector();
 
         List<ArrivalEvent> arrivals = detector.detect(trail);
 
-        assertThat(detector.counts().stopsSkipped())
+        assertThat(detector.counts().stopsUnobserved())
                 .describedAs("a 20-second poll misses stops; those are counted, not invented")
                 .isPositive();
         // The skipped stops must not appear as arrivals: every emitted sequence has to
