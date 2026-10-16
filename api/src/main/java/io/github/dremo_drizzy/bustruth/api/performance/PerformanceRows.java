@@ -172,12 +172,26 @@ public final class PerformanceRows {
      *                          produce
      * @param coverage          captured as a share of expected
      * @param arrivalsDerived   arrivals derived for that service date
+     * @param arrivalsMatched   of those, how many found a published time to compare
+     *                          against. Null when the on-time stage has not been run
+     *                          over the date, which is different from zero
+     * @param arrivalsUnmatched arrivals with no published time for that trip and stop
+     * @param implausibleDelaysRefused arrivals whose delay exceeded twelve hours and
+     *                          were therefore counted and dropped rather than averaged:
+     *                          a bus is never twelve hours early, so the row is a
+     *                          service-date labelling fault, not a delay (ADR-019).
+     *                          Published for the same reason every percentage carries
+     *                          its count — a guard nobody can see is the same as no
+     *                          guard
      */
     public record CoverageDay(
             @JsonProperty("service_date") LocalDate serviceDate,
             @JsonProperty("snapshots_captured") int snapshotsCaptured,
             @JsonProperty("snapshots_expected") int snapshotsExpected,
             @JsonProperty("coverage") Share coverage,
-            @JsonProperty("arrivals_derived") int arrivalsDerived) {
+            @JsonProperty("arrivals_derived") int arrivalsDerived,
+            @JsonProperty("arrivals_matched") Integer arrivalsMatched,
+            @JsonProperty("arrivals_unmatched") Integer arrivalsUnmatched,
+            @JsonProperty("implausible_delays_refused") Integer implausibleDelaysRefused) {
     }
 }

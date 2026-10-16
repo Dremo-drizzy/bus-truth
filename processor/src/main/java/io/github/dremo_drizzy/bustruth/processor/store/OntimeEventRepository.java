@@ -1,6 +1,7 @@
 package io.github.dremo_drizzy.bustruth.processor.store;
 
 import io.github.dremo_drizzy.bustruth.common.OntimeEvent;
+import io.github.dremo_drizzy.bustruth.processor.ontime.OntimeCounts;
 import io.github.dremo_drizzy.bustruth.processor.ontime.ScheduledArrival;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -144,6 +145,42 @@ public class OntimeEventRepository {
                         rs.getInt("scheduled_occurrences"),
                         rs.getString("route_id")))
                 .list();
+    }
+
+    /**
+     * Records what a day's run counted and refused.
+     *
+     * <p>Written per service date so the refusals are publishable. A guard that
+     * silently drops three rows is indistinguishable from one silently dropping nine
+     * thousand, and this project's rule is that a figure travels with its counts —
+     * including the figures for rows that were thrown away (ADR-019).
+     */
+    private static final String UPSERT_QUALITY = """
+            insert into ontime_quality
+                (service_date, feed_version, arrivals_considered, matched, unmatched,
+                 unusable_schedule_time, implausible_delays_refused, computed_at)
+            values (:serviceDate, :feedVersion, :arrivalsConsidered, :matched, :unmatched,
+                 :unusableScheduleTime, :implausibleDelaysRefused, clock_timestamp())
+            on conflict (service_date) do update set
+                feed_version = excluded.feed_version,
+                arrivals_considered = excluded.arrivals_considered,
+                matched = excluded.matched,
+                unmatched = excluded.unmatched,
+                unusable_schedule_time = excluded.unusable_schedule_time,
+                implausible_delays_refused = excluded.implausible_delays_refused,
+                computed_at = excluded.computed_at
+            """;
+
+    public void recordQuality(LocalDate serviceDate, String feedVersion, OntimeCounts counts) {
+        jdbcClient.sql(UPSERT_QUALITY)
+                .param("serviceDate", serviceDate)
+                .param("feedVersion", feedVersion)
+                .param("arrivalsConsidered", counts.arrivalsConsidered())
+                .param("matched", counts.matched())
+                .param("unmatched", counts.unmatched())
+                .param("unusableScheduleTime", counts.unusableScheduleTime())
+                .param("implausibleDelaysRefused", counts.implausibleDelay())
+                .update();
     }
 
     /** Clears a range so it can be rebuilt, for the same reason detection does. */

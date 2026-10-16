@@ -109,8 +109,17 @@ class PerformanceIT {
                     primary key (feed_version, stop_id))
                 """).update();
 
-        jdbcClient.sql("truncate table ontime_events, arrival_events, raw_vehicle_positions, "
-                + "gtfs_routes, gtfs_stops, gtfs_feed_versions").update();
+        jdbcClient.sql("""
+                create table if not exists ontime_quality (
+                    service_date date primary key, feed_version text not null,
+                    arrivals_considered integer not null, matched integer not null,
+                    unmatched integer not null, unusable_schedule_time integer not null,
+                    implausible_delays_refused integer not null,
+                    computed_at timestamptz not null default clock_timestamp())
+                """).update();
+
+        jdbcClient.sql("truncate table ontime_events, ontime_quality, arrival_events, "
+                + "raw_vehicle_positions, gtfs_routes, gtfs_stops, gtfs_feed_versions").update();
 
         jdbcClient.sql("""
                 insert into gtfs_feed_versions (feed_version, loaded_at, source_sha256, source_bytes)
@@ -152,6 +161,16 @@ class PerformanceIT {
         // shape of the live data — on 9 October the top three routes by share had
         // eleven, four and two arrivals between them.
         ontime("3", "trip-3-0", "8184", 1, DAY_ONE, 20, true, 11);
+
+        // What the on-time run counted and refused on day one, so coverage can publish
+        // it. Day two has no record, which must read as null rather than zero.
+        jdbcClient.sql("""
+                        insert into ontime_quality
+                            (service_date, feed_version, arrivals_considered, matched,
+                             unmatched, unusable_schedule_time, implausible_delays_refused)
+                        values (:date, :feed, 120, 117, 3, 0, 2)
+                        """)
+                .param("date", DAY_ONE).param("feed", FEED).update();
 
         // Collection record: two days, one of them thin.
         snapshots(DAY_ONE, 300);
@@ -385,11 +404,21 @@ class PerformanceIT {
                 .andExpect(jsonPath("$[0].snapshots_expected").value(4320))
                 .andExpect(jsonPath("$[0].coverage.percent").value(6.9))
                 .andExpect(jsonPath("$[0].arrivals_derived").value(2))
+                // What the run refused is published, not just logged: a guard that
+                // drops two rows must be distinguishable from one dropping two
+                // thousand.
+                .andExpect(jsonPath("$[0].arrivals_matched").value(117))
+                .andExpect(jsonPath("$[0].arrivals_unmatched").value(3))
+                .andExpect(jsonPath("$[0].implausible_delays_refused").value(2))
                 .andExpect(jsonPath("$[1].snapshots_captured").value(50))
                 // A day with snapshots but no derived arrivals is visible as such: the
                 // detector has not been run over it, which is a different failure from
                 // no buses running.
-                .andExpect(jsonPath("$[1].arrivals_derived").value(0));
+                .andExpect(jsonPath("$[1].arrivals_derived").value(0))
+                // And a day the on-time stage never ran over reports null, not zero —
+                // "we did not compare" is not "we compared and found nothing".
+                .andExpect(jsonPath("$[1].arrivals_matched").value(nullValue()))
+                .andExpect(jsonPath("$[1].implausible_delays_refused").value(nullValue()));
     }
 
     @Test

@@ -69,6 +69,17 @@ public class OntimeRun {
      */
     private static final Duration IMPLAUSIBLE_DELAY = Duration.ofHours(12);
 
+    /**
+     * How many refusals are expected, as a share of the day's arrivals.
+     *
+     * <p>Measured: the week 4-10 October produced 3 refusals out of 112,951 matched
+     * arrivals, which is 0.003%. The threshold is set at 0.1% — about thirty times the
+     * observed rate — so ordinary noise is silent and a new labelling fault is loud.
+     * Recorded here rather than chosen quietly, because a guard whose output nobody
+     * reads is the same as no guard (ADR-019).
+     */
+    private static final double REFUSALS_WORTH_A_WARNING = 0.001;
+
     private final OntimeEventRepository repository;
     private final DetectionSettings settings;
 
@@ -108,14 +119,41 @@ public class OntimeRun {
             OntimeCounts dayCounts = compare(arrivals, feedVersion, events);
 
             int written = repository.insertAll(events);
+            repository.recordQuality(day, feedVersion, dayCounts);
             total = total.plus(dayCounts);
 
             log.info("{} against {}: {} — {} rows written",
                     day, feedVersion, dayCounts, written);
+            warnIfRefusingTooMuch(day, dayCounts);
         }
 
         log.info("on-time run complete for {} .. {}: {}", from, to, total);
         return total;
+    }
+
+    /**
+     * Says so, loudly, when the plausibility guard is doing more than mopping up.
+     *
+     * <p>Three refusals in a week is the measured background rate and needs no
+     * attention. A hundred would mean the feed had changed how it labels service days
+     * again, and the figures for that day would be resting on a shrinking subset
+     * without anybody noticing.
+     */
+    private static void warnIfRefusingTooMuch(LocalDate day, OntimeCounts counts) {
+        if (counts.arrivalsConsidered() == 0 || counts.implausibleDelay() == 0) {
+            return;
+        }
+        double share = (double) counts.implausibleDelay() / counts.arrivalsConsidered();
+        if (share >= REFUSALS_WORTH_A_WARNING) {
+            log.warn("{}: refused {} of {} arrivals for an implausible delay ({}%), above the"
+                            + " {}% worth investigating — the feed may have changed how it"
+                            + " labels service days",
+                    day, counts.implausibleDelay(), counts.arrivalsConsidered(),
+                    Math.round(share * 1000) / 10.0, REFUSALS_WORTH_A_WARNING * 100);
+        } else {
+            log.info("{}: refused {} arrivals for an implausible delay, within the measured"
+                    + " background rate", day, counts.implausibleDelay());
+        }
     }
 
     /** Compares one day's arrivals, appending the matched ones to {@code events}. */

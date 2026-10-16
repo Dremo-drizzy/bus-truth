@@ -19,12 +19,30 @@ All figures cover **4–10 October 2026** unless stated otherwise, computed with
 | figure | value | count | never quote without |
 |---|---|---|---|
 | on time | **60.1%** | 65,696 of 109,230 matched | the period, and the day table |
+| on time, weighted by scheduled service | **60.1%** | 907,323 scheduled stop-events | that it agrees with the raw figure to 0.0 points |
 | median delay | +126s | 109,230 | — |
 | early (> 1 min) | 9.2% | 109,230 | — |
 | late (> 5 min) | 30.7% | 109,230 | — |
 | arrivals derived | 113,841 | over 3–10 Oct | 99.2% matched a published time |
 | arrivals unmatched | 887 | 0.8% | counted, never stored with a null delay |
-| implausible delays refused | 3 | — | ADR-019 |
+| implausible delays refused | 3 | of 112,951 matched (0.003%) | published per day via /api/coverage; warns above 0.1% |
+
+## Coverage bias in the headline — tested
+
+| figure | value | note |
+|---|---|---|
+| raw figure, weighted by observed arrivals | 60.1% | |
+| post-stratified by scheduled service | **60.1%** | 0.0-point gap: the raw figure is unbiased by coverage |
+| same rates weighted uniformly per hour | 63.9% | proof the arithmetic is live |
+| peak hours only (16:00–17:00) | 45.6% | mix can move this figure 26 points |
+| evening only (19:00–23:00) | 71.5% | |
+
+The near-cancellation is explained, not assumed: the morning is under-observed by about
+3 points of share per hour (06:00–08:00) and the evening over-observed by 1.3–2.3
+(18:00–22:00). Missing the evening peak would flatter the figure; missing the 79.4%
+early morning penalises it. **Post-stratification fixes mix, not missingness** — no
+reweighting can produce a figure for a stratum with no observations, which is why
+Thursday 8 October still has none.
 
 ## Variation — the frame for everything else
 
@@ -70,11 +88,20 @@ days were watched.
 
 ## By kind of service
 
-| | arrivals | on time | median delay | worst tenth |
-|---|---|---|---|---|
-| Express routes | 3,776 | 48.0% | +245s | +1,296s |
-| All other routes | 105,375 | 60.6% | +124s | +872s |
-| Ferries | 79 | 97.5% | +82s | +178s |
+| | arrivals | on time | **hour-standardised** | median delay | worst tenth |
+|---|---|---|---|---|---|
+| Ferries | 79 | 97.5% | **98.2%** | +82s | +178s |
+| Local routes | 105,375 | 60.6% | **60.5%** | +124s | +872s |
+| Express routes | 3,776 | 48.0% | **55.6%** | +245s | +1,296s |
+
+**The raw express gap is 12.6 points and about 60% of it is the hour effect.** Express
+routes are commuter services running disproportionately at the worst time of day;
+standardised to a common hour mix the gap is **4.9 points**, not 12.6. Quote the
+standardised figure, or quote the interaction instead: express is +7.2 points better
+than local at 06:00 and 33.2 points worse at 09:00.
+
+The ferry figure is not a standardisation artefact — it has only 79 arrivals, so the
+standardised number is the fragile one; the raw 97.5% of 79 is what to quote.
 
 ## Routes
 

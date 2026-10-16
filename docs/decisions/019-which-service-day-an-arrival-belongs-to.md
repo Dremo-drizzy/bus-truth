@@ -111,6 +111,25 @@ an average where nobody would notice it.
 | on time at 00:00 | 17.0% | 74.8% |
 | median delay at 00:00 | −86,358s | +4s |
 
+## The guard publishes what it refuses
+
+A guard whose refusals live only in a log line cannot be checked, and one refusing three
+rows is indistinguishable from one refusing nine thousand. So the counts are persisted
+per service date in `ontime_quality` — arrivals considered, matched, unmatched, unusable
+schedule times and implausible delays refused — rewritten whenever a range is rebuilt,
+and served from `/api/coverage` beside that day's collection figures. The same rule that
+governs every percentage on this site governs the rows thrown away.
+
+A day the on-time stage has never run over reports **null**, not zero: "we did not
+compare" is not "we compared and found nothing".
+
+**The threshold is 0.1% of a day's arrivals**, and it is measured rather than chosen:
+the week produced 3 refusals out of 112,951 matched, or 0.003%, so 0.1% is about thirty
+times the background rate. Below it the run logs the count as ordinary; at or above it
+the run warns that the feed may have changed how it labels service days. Three in a week
+is mopping up; a hundred would mean the figures for that day rest on a shrinking subset.
+
 Revisit if: the feed starts labelling service days per the GTFS-Realtime specification,
 in which case the override stops firing on its own and the counter should go to zero.
-Watch `implausibleDelay` — it going above a handful means a new labelling fault.
+Watch `implausible_delays_refused` in `/api/coverage` — it going above a handful means a
+new labelling fault.

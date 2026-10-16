@@ -444,9 +444,13 @@ public class PerformanceRepository {
                             group by 1)
                         select coalesce(c.day, d.day) as day,
                                coalesce(c.snapshots, 0) as snapshots,
-                               coalesce(d.arrivals, 0) as arrivals
+                               coalesce(d.arrivals, 0) as arrivals,
+                               -- Left joined, so a date the on-time stage has not run
+                               -- over reports null rather than a misleading zero.
+                               q.matched, q.unmatched, q.implausible_delays_refused
                         from captured c
                         full join derived d on d.day = c.day
+                        left join ontime_quality q on q.service_date = coalesce(c.day, d.day)
                         order by 1
                         """)
                 .query((rs, rowNum) -> {
@@ -456,7 +460,10 @@ public class PerformanceRepository {
                             captured,
                             expectedPerDay,
                             Share.of(captured, expectedPerDay),
-                            rs.getInt("arrivals"));
+                            rs.getInt("arrivals"),
+                            rs.getObject("matched", Integer.class),
+                            rs.getObject("unmatched", Integer.class),
+                            rs.getObject("implausible_delays_refused", Integer.class));
                 })
                 .list();
     }

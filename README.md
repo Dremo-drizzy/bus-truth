@@ -154,20 +154,38 @@ On-time performance tracks the road, hour by hour: **79.4% at 06:00 against 45.3
 17:00**, with the median arrival going from 37 seconds late to 267. The mechanism is
 congestion, and it is the strongest pattern in the data.
 
-### 3. The express routes are the least punctual, and the ferry is almost perfect
+### 3. The ferry is the natural experiment
 
-| | arrivals | on time | median delay | worst tenth |
+| | arrivals | on time | hour-standardised | median delay |
 |---|---|---|---|---|
-| Express routes | 3,776 | **48.0%** | +245s | +1,296s |
-| All other routes | 105,375 | 60.6% | +124s | +872s |
-| Ferries | 79 | **97.5%** | +82s | +178s |
+| **Ferries** | 79 | **97.5%** | 98.2% | +82s |
+| Local routes | 105,375 | 60.6% | 60.5% | +124s |
+| Express routes | 3,776 | 48.0% | **55.6%** | +245s |
 
-Express services are 12.6 points worse than the rest of the network and run to double
-the median delay. The three least punctual routes that clear the ranking floor are all
-of them — 136 Farnham Gate Express at 26.3% of 175 arrivals, 158 Woodlawn Express at
-27.5% of 80, 123 Timberlea Express at 30.0% of 90 — which fits the same mechanism:
-they are commuter services on peak-hour road corridors. The ferry, the only mode here
-that does not share a road with cars, is the most punctual thing Halifax Transit runs.
+The ferry runs all day, does not share a road with cars, and is on time **97.5% of 79
+arrivals** against 60.1% for the network. That gap is far too large to be a scheduling
+artefact, and it isolates the mechanism the rest of these findings point at: the thing
+degrading Halifax Transit's punctuality is road traffic.
+
+**The express gap is mostly the hour effect wearing a costume, and most of it does not
+survive the control.** Express routes look 12.6 points worse than everything else, but
+they are commuter services that run disproportionately at the worst time of day.
+Standardising both to the same hour mix closes about 60% of the gap: 48.0% becomes
+55.6%, against 60.5% for local routes — a residual of **4.9 points**, not 12.6.
+
+What does survive is sharper than a mode difference. Express routes are far worse
+**specifically at peak** and slightly **better** off-peak:
+
+| hour | express | local | gap |
+|---|---|---|---|
+| 06:00 | 85.8% of 318 | 78.6% | **+7.2** |
+| 08:00 | 34.7% of 265 | 54.1% | −19.4 |
+| 09:00 | 22.5% of 80 | 55.7% | −33.2 |
+| 17:00 | 30.2% of 640 | 46.5% | −16.3 |
+| 23:00 | 76.7% of 60 | 76.2% | +0.5 |
+
+An express bus is the best thing on the network at six in the morning and the worst at
+nine. That is an interaction with congestion, not a property of the service type.
 
 ### 4. A leaderboard ranked on percentage alone ranks sample sizes
 
@@ -259,6 +277,43 @@ No figure in this project is quoted without its period, and no single number sta
 | Fri 9 Oct | 66.4% | +104s | 14,568 |
 | Sat 10 Oct | **70.0%** | +74s | 17,933 |
 | **week** | **60.1%** | **+126s** | **109,230** |
+
+### Is 60.1% biased by when we were collecting? Checked: no, by 0.0 points
+
+The reasoning that made the day-of-week pattern unpublishable applies to the headline
+too. On-time performance varies 34.1 points by hour, and each day's share of the
+16:00–17:00 peak ranges from 0% to 29.8% — so if the hours we *observed* are not
+distributed like the hours Halifax actually *runs*, then 60.1% is weighted by collector
+uptime rather than by service, and the under-observed worst hour would make it
+optimistic.
+
+So the figure is post-stratified. Each hour's observed on-time rate is reweighted by
+that hour's share of **scheduled** stop-events — 907,323 of them across the week, taken
+from the schedule's own calendar so that only services actually running on each date
+are counted:
+
+| | on time |
+|---|---|
+| weighted by the arrivals we observed | **60.1%** |
+| weighted by Halifax's scheduled service | **60.1%** |
+| **difference** | **0.0 points** |
+
+**The raw figure is not biased by our coverage**, and that is a result rather than an
+assumption — but it is a near-cancellation, not an accident of a safe method, and the
+reason is worth stating. We under-observed the morning by about 3 points of share per
+hour at 06:00, 07:00 and 08:00, and over-observed the evening by 1.3 to 2.3 points at
+18:00 through 22:00. Missing the evening peak would have flattered the figure; missing
+the early morning, which runs at 79.4%, penalises it. The two offset almost exactly.
+
+The arithmetic is live rather than inert: weighting every hour equally gives 63.9%,
+peak hours alone give 45.6%, and evening hours alone 71.5%. Mix can move this number by
+26 points. It happens not to, here.
+
+**This does not fix missingness, only mix.** Post-stratification can reweight the
+strata you observed; it cannot invent the ones you missed. Thursday 8 October has no
+observed arrivals between 07:00 and 18:59 at all, so no reweighting can produce a
+figure for Thursday — which is why the day table carries its coverage caveat and the
+day-of-week pattern is still not published.
 
 ### The hour of the day is the real structure, with an obvious mechanism
 

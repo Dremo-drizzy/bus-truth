@@ -150,6 +150,35 @@ export default function AboutPage() {
         timestamp. Everything the choice changes comes from the other half.
       </p>
 
+      <h2>Is the figure biased by when we were collecting?</h2>
+      <p>
+        It would be easy for it to be. On-time performance varies 34 points across the
+        day, and this project&rsquo;s collection was uneven — so if the hours we watched
+        are not distributed like the hours Halifax runs buses, the headline is weighted
+        by our uptime rather than by the service.
+      </p>
+      <p>
+        So it is checked rather than assumed. Each hour&rsquo;s observed rate was
+        reweighted by that hour&rsquo;s share of <strong>scheduled</strong> service —
+        907,323 scheduled stop-events across the week, counted from the schedule&rsquo;s
+        own calendar. The reweighted figure is <strong>60.1%</strong>, the same as the
+        raw one to within <strong>0.0 points</strong>.
+      </p>
+      <p>
+        That is a near-cancellation rather than luck, and the reason is worth knowing:
+        we under-observed the morning and over-observed the late evening. Missing the
+        evening peak would have flattered the figure; missing the early morning, which
+        runs at 79%, penalises it. The two offset. Weighting every hour equally would
+        give 63.9%, peak hours alone 45.6% — so the mix can move this number by 26
+        points, and it happens not to here.
+      </p>
+      <p>
+        One limit: reweighting fixes the <em>mix</em> of hours observed, not the hours
+        missed entirely. Thursday 8 October has no observed arrivals between 07:00 and
+        18:59, and no amount of reweighting can produce a figure for a day we did not
+        watch.
+      </p>
+
       <h2>How few observations is too few</h2>
       <p>
         One observation moves a percentage by 100/n points. This site publishes an
