@@ -32,6 +32,10 @@ import org.springframework.transaction.annotation.Transactional;
  * a transit agency. Unmatched arrivals are counted and reported instead, which is why
  * the match rate is published with every on-time figure.
  *
+ * <p><b>It will not publish a delay it cannot believe.</b> A delay beyond half a day is
+ * not a late bus, it is a disagreement about which service day the trip belongs to, so
+ * the row is counted and dropped rather than averaged with real ones.
+ *
  * <p><b>It will not guess at a published time it cannot read.</b> A schedule value
  * that will not parse is counted separately from an unmatched one, because the first
  * is a bug here and the second is a disagreement between two sources.
@@ -47,6 +51,23 @@ import org.springframework.transaction.annotation.Transactional;
 public class OntimeRun {
 
     private static final Logger log = LoggerFactory.getLogger(OntimeRun.class);
+
+    /**
+     * Beyond this, a delay is not a delay.
+     *
+     * <p>Half a day, and the figure comes from the schedule rather than taste. A
+     * Halifax service day spans 04:20 to 26:01 — about twenty-two hours — and the
+     * largest delay ever observed in the published week is 4.5 hours. A delay of twelve
+     * hours or more cannot be a late bus; it can only be the service date and the
+     * published time disagreeing about which day the trip belongs to, which is a
+     * labelling fault somewhere upstream (ADR-019).
+     *
+     * <p>{@link io.github.dremo_drizzy.bustruth.processor.detect.ServiceDay} repairs
+     * the cause that was measured — 2,657 of 2,660 cases. This is the guard behind it:
+     * it catches whatever is left, and whatever arrives next, instead of letting a
+     * twenty-four-hour error into an average where nobody would see it.
+     */
+    private static final Duration IMPLAUSIBLE_DELAY = Duration.ofHours(12);
 
     private final OntimeEventRepository repository;
     private final DetectionSettings settings;
@@ -78,7 +99,7 @@ public class OntimeRun {
                 // Loudly, because this is the one failure that would otherwise look
                 // like a day on which no buses ran.
                 log.warn("{}: no published schedule covers this date, skipping", day);
-                total = total.plus(new OntimeCounts(0, 0, 0, 0, 0, 0, 0, 0, 0, 1));
+                total = total.plus(new OntimeCounts(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1));
                 continue;
             }
 
@@ -108,6 +129,7 @@ public class OntimeRun {
         int late = 0;
         int sequenceDisagreements = 0;
         int ambiguous = 0;
+        int implausible = 0;
 
         for (ScheduledArrival arrival : arrivals) {
             if (!arrival.matched()) {
@@ -123,6 +145,14 @@ public class OntimeRun {
             }
 
             Duration delay = Duration.between(scheduled, arrival.observedArrivalAt());
+
+            if (delay.abs().compareTo(IMPLAUSIBLE_DELAY) >= 0) {
+                // Counted, never stored. Publishing it would put a twenty-four-hour
+                // error into the same average as real delays.
+                implausible++;
+                continue;
+            }
+
             boolean tooEarly = delay.compareTo(settings.onTimeEarly()) < 0;
             boolean tooLate = delay.compareTo(settings.onTimeLate()) > 0;
 
@@ -164,7 +194,7 @@ public class OntimeRun {
                     arrival.ambiguous()));
         }
 
-        return new OntimeCounts(arrivals.size(), matched, unmatched, unusable,
+        return new OntimeCounts(arrivals.size(), matched, unmatched, unusable, implausible,
                 onTime, early, late, sequenceDisagreements, ambiguous, 0);
     }
 }

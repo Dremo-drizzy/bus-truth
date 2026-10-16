@@ -291,6 +291,24 @@ class OntimeRunIT {
     }
 
     @Test
+    @DisplayName("a delay beyond half a day is counted and not published")
+    void refusesAnImplausibleDelay() throws Exception {
+        // The real shape of this: a trip published at 24:00:00 whose arrival was
+        // observed a minute before midnight the evening before, so the service date and
+        // the published time disagree by a day. Three such rows survived the
+        // service-day repair in the published week. A bus is never twenty-four hours
+        // early, and storing one would poison every average computed over it.
+        stopTime(IN_FORCE, "4659595", 7, "8191", "24:00:00");
+        arrival("4659595", 7, "8191", "2026-10-14T02:58:48Z", "HIGH");
+
+        OntimeCounts counts = ontimeRun.run(SERVICE_DATE, SERVICE_DATE);
+
+        assertThat(counts.implausibleDelay()).isEqualTo(1);
+        assertThat(counts.matched()).isZero();
+        assertThat(rowCount()).isZero();
+    }
+
+    @Test
     @DisplayName("re-running a range leaves exactly what one run would have left")
     void rerunningIsIdempotent() {
         arrival("4659595", 1, "8184", "2026-10-14T11:02:30Z", "HIGH");
