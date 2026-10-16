@@ -1,5 +1,8 @@
 # 016 — How it is deployed
 
+> **NEEDS DANIEL'S REVIEW** — written by Claude Code; the reasoning is not yet the
+> author's own.
+>
 > **The host choice is Daniel's and is not made here.** The brief leaves it to him on
 > the day; `docs/DEPLOY.md` sets out both options and recommends one. What this record
 > fixes is the shape of the deployment, which is a security question rather than a
