@@ -126,6 +126,29 @@ public final class PerformanceRows {
             @JsonProperty("stops_below_threshold") int stopsBelowThreshold) {
     }
 
+    /**
+     * The whole network for a range, with the days it averages.
+     *
+     * <p>The days are not decoration. On the published week the spread between the
+     * best and worst day is 21 points — wider than the 17.5-point gap between the two
+     * candidate arrival definitions and wider still than the 8.7-point margin of error
+     * — so a single figure for a range, standing alone, implies a precision the data
+     * does not have. Any page showing {@code onTime} shows {@code byDay} beside it.
+     *
+     * @param from the first service date included, so no figure travels without its
+     *             period
+     */
+    public record NetworkSummary(
+            @JsonProperty("from") LocalDate from,
+            @JsonProperty("to") LocalDate to,
+            @JsonProperty("arrivals") int arrivals,
+            @JsonProperty("on_time") Share onTime,
+            @JsonProperty("median_delay_seconds") Integer medianDelaySeconds,
+            @JsonProperty("p90_delay_seconds") Integer p90DelaySeconds,
+            @JsonProperty("by_day") List<Day> byDay,
+            @JsonProperty("by_hour") List<HourOfDay> byHour) {
+    }
+
     /** Everything the stop page draws. */
     public record StopReliability(
             @JsonProperty("stop_id") String stopId,

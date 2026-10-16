@@ -25,10 +25,15 @@ were served and never mentioned. They are counted, never interpolated, and never
 reported as missed service.
 
 Two further honest limits, both measured and both below in [data
-quality](#data-quality): the published figure moves **17.5 percentage points** on our
-own definition of the moment of arrival, carries an **8.7-point** margin of error after
-that definition was calibrated, and the two data sources disagree about stop numbering
-on **21.5%** of arrivals.
+quality](#data-quality): the published figure moves **17.5 percentage points** on our own
+definition of the moment of arrival — a different 17.5 from the coverage share above,
+unfortunately — and carries an **8.7-point** margin of error once that definition was
+settled. The two data sources also disagree about stop numbering on **21.5%** of
+arrivals.
+
+**And the figure worth reading first:** the buses themselves vary by more than any of
+that — 21.3 points between the best and worst day of the week, 34.1 between the best and
+worst hour of the day. See [findings](#findings).
 
 Bunching, ghost buses and prediction accuracy are designed and not built. Prediction
 accuracy needs the trip-updates loader, which is sized and deferred for a measured
@@ -119,36 +124,74 @@ compose file rather than a value in it.
 ## Findings
 
 > **NEEDS DANIEL'S REVIEW** — written by Claude Code to unblock the build. Every number
-> here is measured and reproducible; the choice of what matters is his.
+> here is measured and reproducible from the queries in `docs/decisions/`; the choice of
+> what matters is his.
 
-**Route 63 collapses after 21:00.** On 9 October it ran 29.2% on time across 24
-observed arrivals — the worst of the 54 routes with enough observations to rank — and
-its hourly breakdown shows where: 2 of 4 on time at 18:00, 3 of 6 at 19:00, 2 of 5 at
-20:00, then **0 of 5, 0 of 3 and 0 of 1** through to midnight. The failure is a time of
-day, not a route.
+All figures below cover **4–10 October 2026**: 109,230 arrivals matched to a published
+schedule time, derived from 1.2 million recorded vehicle positions.
 
-**The best and worst routes by percentage are an artefact of how little we saw them.**
-Ranked on share alone, the top three routes that day had **eleven, four and two**
-observed arrivals and the bottom two had one each. Published that way the leaderboard
-would rank routes by their own sample size. This is why no percentage leaves the API
-without its denominator, and why the site says "too few observations" rather than
-printing a number from a handful of rows.
+### 1. The buses vary more than the methodology does
 
-**The agency's realtime feed and its published schedule disagree about their own
-trips.** They name the same stop for the same stop number on 78.5% of matched arrivals;
-on the rest the feed runs one to three places ahead, because its trips contain stops the
-published zip does not list. Both are the agency's own data, published weeks apart.
+| | points |
+|---|---|
+| this project's margin of error after calibration | 8.7 |
+| gap between the two candidate definitions of "arrived" | 17.5 |
+| **spread between the best and worst day of the week** | **21.3** |
+| **spread between the best and worst hour of the day** | **34.1** |
 
-**4.4% of live trip ids cannot join the schedule at all** without stripping a suffix
-the schedule has never used.
+Days went into settling choices worth 8.7 and 17.5 points. The service moves more than
+that between a Tuesday and a Saturday, and more again between 06:00 and 17:00. This is
+the frame every caveat in this project should be read in.
 
-**The honest headline is about us, not the buses.** On the same week's data, the
-on-time figure is **40.9%** or **58.4%** depending on which end of a stop's reporting
-window counts as the arrival — **17.5 points** on an internal definition, with no bus
-behaving differently. The definition was then settled against the agency's own
-`STOPPED_AT` positions, leaving a measured **8.7-point** margin of error. Any single
-number from this project should be read with both figures in mind, which is why both
-are on the method page permanently.
+**They are not like-for-like.** 8.7 and 17.5 are systematic shifts that move every row
+the same way; 21.3 and 34.1 are max-minus-min ranges over seven days and twenty-two
+hours, which grow with the number of samples and are driven by extremes. Compare them
+for scale, not as equivalents.
+
+### 2. When you travel matters more than which route you take
+
+On-time performance tracks the road, hour by hour: **79.4% at 06:00 against 45.3% at
+17:00**, with the median arrival going from 37 seconds late to 267. The mechanism is
+congestion, and it is the strongest pattern in the data.
+
+### 3. The express routes are the least punctual, and the ferry is almost perfect
+
+| | arrivals | on time | median delay | worst tenth |
+|---|---|---|---|---|
+| Express routes | 3,776 | **48.0%** | +245s | +1,296s |
+| All other routes | 105,375 | 60.6% | +124s | +872s |
+| Ferries | 79 | **97.5%** | +82s | +178s |
+
+Express services are 12.6 points worse than the rest of the network and run to double
+the median delay. The three least punctual routes that clear the ranking floor are all
+of them — 136 Farnham Gate Express at 26.3% of 175 arrivals, 158 Woodlawn Express at
+27.5% of 80, 123 Timberlea Express at 30.0% of 90 — which fits the same mechanism:
+they are commuter services on peak-hour road corridors. The ferry, the only mode here
+that does not share a road with cars, is the most punctual thing Halifax Transit runs.
+
+### 4. A leaderboard ranked on percentage alone ranks sample sizes
+
+Queried over a single service date, the three "best" routes had **eleven, four and two**
+observed arrivals and the two "worst" had one each. No percentage leaves the API without
+its denominator, and nothing is ranked below 23 arrivals — see
+[ADR-017](docs/decisions/017-how-few-observations-is-too-few.md).
+
+### 5. The agency's realtime feed and its own schedule disagree about its own trips
+
+They name the same stop for the same stop number on **78.5%** of matched arrivals; on
+the rest the feed runs one to three places ahead, because its trips contain stops the
+published zip does not list. Separately, **4.4%** of live trip ids cannot join the
+schedule at all without stripping a suffix the schedule has never used, and the feed
+labels post-midnight trips with the following calendar date — which put a 24-hour error
+into 2,660 arrivals until it was caught
+([ADR-019](docs/decisions/019-which-service-day-an-arrival-belongs-to.md)).
+
+### 6. The most honest number here is about us
+
+The published figure moves **17.5 points** on an internal definition of what counts as
+arriving, and carries an **8.7-point** margin of error after that definition was
+settled against the agency's own data. Both are published, permanently, beside every
+headline.
 
 ## Data quality
 
@@ -198,27 +241,61 @@ denominator so the frontend can say so instead of printing a number.
 
 ### The published figure, and what it rests on
 
-**58.4% of arrivals were on time across 4–10 October 2026** — 63,991 of 109,584
-arrivals matched to a published time, out of 110,439 derived. 11.1% were more than a
-minute early and 30.5% more than five minutes late.
+**60.1% of arrivals were on time across 4–10 October 2026** — 65,696 of 109,230
+arrivals matched to a published time, out of 113,841 derived over the range. 9.2% were
+more than a minute early and 30.7% more than five minutes late; the median arrival was
+**126 seconds late**.
 
-The week is the figure. A single day is not representative of it:
+No figure in this project is quoted without its period, and no single number stands for
+"Halifax's on-time performance". Here is the week it averages:
 
-| service date | on time | median delay |
-|---|---|---|
-| Sun 4 Oct | 53.6% of 16,359 | +176s |
-| Mon 5 Oct | 60.8% of 13,750 | +121s |
-| Tue 6 Oct | 46.9% of 18,634 | +209s |
-| Wed 7 Oct | 58.5% of 21,818 | +125s |
-| Thu 8 Oct | 57.1% of 6,064 | +101s |
-| Fri 9 Oct | 64.2% of 14,583 | +100s |
-| Sat 10 Oct | 68.3% of 18,376 | +70s |
-| **week** | **58.4% of 109,584** | **+123s** |
+| service date | on time | median delay | arrivals observed |
+|---|---|---|---|
+| Sun 4 Oct | 54.9% | +181s | 16,142 |
+| Mon 5 Oct | 61.8% | +117s | 14,067 |
+| Tue 6 Oct | **48.7%** | +212s | 18,588 |
+| Wed 7 Oct | 59.9% | +126s | 21,832 |
+| Thu 8 Oct | 62.3% | +107s | 6,100 |
+| Fri 9 Oct | 66.4% | +104s | 14,568 |
+| Sat 10 Oct | **70.0%** | +74s | 17,933 |
+| **week** | **60.1%** | **+126s** | **109,230** |
 
-The spread between the best and worst day is **21.4 points** — wider than the
-17.5-point definitional gap and wider still than the 8.7-point margin of error. Quoting
-any single day as "Halifax's on-time performance" would have been quoting a number with
-more day-to-day variation in it than methodology.
+### The hour of the day is the real structure, with an obvious mechanism
+
+The day-to-day spread is partly an artefact of **when** each day was watched — see the
+caveat below — but the hourly pattern is not, and it is the clearest signal in the data:
+
+| hour (Halifax) | on time | median delay | arrivals |
+|---|---|---|---|
+| 06:00 | **79.4%** | +37s | 2,788 |
+| 08:00 | 52.8% | +185s | 4,124 |
+| 12:00 | 59.0% | +143s | 5,483 |
+| **17:00** | **45.3%** | **+267s** | 8,312 |
+| 19:00 | 60.8% | +146s | 7,106 |
+| 22:00 | 79.1% | +52s | 5,370 |
+
+On-time performance collapses through the afternoon and recovers in the evening. The
+worst hour is 17:00 at 45.3%; the best well-observed hour is 06:00 at 79.4%. The
+mechanism is not mysterious — it is traffic — and it means a passenger's experience of
+this network depends more on when they travel than on which route they take.
+
+### Why the day-to-day figures need their coverage read beside them
+
+Collection was not even across the week, and the gaps are not random with respect to
+the hour. Measured: **Thursday 8 October has no observed arrivals at all between 07:00
+and 18:59** — its 62.3% comes almost entirely from evening service, which is the part
+of the day that runs well. The share of each day's arrivals falling in the 16:00–17:00
+peak ranges from **0% to 29.8%**.
+
+Restricted to 07:00–18:59, where six of the seven days have data, the ordering largely
+holds — Saturday 68.5%, Friday 59.8%, Wednesday 54.2%, Monday 53.1%, Sunday 49.6%,
+Tuesday 42.9% — so there is probably a real day effect underneath. But it cannot be
+cleanly separated from coverage with this week's data, so **the day-of-week pattern is
+not published as a finding**. The hourly pattern is, because it is computed across all
+days at once and does not depend on which days were watched.
+
+This is exactly why `/api/coverage` exists, and why the site shows each day's arrival
+count beside its percentage.
 
 ### What "arrived" means here, and the two margins that come with it
 
@@ -302,13 +379,16 @@ A single observation moves a percentage by 100/n points. This project publishes 
 point margin of error, so a figure where one bus swings it further than that is
 describing its own sample size:
 
-- **a percentage is shown** only over **12** or more arrivals
-- **a route or stop is ranked** only over **46** or more — a quarter of the margin,
-  because placing one route above another is a stronger claim than printing its number
+- **a percentage is shown** only over **12** or more arrivals — one figure, so
+  `100/12 = 8.3 < 8.7`
+- **a route or stop is ranked** only over **23** or more — a ranking compares *two*
+  figures and carries both their noise, so `2 × 100/23 = 8.7`
 
-Both are computed from the 8.7 in code and served to the site from `/api/meta`, so the
-floors cannot drift from the figure that justifies them. Over a week they cost little:
-75 of the 81 observed routes clear 46, and the median route has 302 arrivals. See
+Nothing in that is chosen: the only difference between the two floors is how many
+percentages the claim rests on. Both are computed from the 8.7 in code and served to
+the site from `/api/meta`, so they cannot drift from the figure that justifies them.
+Over a week they cost little — 79 of the 81 observed routes clear 12 and 78 clear 23,
+with a median of 302 arrivals per route. See
 [ADR-017](docs/decisions/017-how-few-observations-is-too-few.md).
 
 ### The two sources number the same trip's stops differently

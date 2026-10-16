@@ -68,6 +68,13 @@ export default function RouteDetailPage() {
         <span className="badge big">{routeLabel(route)}</span>{" "}
         {route.route_long_name}
       </h1>
+      {/* The period travels with the figures. A percentage without the days it covers
+          invites being quoted as "this route's on-time performance", and the
+          day-to-day spread across a week is wider than this project's own margin of
+          error. */}
+      <p className="lede">
+        {range.from} to {range.to}
+      </p>
 
       <section className="cards">
         <div className="card">

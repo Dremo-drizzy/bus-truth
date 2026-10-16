@@ -163,15 +163,17 @@ export default function AboutPage() {
           below that you will see &ldquo;too few observations&rdquo;
         </li>
         <li>
-          a route or stop is <strong>ranked</strong> only over <strong>46</strong> or
-          more, a quarter of the margin, because placing one route above another is a
-          stronger claim than printing its number
+          a route or stop is <strong>ranked</strong> only over <strong>23</strong> or
+          more, because a ranking compares two percentages and carries both their
+          noise
         </li>
       </ul>
       <p>
-        Over the published week that costs little: 75 of the 81 observed routes clear
-        the ranking floor, and the median route has 302 arrivals. On a single day it
-        would cost most of them, which is one reason the default range is a week.
+        Neither number is chosen: the only difference between them is how many figures
+        the claim rests on. Over the published week they cost little — 78 of the 81
+        observed routes can be ranked, and the median route has 302 arrivals. On a
+        single day they would exclude most of them, which is one reason the default
+        range is a week.
       </p>
 
       <h2>Matching an arrival to the schedule</h2>

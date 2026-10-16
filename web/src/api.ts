@@ -79,6 +79,25 @@ export type RouteDetail = Route & {
   stops_below_threshold: number;
 };
 
+/**
+ * The network for a range, with the days it averages.
+ *
+ * `by_day` is not optional decoration. Across the published week the spread between
+ * the best and worst service date is about 21 points — wider than any methodological
+ * choice in this project — so a single figure standing alone implies a precision the
+ * data does not have. Anywhere `on_time` is shown, the days are shown too.
+ */
+export type NetworkSummary = {
+  from: string;
+  to: string;
+  arrivals: number;
+  on_time: Share;
+  median_delay_seconds: number | null;
+  p90_delay_seconds: number | null;
+  by_day: Day[];
+  by_hour: HourOfDay[];
+};
+
 export type StopReliability = {
   stop_id: string;
   stop_name: string | null;

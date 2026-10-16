@@ -87,6 +87,10 @@ What I gave up:
   proud of. The honest version: the constraint was measured, the trade was named, and
   the irreplaceable data kept being collected.
 
-Revisit if: B gets built, which is a day and a half whenever there is a day and a half —
-at which point the host collects everything and the laptop stops being part of the
-system. That is the intended end state and this record is a waypoint, not a design.
+Revisit: **after 27 October**, on the senior reviewer's ruling. B is a day and a half
+out of the nine remaining before then, it has a known blocker, and — the deciding point
+— **it moves no published number.** Deferring it is the whole decision: the scope, the
+estimate and the blocker are the deliverable here, not the code. Whenever there is a
+day and a half, B gets built, the host collects everything and the laptop stops being
+part of the system. That is the intended end state; this record is a waypoint, not a
+design.

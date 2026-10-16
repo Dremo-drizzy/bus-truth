@@ -279,6 +279,12 @@ it. It is concentrated by **place**: terminals, bays and park-and-rides. The top
 are Fall River Park and Ride, a Marketplace Drive bay, Novalea Drive, and a Barrington
 Street bay.
 
+That concentration is itself a fact about the feed, not merely a caveat about our
+sample: **`STOPPED_AT` appears where buses stop long enough to be noticed.** 45 stops of
+1,571 ever report it, 27 of them terminals or bays. The field is not a reliable
+assertion that a bus is at a stop — it is a trace of dwell time, which is why it works
+as ground truth for calibration and fails as a detection rule.
+
 ### Which way the skew runs, which is the part that matters
 
 The reviewer expected the skew to mean the true bias is *worse* than 61 seconds. It runs

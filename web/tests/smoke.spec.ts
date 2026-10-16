@@ -34,6 +34,7 @@ const fixture = (name: string): unknown =>
 
 const COVERAGE = fixture("coverage.json");
 const META = fixture("meta.json");
+const SUMMARY = fixture("summary.json");
 const ROUTES = fixture("routes.json");
 const ROUTES_PERFORMANCE = fixture("routes-performance.json");
 const ROUTE_ONE = fixture("route-1.json");
@@ -81,6 +82,7 @@ async function serveApi(page: Page) {
   if (LIVE_API) return;
   await page.route("**/api/coverage", (route) => json(route, COVERAGE));
   await page.route("**/api/meta", (route) => json(route, META));
+  await page.route("**/api/performance/summary*", (route) => json(route, SUMMARY));
   await page.route("**/api/vehicles/live", (route) => json(route, freshLive()));
   await page.route("**/api/routes/performance*", (route) => json(route, ROUTES_PERFORMANCE));
   await page.route("**/api/routes/*/performance*", (route) => json(route, ROUTE_ONE));
@@ -165,6 +167,18 @@ test("the leaderboard shows a real percentage beside its arrival count", async (
   await expect(table).toBeVisible();
   await expect(table.locator("tbody tr").first()).toContainText(/%/);
   await expect(table.locator("tbody tr").first()).toContainText(/of [\d,]+/);
+});
+
+test("the leaderboard leads with the week and the days inside it", async ({ page }) => {
+  await serveApi(page);
+  await page.goto("/routes");
+
+  // No page may present a single percentage as "Halifax's on-time performance": the
+  // figure appears with its period, and the days it averages appear beside it.
+  await expect(page.getByRole("heading", { name: /on time, 2026-\d\d-\d\d to/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /by hour of the day/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /by service date/i })).toBeVisible();
+  await expect(page.getByText(/points.{0,40}between the best and worst/i)).toBeVisible();
 });
 
 test("a thin route is shown apart rather than ranked", async ({ page }) => {

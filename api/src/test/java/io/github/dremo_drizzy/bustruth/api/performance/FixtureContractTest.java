@@ -71,6 +71,8 @@ class FixtureContractTest {
                 new Fixture("coverage.json",
                         types.constructCollectionType(List.class, CoverageDay.class)),
                 new Fixture("meta.json", types.constructType(MetaController.Meta.class)),
+                new Fixture("summary.json",
+                        types.constructType(PerformanceRows.NetworkSummary.class)),
                 new Fixture("vehicles-live.json",
                         types.constructType(VehicleFeatureCollection.class)));
     }

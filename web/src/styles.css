@@ -428,3 +428,74 @@ tbody a:hover {
   color: var(--down);
   background: var(--down-surface);
 }
+
+/* ---- the network overview ---- */
+
+/* Two panels side by side on a desktop, stacked on a phone. The figure never appears
+   without the days beside it, which is the point of the component. */
+.overview {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  margin: 1rem 0 1.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--sunk);
+}
+
+.overview h2 {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.overview p {
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+}
+
+.daybars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.daybars li {
+  display: grid;
+  /* Fixed label and value columns so the bars share one baseline and the eye can
+     compare them; the track takes whatever is left. */
+  grid-template-columns: 4.6rem 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+}
+
+.daybar-label {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.daybar-track {
+  height: 0.55rem;
+  border-radius: 999px;
+  background: #e3e7ec;
+  overflow: hidden;
+}
+
+.daybar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.daybar-value {
+  white-space: nowrap;
+}

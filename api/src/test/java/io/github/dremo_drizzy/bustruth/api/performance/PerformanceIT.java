@@ -339,6 +339,42 @@ class PerformanceIT {
     }
 
     @Test
+    @DisplayName("GET /api/performance/summary carries the period and every day in it")
+    void networkSummary() throws Exception {
+        // The whole point of this endpoint: a figure for a range never travels without
+        // the days it averages, because the day-to-day spread in the real data is
+        // wider than any methodological choice in the project.
+        mockMvc.perform(get("/api/performance/summary")
+                        .param("from", DAY_ONE.toString()).param("to", DAY_TWO.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.from").value(DAY_ONE.toString()))
+                .andExpect(jsonPath("$.to").value(DAY_TWO.toString()))
+                // 14 of route 1, 100 of route 10, 2 of route 2, 1 of route 3.
+                .andExpect(jsonPath("$.arrivals").value(117))
+                .andExpect(jsonPath("$.on_time.count").value(98))
+                .andExpect(jsonPath("$.on_time.of").value(117))
+                .andExpect(jsonPath("$.by_day.length()").value(2))
+                .andExpect(jsonPath("$.by_day[0].service_date").value(DAY_ONE.toString()))
+                .andExpect(jsonPath("$.by_day[1].service_date").value(DAY_TWO.toString()))
+                // Day two is route 1's four late arrivals and nothing else.
+                .andExpect(jsonPath("$.by_day[1].arrivals").value(4))
+                .andExpect(jsonPath("$.by_day[1].on_time.count").value(0));
+    }
+
+    @Test
+    @DisplayName("an empty range summarises as zeros with a null percentage")
+    void networkSummaryOverAnEmptyRange() throws Exception {
+        LocalDate quiet = LocalDate.of(2026, 1, 1);
+
+        mockMvc.perform(get("/api/performance/summary")
+                        .param("from", quiet.toString()).param("to", quiet.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.arrivals").value(0))
+                .andExpect(jsonPath("$.on_time.percent").value(nullValue()))
+                .andExpect(jsonPath("$.by_day.length()").value(0));
+    }
+
+    @Test
     @DisplayName("GET /api/coverage publishes the project's own gaps")
     void coverage() throws Exception {
         mockMvc.perform(get("/api/coverage"))

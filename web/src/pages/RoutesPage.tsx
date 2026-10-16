@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { RoutePerformance } from "../api";
 import { routeLabel, useApi } from "../api";
 import { Delay, Empty, Failed, Loading, ShareInline } from "../components/Figures";
+import { NetworkOverview } from "../components/NetworkOverview";
 import { rangeQuery, useRange } from "../range";
 
 /**
@@ -36,6 +37,8 @@ export default function RoutesPage() {
         five minutes late, measured against the schedule published for that day. Every
         percentage shows the number of arrivals behind it.
       </p>
+
+      <NetworkOverview query={query} />
 
       {ranked.length === 0 && thin.length === 0 && (
         <Empty>
