@@ -1,231 +1,286 @@
-# Deploying Bus Truth
+# Deploying Bus Truth to Render
 
-Everything here is built and validated. **Nothing has been deployed** — the host, the
-accounts and the domain are Daniel's to choose, and the brief leaves the choice to him
-on the day. This is what to run once that choice is made.
+Written to be followed in six months having forgotten all of this. Everything in
+`render.yaml` is created by Render; everything in this file is done by hand, in order.
 
-## The costed plan — one host, waiting on approval
+**Nothing has been deployed yet.** Steps 1–10 are the whole job — about 40 minutes, of
+which 30 is waiting for a restore.
 
-**Nothing has been created.** No account, no server, no volume. This section is the
-plan and the sizing; the spend is Daniel's to approve.
+## What you are building
 
-### What has to be hosted, measured rather than guessed
+```
+   bus-truth-web          static site, free      the five React pages
+         │  fetches https://bus-truth-api.onrender.com/api/...
+   bus-truth-api          web service, free      the eight endpoints, from Docker
+         │  private network, same region
+   bus-truth-db           Postgres, free         a copy of the derived tables
+```
 
-| | measured now | growth at full coverage |
+The collector is **not** deployed and is not in the blueprint. It keeps running on your
+laptop, archiving to `data/`. The cloud holds a read-only copy of the derived tables and
+nothing that cannot be rebuilt by replaying the archive.
+
+## Two things to know before you start
+
+**The free database expires 30 days after you create it.** Render then allows a 14-day
+grace period to upgrade to a paid plan, after which it deletes the database and
+everything in it. Put a reminder in your calendar the day you create it. Nothing
+irreplaceable is lost when it goes — the archive is on your machine and every cloud
+table can be rebuilt from it — but the site stops working. See
+[ADR-016](decisions/016-how-it-is-deployed.md).
+
+**Free web services sleep.** After roughly 15 minutes without traffic the API spins
+down, and the next request waits for it to start — about 12 seconds, measured locally.
+Someone who does not know that will think the site is broken. Step 10 is where you
+decide whether that is worth $7/month.
+
+---
+
+## 1. Push the blueprint
+
+```bash
+git checkout r8-ship
+git push origin r8-ship
+```
+
+`render.yaml` has to be on the branch you point Render at. Everything below assumes
+`r8-ship`; if it has been merged by then, use `main`.
+
+## 2. Create everything from the blueprint
+
+Render dashboard: **New → Blueprint**, choose the `bus-truth` repository, choose the
+branch, **Apply**.
+
+Render creates three services plus a database and starts building. Two will not be
+healthy yet, and that is expected:
+
+- `bus-truth-db` — ready in a minute or so
+- `bus-truth-api` — builds the Docker image (5–10 minutes the first time), then starts
+  and **returns errors**, because the database is empty
+- `bus-truth-web` — builds in 1–2 minutes and succeeds, but every page shows an error,
+  because the API has nothing to answer with
+
+If Render rejects `plan: free` on anything, the free plan has been renamed since this
+was written: pick the free option in the dashboard for that service and carry on.
+
+## 3. Note the two connection strings
+
+Dashboard → `bus-truth-db` → **Connections**:
+
+- **Internal Database URL** — used automatically by the API. You never need to touch it.
+- **External Database URL** — what you restore through in step 4. Looks like
+  `postgres://bustruth:...@dpg-xxxx-a.virginia-postgres.render.com/bustruth`.
+
+The external one is a credential. It does not go into a file in this repository, a
+commit message, or a chat window.
+
+## 4. Load the data — the one manual step that matters
+
+The cloud database starts empty **and the API cannot create its own schema**: Flyway
+belongs to the collector, which is not deployed. The restore brings the tables and the
+figures together.
+
+Four sets of tables go up. Raw positions do not — 1.4 million rows that nothing in the
+cloud reads.
+
+```bash
+cd ~/bus-truth                      # wherever the repo lives
+export PGPASSWORD=$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)
+
+pg_dump -h localhost -p 55432 -U bustruth -d bustruth \
+  --no-owner --no-privileges --clean --if-exists \
+  -t 'gtfs_*' -t arrival_events -t ontime_events -t ontime_quality \
+  -f bustruth-derived.sql
+
+ls -lh bustruth-derived.sql          # expect roughly 60-80 MB
+```
+
+What is in it, measured on the current database:
+
+| table | rows | size |
 |---|---|---|
-| archive — trip updates | **15.0 GB** (74,313 snapshots, mean 202.4 kB) | **~840 MB/day** |
-| archive — alerts | 709 MB (74,574 snapshots, mean 9.5 kB) | ~39 MB/day |
-| archive — vehicle positions | 285 MB (75,124 snapshots, mean 3.8 kB) | ~16 MB/day |
-| **archive total** | **~16 GB** | **~910 MB/day ≈ 27 GB/month** |
-| PostgreSQL | 353 MB (1.15M position rows, 16 partly-collected days) | ~250 MB/day ≈ 7.5 GB/month |
+| `gtfs_stop_times` | 324,165 | 64 MB |
+| `ontime_events` | 112,951 | 2.6 MB |
+| `arrival_events` | 113,841 | 1.9 MB |
+| `gtfs_trips` | 9,239 | 1.8 MB |
+| `gtfs_stops`, `gtfs_routes`, `gtfs_calendar*`, `gtfs_feed_versions`, `ontime_quality` | smaller | < 1 MB |
 
-A year of uninterrupted collection is therefore **roughly 330 GB of archive and 90 GB
-of database**. Those two numbers decide the hosting, and they decide it before price
-does.
-
-### What the sizing rules out immediately
-
-- **The brief's option B — a managed PostgreSQL tier — is dead, and not only the free
-  one.** Supabase's free tier is 500 MB of database storage and Neon's is about 0.5 GB
-  per project; the database is already **353 MB** after sixteen partly-collected days
-  and grows about **7.5 GB a month**. It would exhaust either free tier within the first
-  week of real collection — and Supabase's Pro tier, at $25 a month, tops out at 8 GB
-  per project, which is roughly one month of growth. Paying more than the whole VPS
-  costs to run out of room by Christmas is not a trade worth making.
-  ([Supabase pricing](https://www.activepieces.com/blog/supabase-pricing-free-tier-limits-pro-costs-egress.md),
-  [Neon pricing](https://neon.com/pricing) — the free storage figure is from
-  third-party summaries, as Neon's own page did not state it in the text I could
-  retrieve.)
-- **Archiving all three feeds on any affordable host is a dead end.** At 910 MB a day,
-  a 160 GB disk is about 143 days and a 40 GB one is six weeks. This is what ADR-018
-  settles, and it is why the recommendation below needs no block-storage volume at
-  all.
-
-### The feed that drives the bill, and the ruling on it
-
-**94% of the archive is trip updates**, at a mean 202.4 kB a snapshot against 3.8 kB
-for vehicle positions. They are also the agency's own *predictions* and the only
-possible basis for R9 — and October 2026's predictions cannot be collected in December.
-
-**They keep being collected. Nothing is paused and nothing is deleted** (the senior
-reviewer's ruling, and it is right). But the arithmetic rules out archiving them on the
-host: 130 GB of usable disk at 910 MB a day is **about 143 days**, before PostgreSQL
-and before the existing 16 GB. With only positions and alerts — 6% of the bytes, about
-55 MB a day — the same disk lasts over five years.
-
-So the host archives positions and alerts, and trip updates stay on the laptop until
-the archive can be written to object storage. That is scoped at a day and a half,
-mostly because the archive is not write-only — `ArchiveBackfill` replays it off the
-filesystem, so a remote archive needs a remote read path or replay silently stops
-working. Over the reviewer's one-day threshold, so it waits.
-[ADR-018](decisions/018-where-the-archive-lives-once-it-is-hosted.md) has the estimate,
-the fallback and what the fallback costs. The switch is already built:
-`bustruth.collector.trip-updates.enabled=false` on the host.
-
-### The host: Hetzner CPX31 in Ashburn, not Germany
-
-The first version of this plan put the site in Nuremberg, which was wrong for a reason
-that has nothing to do with money: **this is a Halifax transit site built for Canadian
-employers to look at.** Serving it from Germany adds roughly 100 ms to every request
-for exactly the audience that matters.
-
-Verified from Hetzner's own plan pages: the **CX** line and the EU **CPX** plans exist
-only in `FSN1`/`NBG1`/`HEL1` (and `SIN1`). The North American locations are `ASH1`
-(Ashburn, Virginia) and `HIL1` (Hillsboro, Oregon), and they carry a separate CPX
-series:
-
-| plan | vCPU | RAM | NVMe | included traffic | locations |
-|---|---|---|---|---|---|
-| CPX21 | 3 AMD | 4 GB | 80 GB | 2 TB | HIL1, ASH1 |
-| **CPX31** | **4 AMD** | **8 GB** | **160 GB** | **3 TB** | **HIL1, ASH1** |
-| CPX41 | 8 AMD | 16 GB | 240 GB | 4 TB | HIL1, ASH1 |
-
-**CPX31 in ASH1** is the plan: four AMD vCPUs, 8 GB, and a 160 GB NVMe disk — double
-the disk of the EU CX33 this replaces, about 1,000 km from Halifax instead of 6,000.
-The traffic allowance drops from 20 TB to 3 TB, which this project will not approach: a
-GeoJSON response for 240 vehicles is about 40 kB, so 3 TB is tens of millions of map
-refreshes a month.
-
-No separate volume is needed under ADR-018. At ~55 MB of archive a day the 160 GB disk
-is years of runway, and a volume can be added later without moving anything.
-
-### The price: pending, and deliberately not guessed
-
-**The monthly figure is not obtainable from the public site, and I am not going to
-average third-party guesses into a number that looks like a fact.** Every amount on
-Hetzner's Cost-Optimized and Regular Performance pages renders empty — `from /month`
-with nothing in it — and every plan simultaneously reads "currently unavailable". Both
-symptoms have one cause: the price and stock data load only after their cookie banner
-is accepted, so neither is a finding about availability. The senior reviewer checked
-this independently in a browser and got the same result.
-
-Third-party guides disagree with each other (€3.99, €4.35, $7.69 for comparable plans)
-and several report both a 2026 price rise and a renaming of the CX line, so a searched
-figure may be describing a retired plan.
-
-**Where the real number comes from:** signing up is free, and the console and the
-Hetzner Cloud API both show live prices per plan per location. Three things to read
-there, which takes a minute:
-
-1. **CPX31 in ASH1**, monthly, including VAT and any IPv4 surcharge
-2. whether an IPv4 address is charged separately
-3. whether CPX31 is actually orderable in ASH1 today
-
-My expectation is that it lands near the low tens of euros a month. **That is an
-expectation, not a quote**, and no figure goes in the README until it is read from the
-console.
-
-## The two options the brief allows
-
-| | A — one small VPS | B — managed PostgreSQL plus a VPS |
-|---|---|---|
-| cost | about €10/month | free database tier, about €5/month for the VM |
-| operating | one machine, one compose file | two providers, two dashboards |
-| the database | yours to back up and patch | backed up and patched for you |
-| the risk | a disk failure takes everything | the free tier's limits are someone else's decision |
-
-**A is the better fit for this project**, for one reason that has nothing to do with
-cost: the archive and the database have to live together. The archive is the
-irreplaceable asset — 150,000+ snapshots, and everything else is derived from it — and
-replaying a week of it into the database takes hours. Splitting the two across
-providers means the replay crosses the internet. `infra/docker-compose.prod.yml`
-implements A.
-
-For B, point `POSTGRES_HOST` and `POSTGRES_PORT` at the managed instance and drop the
-`postgres` and `backup` services. Nothing else changes, which is the point of those
-two variables.
-
-## Before the first deploy
-
-1. **A host with Docker.** Two things need to be true of it and they are easy to get
-   wrong:
-   - its firewall allows only 22, 80 and 443 inbound
-   - it is not the same machine as anything else that matters
-2. **`.env` on the host**, beside the clone, containing `POSTGRES_USER`,
-   `POSTGRES_PASSWORD` and `POSTGRES_DB`. Generate the password; do not reuse the
-   local one.
-   ```bash
-   cp .env.example .env
-   # POSTGRES_PASSWORD=$(openssl rand -base64 32) — then chmod it
-   chmod 600 .env
-   ```
-   `.env` is git-ignored and must stay that way. No password has a default anywhere in
-   this repo, so a missing variable fails loudly at startup rather than quietly
-   starting with a known one.
-3. **TLS in front of port 80.** The compose stack serves plain HTTP on 80; put Caddy
-   or nginx with Let's Encrypt in front before pointing a domain at it.
-
-## Running it
+Restore it through the **External** URL from step 3:
 
 ```bash
-git clone https://github.com/Dremo-drizzy/bus-truth.git
-cd bus-truth
-# create .env as above, then:
-docker compose -f infra/docker-compose.prod.yml up -d --build
+psql "postgres://bustruth:...@dpg-xxxx-a.virginia-postgres.render.com/bustruth" \
+  -v ON_ERROR_STOP=1 -f bustruth-derived.sql
 ```
 
-That builds three images from source and starts five services. The collector begins
-polling within a minute; the site is on port 80 immediately, with the live map empty
-until the first positions land.
+**Expect 10–30 minutes.** Almost all of it is `gtfs_stop_times`, going over the public
+internet to Virginia, so your upstream speed decides. It prints a line per object; the
+`DROP ... IF EXISTS` notices at the start are normal on a first run.
 
-The schedule is not loaded automatically, because loading it is a decision about which
-publication is in force (ADR-007, ADR-015):
+If it fails with a disk or quota error, the free database is smaller than the dump.
+`gtfs_stop_times` is the table to thin — the API only reads `feed_version`, `trip_id`,
+`stop_sequence`, `stop_id`, `arrival_time` and `departure_time`.
+
+Confirm it arrived:
 
 ```bash
-python scripts/load_gtfs.py        # needs POSTGRES_* in the environment
+psql "<external url>" -c "
+  select 'ontime_events' t, count(*) from ontime_events
+  union all select 'arrival_events', count(*) from arrival_events
+  union all select 'gtfs_stop_times', count(*) from gtfs_stop_times;"
 ```
 
-Then derive arrivals and punctuality for a date range:
+Then delete the dump — it holds no credentials but it is 70 MB of clutter:
+`rm bustruth-derived.sql`.
+
+## 5. Restart the API
+
+Dashboard → `bus-truth-api` → **Manual Deploy → Restart service**. It started against an
+empty database; after the restart the health check passes and the endpoints have data.
+
+## 6. Close the database to the internet
+
+This is the project's one hard requirement, and the restore in step 4 is the only reason
+the database was ever reachable from outside.
+
+Dashboard → `bus-truth-db` → **Access Control**. Remove `0.0.0.0/0` if present, and
+either leave the allowed list **empty** (no external access at all) or restrict it to
+your own IP if you expect to restore again.
+
+The API is unaffected — it reaches the database over Render's private network with the
+internal URL, which access control does not govern.
+
+**Prove it, the way it was proved locally:**
 
 ```bash
-docker compose -f infra/docker-compose.prod.yml run --rm \
-  -e POSTGRES_HOST=postgres -e POSTGRES_PORT=5432 \
-  collector java -jar /app/app.jar --from=2026-10-04 --to=2026-10-10
+# Locally this printed exactly one published port and nothing else:
+#   $ docker compose -f infra/docker-compose.prod.yml config | grep published
+#   web: published: "80"
+
+# On Render the equivalent is that the external URL stops answering:
+psql "postgres://bustruth:...@dpg-xxxx-a.virginia-postgres.render.com/bustruth" \
+  -c "select 1" ; echo "exit=$?"
+# Expect a connection refused or timeout, and a non-zero exit.
+
+# And the site still works, which is what proves the private path is the one in use:
+curl -s -o /dev/null -w "%{http_code}\n" https://bus-truth-api.onrender.com/api/coverage
+# Expect 200.
 ```
 
-## What makes this safe to put on the internet
+Paste both outputs into the pull request. A claim that a database is unreachable is
+worth nothing without the failed connection beside it.
 
-**PostgreSQL publishes no port.** Not `127.0.0.1:5432`, not a firewalled 5432 —
-nothing. It is reachable only as the host `postgres` on the private compose network,
-by the collector, the api and the backup job. The api publishes nothing either; nginx
-proxies to it over the same network. **Port 80 on the `web` container is the only door
-into the stack.**
+## 7. Secrets
 
-This is a correction of a real mistake, not a precaution. The streaming version of
-this project published 5432 and an **unauthenticated Kafka UI on 8080**: anyone who
-found the host could read and write the database and the queue. Running that compose
-file on a public VPS would have been a breach within hours.
+**There are none to set.** Every value the API needs comes either from the database
+Render created (`DATABASE_URL`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`) or
+from the other service (`BUSTRUTH_API_WEB_ORIGIN`), and `render.yaml` wires all of them
+with `fromDatabase` and `fromService`.
 
-Three more things the production file does and the development one does not:
+If you later add something secret — an API key, a password on the processor — declare it
+in `render.yaml` as `sync: false` and set the value in **Dashboard → service →
+Environment**. Never as a literal in the file.
 
-- **every service runs as a non-root user** inside its image
-- **`restart: unless-stopped` everywhere**, and `depends_on: service_healthy` for
-  anything that talks to the database, because Flyway against a still-initialising
-  PostgreSQL fails and restart-loops
-- **a nightly `pg_dump`** at 03:15 UTC, gzipped, kept a fortnight, written to a
-  temporary name and renamed on success — an interrupted dump is not a backup, and a
-  corrupt backup that looks healthy is worse than none
+Worth one look by eye: Dashboard → `bus-truth-api` → **Environment** should show
+`DATABASE_URL` as coming *from the database*, not as a typed value.
 
-## Verifying a deploy
+## 8. Verify all eight endpoints
 
 ```bash
-curl -s localhost/api/coverage | head          # the pipeline's own record
-curl -s localhost/api/vehicles/live | head     # positions arriving
-docker compose -f infra/docker-compose.prod.yml ps   # all healthy
-ls -la infra/backups/                          # a dump within 24 hours
+API=https://bus-truth-api.onrender.com
+R="from=2026-10-04&to=2026-10-10"
+
+for p in \
+  "/api/vehicles/live" \
+  "/api/routes" \
+  "/api/routes/performance?$R" \
+  "/api/routes/1/performance?$R" \
+  "/api/stops/8640/reliability?$R" \
+  "/api/coverage" \
+  "/api/meta" \
+  "/api/performance/summary?$R" ; do
+  printf "%-3s %s\n" "$(curl -s -o /dev/null -w '%{http_code}' "$API$p")" "$p"
+done
 ```
 
-The brief's bar for done is **the collector running unattended for 24 hours with
-coverage above 99%.** `/api/coverage` is the measurement: it reports snapshots
-captured against the 4,320 a day of 20-second polling produces. Below 99% means the
-collector restarted or the host throttled it, and the figures for that day rest on
-part of the day.
+All eight must be `200`. The first will be slow if the service was asleep.
 
-## What is not done
+`/api/vehicles/live` returning an empty feature collection is **correct**: the collector
+is not deployed, so nothing writes live positions, and the map shows its "no recent
+data" notice. That is one of the three states it exists to distinguish.
 
-- **Nothing is deployed.** No host exists yet.
-- **No domain, no TLS certificate.** Both wait on the host.
-- **The 24-hour unattended run has not happened**, so the coverage-above-99%
-  requirement is unverified. It cannot be checked from a laptop that sleeps — which is
-  precisely why collection has been at 73.7% here, and why hosting it is the last
-  stage rather than an optional one.
+## 9. Verify all five pages
+
+Open the static site URL and check each renders numbers rather than an error:
+
+| page | what to look for |
+|---|---|
+| `/` | the map draws; the "no recent data" notice is expected |
+| `/routes` | the overview (on time, by hour, by service date) and the ranked table |
+| `/routes/1` | two charts and a worst-stops table |
+| `/stops/8640` | Mumford Terminal, with a by-route table |
+| `/about` | the method text and a coverage table with real dates |
+
+**Then the test that catches the mistake this deployment is most likely to make:**
+
+> Open `https://<your-site>.onrender.com/routes/1` **directly in a new tab**. Do not
+> click through from the home page.
+
+If that 404s, the SPA rewrite in `render.yaml` is not in effect. It is the commonest
+failure when putting a Vite app on a static host, it never appears while clicking
+around, and it breaks every link anybody shares.
+
+Also worth doing once at 400px wide in devtools: nothing should scroll sideways. The
+Playwright suite asserts that on every push, but against the local build.
+
+## 10. Read the memory, then decide about $7
+
+Dashboard → `bus-truth-api` → **Metrics → Memory**.
+
+Measured locally in the same image, under a hard 512 MB limit, with the same JVM flags
+the blueprint sets:
+
+| | |
+|---|---|
+| steady state, idle | **188 MiB** (37% of 512) |
+| under 150 concurrent requests | **194 MiB** (38%) |
+| peak ever recorded, which is JVM startup | **300 MiB** (59%) |
+
+**It fits, with headroom.** 512 MB is not the constraint — the startup spike is the
+largest figure and it is still three fifths of the limit.
+
+So the $7/month question is not about memory. It is about the sleep: free services spin
+down after about 15 minutes idle and cold-start in roughly 12 seconds. If you are
+sending this link to interviewers, a 12-second first load is the argument for paying.
+**Your call; nothing here requires it.**
+
+To upgrade, change only `plan:` on `bus-truth-api` in `render.yaml` and re-apply the
+blueprint. Leave the database free until it expires.
+
+---
+
+## Afterwards: the 24-hour coverage check
+
+The brief's last unmet requirement is the collector running unattended for 24 hours
+above 99% coverage. **This deployment is not that.** The collector runs on your laptop,
+so the measurement stays local:
+
+```bash
+# leave the collector running for a day, then:
+curl -s localhost:8084/api/coverage | tail -5
+```
+
+Coverage is snapshots captured against the 4,320 a day that 20-second polling produces.
+On a laptop that sleeps it has measured 32%–79%. Above 99% needs a machine that does not
+sleep, which is what hosting the collector would fix and what this blueprint
+deliberately does not do.
+
+## If something is wrong
+
+| symptom | cause |
+|---|---|
+| API health check fails, logs show a connection error | the restore has not run (step 4), or the database expired |
+| every page shows "Could not load" | `VITE_API_BASE_URL` was not set at build time — check the static site's Environment, then **Clear build cache & deploy** |
+| pages work when clicked but a pasted URL 404s | the SPA rewrite is missing (step 9) |
+| the browser console shows a CORS error | `BUSTRUTH_API_WEB_ORIGIN` on the API does not match the site's origin |
+| the API restarts every few minutes | out of memory — compare Metrics against step 10 |
+| it all worked, now the database is gone | the free database expired: 14-day grace to upgrade, then deletion |

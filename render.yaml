@@ -1,0 +1,160 @@
+# Bus Truth on Render — create everything from this file.
+#
+#   Render dashboard → New → Blueprint → pick this repository → Apply
+#
+# It declares three things and nothing else: the site, the API, and a Postgres
+# database. There is deliberately no collector, no loader, no cron job and no
+# persistent disk, because nothing in the cloud writes to data/ — the archive lives on
+# Daniel's machine and the cloud only ever reads a copy of the derived tables.
+#
+# Two consequences of that worth knowing before you apply it:
+#
+#   1. The database starts EMPTY and the API cannot create its own schema (Flyway
+#      belongs to the collector, which is not deployed). The schema and the figures
+#      both arrive with the one-time restore in docs/DEPLOY.md, step 4. Until then the
+#      API will start and its endpoints will return errors or empty results.
+#
+#   2. A Render FREE Postgres EXPIRES 30 DAYS AFTER CREATION, with a 14-day grace
+#      period to upgrade before Render deletes it and everything in it. Nothing here
+#      is irreplaceable — every table can be rebuilt from the local archive by
+#      replaying it — but the site goes down when it expires. Diarise it. ADR-016 has
+#      the detail.
+#
+# No secret appears in this file. The database's credentials are injected by Render
+# from the database it creates; anything else secret is declared `sync: false`, which
+# makes Render prompt for it once at creation.
+
+databases:
+  - name: bus-truth-db
+    databaseName: bustruth
+    user: bustruth
+    plan: free
+    # Virginia: this is a Halifax transit site for Canadian viewers, and Virginia is
+    # the closest region Render offers — about 1,100 km away against 6,000 for
+    # Frankfurt. Every service here uses the same region so that the API reaches the
+    # database over Render's private network rather than the public internet.
+    region: virginia
+
+services:
+  # ---------------------------------------------------------------------------------
+  # The API. Built from the Dockerfile the project already had, so what runs in the
+  # cloud is the image that was built and smoke-tested locally.
+  # ---------------------------------------------------------------------------------
+  - type: web
+    name: bus-truth-api
+    runtime: docker
+    region: virginia
+    plan: free
+    dockerfilePath: ./infra/api.Dockerfile
+    # The repo root, because the api module depends on common and Maven needs the
+    # whole reactor.
+    dockerContext: .
+    # Render watches this to decide when the instance is healthy, and the free plan
+    # spins the instance down when idle — so this path is also what wakes it up.
+    healthCheckPath: /actuator/health
+    envVars:
+      # ---- the JVM inside a 512 MB container -------------------------------------
+      # Capped explicitly. Left to itself a modern JVM takes a quarter of what it
+      # believes the machine has, which on a shared host can be read as far more than
+      # 512 MB; the container is then killed for exceeding memory and Render reports a
+      # crash loop with nothing in the application log to explain it.
+      #
+      # 70% of 512 MB is about 358 MB of heap, leaving room for metaspace, thread
+      # stacks, code cache and the direct buffers the PostgreSQL driver uses.
+      # SerialGC because one small heap on one or two cores does not benefit from a
+      # concurrent collector and G1's own bookkeeping is real memory.
+      - key: JAVA_TOOL_OPTIONS
+        value: >-
+          -XX:MaxRAMPercentage=70
+          -XX:+UseSerialGC
+          -XX:MaxMetaspaceSize=128m
+          -Xss512k
+          -XX:+ExitOnOutOfMemoryError
+
+      # ---- the database ----------------------------------------------------------
+      # The whole connection string, from the database Render creates above. It is the
+      # INTERNAL one: services in the same region reach the database privately, and it
+      # is never typed anywhere.
+      #
+      # It arrives as postgres://user:password@host:5432/database, which JDBC cannot
+      # use, so ApiApplication translates it at startup (see DatabaseUrl). A Blueprint
+      # cannot inject a database's host or port — only the connection string, user,
+      # password and database name — and the internal hostname is generated when the
+      # database is created, so assembling a JDBC URL from parts in this file is not
+      # possible.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bus-truth-db
+          property: connectionString
+
+      # Also injected individually, because the application's own defaults are built
+      # from these and it is clearer in the logs which database it reached.
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: bus-truth-db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: bus-truth-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: bus-truth-db
+          property: password
+
+      # ---- the rest --------------------------------------------------------------
+      # The API never migrates; the collector owns the schema and is not deployed, so
+      # the schema arrives with the restore. Stated here as well as in application.yml
+      # so that it cannot be turned on by accident in the dashboard.
+      - key: SPRING_FLYWAY_ENABLED
+        value: "false"
+
+      # Which origin may call this API from a browser. Taken from the static site
+      # below, so it is correct without anybody looking it up, and it is one origin
+      # rather than a wildcard — see WebOriginConfig.
+      - key: BUSTRUTH_API_WEB_ORIGIN
+        fromService:
+          type: web
+          name: bus-truth-web
+          property: host
+
+  # ---------------------------------------------------------------------------------
+  # The site. A static build, so there is no server to pay for and nothing to patch.
+  # ---------------------------------------------------------------------------------
+  - type: web
+    name: bus-truth-web
+    runtime: static
+    region: virginia
+    # Everything frontend lives in web/, so Render builds from there and the paths
+    # below are relative to it.
+    rootDir: web
+    # npm ci, not install: it installs exactly the committed lockfile and fails if the
+    # lockfile and package.json disagree. `npm run build` is `tsc --noEmit && vite
+    # build`, so a type error fails the deploy rather than reaching a visitor.
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      # The API's origin, baked into the bundle at build time. Render injects the
+      # hostname without a scheme; the frontend normalises that (see api.ts).
+      #
+      # Unset, the site would fetch /api/... from its own origin and every request
+      # would 404 against the static host — which is the failure this variable exists
+      # to prevent.
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: bus-truth-api
+          property: host
+    routes:
+      # THE REWRITE THAT MATTERS. React Router owns the paths: /routes/14 and
+      # /stops/8640 are client-side routes with no file behind them. Without this,
+      # opening or refreshing one of those URLs — or following a shared link — returns
+      # the static host's 404, while the identical page reached by clicking works
+      # perfectly. It is the single most common mistake when putting a Vite app on a
+      # static host, and it only ever shows up after someone shares a link.
+      #
+      # Last rule, so real files (/assets/*, /favicon.ico) are served first and only
+      # unmatched paths fall through to the app shell.
+      - type: rewrite
+        source: /*
+        destination: /index.html
