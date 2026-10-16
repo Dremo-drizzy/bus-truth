@@ -6,6 +6,12 @@ on:
   push:
   pull_request:
     branches: [main]
+  # Weekly, because two kinds of rot are invisible to a push-triggered build: a
+  # dependency that stops resolving, and a browser or action version that changes
+  # under us. Monday 06:00 UTC, so a failure is waiting on Monday morning rather
+  # than discovered mid-week.
+  schedule:
+    - cron: "0 6 * * 1"
 
 # The job only reads the repository. Narrowing the token means a compromised
 # action in the build cannot push commits or publish releases.

@@ -15,11 +15,9 @@
    },
    "properties": {
     "vehicle_id": "2528",
-    "vehicle_label": "528",
     "route_id": "320",
     "trip_id": "4653804",
     "bearing": 160,
-    "speed": 26.37536,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -34,11 +32,9 @@
    },
    "properties": {
     "vehicle_id": "2529",
-    "vehicle_label": "529",
     "route_id": "320",
     "trip_id": "4653779",
     "bearing": 40,
-    "speed": 15.19936,
     "vehicle_timestamp": "2026-10-15T21:07:18Z"
    }
   },
@@ -53,11 +49,9 @@
    },
    "properties": {
     "vehicle_id": "2530",
-    "vehicle_label": "530",
     "route_id": "330B",
     "trip_id": "4653842",
     "bearing": 135,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -72,11 +66,9 @@
    },
    "properties": {
     "vehicle_id": "2531",
-    "vehicle_label": "531",
     "route_id": "320",
     "trip_id": "4653805",
     "bearing": 346,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:28Z"
    }
   },
@@ -91,11 +83,9 @@
    },
    "properties": {
     "vehicle_id": "2533",
-    "vehicle_label": "533",
     "route_id": "320",
     "trip_id": "4653780",
     "bearing": 150,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:59Z"
    }
   },
@@ -110,11 +100,9 @@
    },
    "properties": {
     "vehicle_id": "2717",
-    "vehicle_label": "717",
     "route_id": "9A",
     "trip_id": "4661520",
     "bearing": 90,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:19Z"
    }
   },
@@ -129,11 +117,9 @@
    },
    "properties": {
     "vehicle_id": "2720",
-    "vehicle_label": "720",
     "route_id": "10B",
     "trip_id": "4649781",
     "bearing": 92,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:12Z"
    }
   },
@@ -148,11 +134,9 @@
    },
    "properties": {
     "vehicle_id": "2722",
-    "vehicle_label": "722",
     "route_id": "9B",
     "trip_id": "4661726",
     "bearing": 8,
-    "speed": 4.4704,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -167,11 +151,9 @@
    },
    "properties": {
     "vehicle_id": "2724",
-    "vehicle_label": "724",
     "route_id": "90",
     "trip_id": "4661024",
     "bearing": 76,
-    "speed": 1.78816,
     "vehicle_timestamp": "2026-10-15T21:06:57Z"
    }
   },
@@ -186,11 +168,9 @@
    },
    "properties": {
     "vehicle_id": "2725",
-    "vehicle_label": "725",
     "route_id": "10C",
     "trip_id": "4650049",
     "bearing": 344,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:06:53Z"
    }
   },
@@ -205,11 +185,9 @@
    },
    "properties": {
     "vehicle_id": "2726",
-    "vehicle_label": "726",
     "route_id": "2",
     "trip_id": "4651118",
     "bearing": 180,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -224,11 +202,9 @@
    },
    "properties": {
     "vehicle_id": "2727",
-    "vehicle_label": "727",
     "route_id": "9A",
     "trip_id": "4661459",
     "bearing": 148,
-    "speed": 4.4704,
     "vehicle_timestamp": "2026-10-15T21:07:03Z"
    }
   },
@@ -243,11 +219,9 @@
    },
    "properties": {
     "vehicle_id": "2733",
-    "vehicle_label": "733",
     "route_id": "9A",
     "trip_id": "4661518",
     "bearing": 308,
-    "speed": 0.44704,
     "vehicle_timestamp": "2026-10-15T21:06:57Z"
    }
   },
@@ -262,11 +236,9 @@
    },
    "properties": {
     "vehicle_id": "2734",
-    "vehicle_label": "734",
     "route_id": "10C",
     "trip_id": "4650053",
     "bearing": 332,
-    "speed": 2.2352,
     "vehicle_timestamp": "2026-10-15T21:06:58Z"
    }
   },
@@ -281,11 +253,9 @@
    },
    "properties": {
     "vehicle_id": "2736",
-    "vehicle_label": "736",
     "route_id": "9A",
     "trip_id": "4661458",
     "bearing": 136,
-    "speed": 12.96416,
     "vehicle_timestamp": "2026-10-15T21:06:59Z"
    }
   },
@@ -300,11 +270,9 @@
    },
    "properties": {
     "vehicle_id": "2738",
-    "vehicle_label": "738",
     "route_id": "1",
     "trip_id": "4649283",
     "bearing": null,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:13Z"
    }
   },
@@ -319,11 +287,9 @@
    },
    "properties": {
     "vehicle_id": "2739",
-    "vehicle_label": "739",
     "route_id": "8",
     "trip_id": "4659591",
     "bearing": 54,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:18Z"
    }
   },
@@ -338,11 +304,9 @@
    },
    "properties": {
     "vehicle_id": "2741",
-    "vehicle_label": "741",
     "route_id": "4",
     "trip_id": "4654463",
     "bearing": 340,
-    "speed": 12.96416,
     "vehicle_timestamp": "2026-10-15T21:07:12Z"
    }
   },
@@ -357,11 +321,9 @@
    },
    "properties": {
     "vehicle_id": "2742",
-    "vehicle_label": "742",
     "route_id": "1",
     "trip_id": "4649284",
     "bearing": 270,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:17Z"
    }
   },
@@ -376,11 +338,9 @@
    },
    "properties": {
     "vehicle_id": "2743",
-    "vehicle_label": "743",
     "route_id": "1",
     "trip_id": "4649387",
     "bearing": 160,
-    "speed": 1.78816,
     "vehicle_timestamp": "2026-10-15T21:06:57Z"
    }
   },
@@ -395,11 +355,9 @@
    },
    "properties": {
     "vehicle_id": "2745",
-    "vehicle_label": "745",
     "route_id": "4",
     "trip_id": "4654462",
     "bearing": 333,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:20Z"
    }
   },
@@ -414,11 +372,9 @@
    },
    "properties": {
     "vehicle_id": "2746",
-    "vehicle_label": "746",
     "route_id": "1",
     "trip_id": "4649282",
     "bearing": 270,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:49Z"
    }
   },
@@ -433,11 +389,9 @@
    },
    "properties": {
     "vehicle_id": "2748",
-    "vehicle_label": "748",
     "route_id": "4",
     "trip_id": "4654461",
     "bearing": 324,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:58Z"
    }
   },
@@ -452,11 +406,9 @@
    },
    "properties": {
     "vehicle_id": "2749",
-    "vehicle_label": "749",
     "route_id": "93",
     "trip_id": "4661225",
     "bearing": 348,
-    "speed": 13.4112,
     "vehicle_timestamp": "2026-10-15T21:07:01Z"
    }
   },
@@ -471,11 +423,9 @@
    },
    "properties": {
     "vehicle_id": "2751",
-    "vehicle_label": "751",
     "route_id": "1",
     "trip_id": "4649278",
     "bearing": 312,
-    "speed": 4.4704,
     "vehicle_timestamp": "2026-10-15T21:07:00Z"
    }
   },
@@ -490,11 +440,9 @@
    },
    "properties": {
     "vehicle_id": "2753",
-    "vehicle_label": "753",
     "route_id": "1",
     "trip_id": "4649384",
     "bearing": 344,
-    "speed": 1.78816,
     "vehicle_timestamp": "2026-10-15T21:07:11Z"
    }
   },
@@ -509,11 +457,9 @@
    },
    "properties": {
     "vehicle_id": "2755",
-    "vehicle_label": "755",
     "route_id": "9A",
     "trip_id": "4661457",
     "bearing": 324,
-    "speed": 2.2352,
     "vehicle_timestamp": "2026-10-15T21:07:22Z"
    }
   },
@@ -528,11 +474,9 @@
    },
    "properties": {
     "vehicle_id": "2757",
-    "vehicle_label": "757",
     "route_id": "1",
     "trip_id": "4649388",
     "bearing": 152,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -547,11 +491,9 @@
    },
    "properties": {
     "vehicle_id": "2759",
-    "vehicle_label": "759",
     "route_id": "1",
     "trip_id": "4649385",
     "bearing": 248,
-    "speed": 4.02336,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -566,11 +508,9 @@
    },
    "properties": {
     "vehicle_id": "2760",
-    "vehicle_label": "760",
     "route_id": "90",
     "trip_id": "4660998",
     "bearing": 328,
-    "speed": 8.49376,
     "vehicle_timestamp": "2026-10-15T21:07:03Z"
    }
   },
@@ -585,11 +525,9 @@
    },
    "properties": {
     "vehicle_id": "2761",
-    "vehicle_label": "761",
     "route_id": "3",
     "trip_id": "4653028",
     "bearing": 204,
-    "speed": 0.44704,
     "vehicle_timestamp": "2026-10-15T21:07:21Z"
    }
   },
@@ -604,11 +542,9 @@
    },
    "properties": {
     "vehicle_id": "3087",
-    "vehicle_label": "1087",
     "route_id": "7B",
     "trip_id": "4659160",
     "bearing": 306,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:07Z"
    }
   },
@@ -623,11 +559,9 @@
    },
    "properties": {
     "vehicle_id": "3096",
-    "vehicle_label": "1096",
     "route_id": "62",
     "trip_id": "4656839",
     "bearing": 90,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:06Z"
    }
   },
@@ -642,11 +576,9 @@
    },
    "properties": {
     "vehicle_id": "3112",
-    "vehicle_label": "1112",
     "route_id": "2",
     "trip_id": "4651120",
     "bearing": 225,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:54Z"
    }
   },
@@ -661,11 +593,9 @@
    },
    "properties": {
     "vehicle_id": "3113",
-    "vehicle_label": "1113",
     "route_id": "64",
     "trip_id": "4657140",
     "bearing": 64,
-    "speed": 13.4112,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -680,11 +610,9 @@
    },
    "properties": {
     "vehicle_id": "3116",
-    "vehicle_label": "1116",
     "route_id": "8",
     "trip_id": "4659541",
     "bearing": 304,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:05Z"
    }
   },
@@ -699,11 +627,9 @@
    },
    "properties": {
     "vehicle_id": "3138",
-    "vehicle_label": "1138",
     "route_id": "185",
     "trip_id": "4650574",
     "bearing": 132,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:05Z"
    }
   },
@@ -718,11 +644,9 @@
    },
    "properties": {
     "vehicle_id": "3139",
-    "vehicle_label": "1139",
     "route_id": "4",
     "trip_id": "4654541",
     "bearing": 76,
-    "speed": 1.78816,
     "vehicle_timestamp": "2026-10-15T21:06:57Z"
    }
   },
@@ -737,11 +661,9 @@
    },
    "properties": {
     "vehicle_id": "3142",
-    "vehicle_label": "1142",
     "route_id": "6B",
     "trip_id": "4657896",
     "bearing": 56,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:11Z"
    }
   },
@@ -756,11 +678,9 @@
    },
    "properties": {
     "vehicle_id": "3144",
-    "vehicle_label": "1144",
     "route_id": "168A",
     "trip_id": "4650423",
     "bearing": 76,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:13Z"
    }
   },
@@ -775,11 +695,9 @@
    },
    "properties": {
     "vehicle_id": "3155",
-    "vehicle_label": "1155",
     "route_id": "9A",
     "trip_id": "4661462",
     "bearing": 248,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -794,11 +712,9 @@
    },
    "properties": {
     "vehicle_id": "3156",
-    "vehicle_label": "1156",
     "route_id": "51B",
     "trip_id": "4655395",
     "bearing": 45,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:35Z"
    }
   },
@@ -813,11 +729,9 @@
    },
    "properties": {
     "vehicle_id": "3158",
-    "vehicle_label": "1158",
     "route_id": "90",
     "trip_id": "4661043",
     "bearing": 202,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:11Z"
    }
   },
@@ -832,11 +746,9 @@
    },
    "properties": {
     "vehicle_id": "3160",
-    "vehicle_label": "1160",
     "route_id": "2",
     "trip_id": "4651055",
     "bearing": 312,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:06:57Z"
    }
   },
@@ -851,11 +763,9 @@
    },
    "properties": {
     "vehicle_id": "3161",
-    "vehicle_label": "1161",
     "route_id": "90",
     "trip_id": "4660977",
     "bearing": 257,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:01Z"
    }
   },
@@ -870,11 +780,9 @@
    },
    "properties": {
     "vehicle_id": "3162",
-    "vehicle_label": "1162",
     "route_id": "138",
     "trip_id": "4650305",
     "bearing": 72,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:05Z"
    }
   },
@@ -889,11 +797,9 @@
    },
    "properties": {
     "vehicle_id": "3163",
-    "vehicle_label": "1163",
     "route_id": "53",
     "trip_id": "4655591",
     "bearing": 44,
-    "speed": 0.44704,
     "vehicle_timestamp": "2026-10-15T21:06:52Z"
    }
   },
@@ -908,11 +814,9 @@
    },
    "properties": {
     "vehicle_id": "3164",
-    "vehicle_label": "1164",
     "route_id": "123",
     "trip_id": "4650151",
     "bearing": 252,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:04Z"
    }
   },
@@ -927,11 +831,9 @@
    },
    "properties": {
     "vehicle_id": "3167",
-    "vehicle_label": "1167",
     "route_id": "168B",
     "trip_id": "4650449",
     "bearing": 116,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:07Z"
    }
   },
@@ -946,11 +848,9 @@
    },
    "properties": {
     "vehicle_id": "3168",
-    "vehicle_label": "1168",
     "route_id": "51B",
     "trip_id": "4655383",
     "bearing": 340,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:15Z"
    }
   },
@@ -965,11 +865,9 @@
    },
    "properties": {
     "vehicle_id": "3169",
-    "vehicle_label": "1169",
     "route_id": "6A",
     "trip_id": "4657679",
     "bearing": 315,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:01Z"
    }
   },
@@ -984,11 +882,9 @@
    },
    "properties": {
     "vehicle_id": "3171",
-    "vehicle_label": "1171",
     "route_id": "3",
     "trip_id": "4653030",
     "bearing": 128,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:04Z"
    }
   },
@@ -1003,11 +899,9 @@
    },
    "properties": {
     "vehicle_id": "3173",
-    "vehicle_label": "1173",
     "route_id": "56",
     "trip_id": "4656217",
     "bearing": 184,
-    "speed": 17.43456,
     "vehicle_timestamp": "2026-10-15T21:06:59Z"
    }
   },
@@ -1022,11 +916,9 @@
    },
    "properties": {
     "vehicle_id": "3175",
-    "vehicle_label": "1175",
     "route_id": "127",
     "trip_id": "4650189",
     "bearing": 28,
-    "speed": 2.2352,
     "vehicle_timestamp": "2026-10-15T21:07:20Z"
    }
   },
@@ -1041,11 +933,9 @@
    },
    "properties": {
     "vehicle_id": "3176",
-    "vehicle_label": "1176",
     "route_id": "84",
     "trip_id": "4660050",
     "bearing": 332,
-    "speed": 22.352,
     "vehicle_timestamp": "2026-10-15T21:07:14Z"
    }
   },
@@ -1060,11 +950,9 @@
    },
    "properties": {
     "vehicle_id": "3178",
-    "vehicle_label": "1178",
     "route_id": "87",
     "trip_id": "4660623",
     "bearing": 268,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:49Z"
    }
   },
@@ -1079,11 +967,9 @@
    },
    "properties": {
     "vehicle_id": "3179",
-    "vehicle_label": "1179",
     "route_id": "54",
     "trip_id": "4655771",
     "bearing": 128,
-    "speed": 4.4704,
     "vehicle_timestamp": "2026-10-15T21:07:20Z"
    }
   },
@@ -1098,11 +984,9 @@
    },
    "properties": {
     "vehicle_id": "3184",
-    "vehicle_label": "1184",
     "route_id": "28",
     "trip_id": "4652332",
     "bearing": 280,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:04Z"
    }
   },
@@ -1117,11 +1001,9 @@
    },
    "properties": {
     "vehicle_id": "3189",
-    "vehicle_label": "1189",
     "route_id": "28",
     "trip_id": "4652333",
     "bearing": 284,
-    "speed": 15.6464,
     "vehicle_timestamp": "2026-10-15T21:06:52Z"
    }
   },
@@ -1136,11 +1018,9 @@
    },
    "properties": {
     "vehicle_id": "3190",
-    "vehicle_label": "1190",
     "route_id": "21",
     "trip_id": "4651317",
     "bearing": 62,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:21Z"
    }
   },
@@ -1155,11 +1035,9 @@
    },
    "properties": {
     "vehicle_id": "3191",
-    "vehicle_label": "1191",
     "route_id": "25",
     "trip_id": "4652103",
     "bearing": 316,
-    "speed": 0.44704,
     "vehicle_timestamp": "2026-10-15T21:07:12Z"
    }
   },
@@ -1174,11 +1052,9 @@
    },
    "properties": {
     "vehicle_id": "3192",
-    "vehicle_label": "1192",
     "route_id": "6C",
     "trip_id": "4658057",
     "bearing": 256,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:14Z"
    }
   },
@@ -1193,11 +1069,9 @@
    },
    "properties": {
     "vehicle_id": "3198",
-    "vehicle_label": "1198",
     "route_id": "158",
     "trip_id": "4650317",
     "bearing": 292,
-    "speed": 13.4112,
     "vehicle_timestamp": "2026-10-15T21:06:57Z"
    }
   },
@@ -1212,11 +1086,9 @@
    },
    "properties": {
     "vehicle_id": "3199",
-    "vehicle_label": "1199",
     "route_id": "7B",
     "trip_id": "4659235",
     "bearing": 348,
-    "speed": 4.02336,
     "vehicle_timestamp": "2026-10-15T21:07:14Z"
    }
   },
@@ -1231,11 +1103,9 @@
    },
    "properties": {
     "vehicle_id": "3204",
-    "vehicle_label": "1204",
     "route_id": "54",
     "trip_id": "4655794",
     "bearing": 216,
-    "speed": 2.2352,
     "vehicle_timestamp": "2026-10-15T21:07:04Z"
    }
   },
@@ -1250,11 +1120,9 @@
    },
    "properties": {
     "vehicle_id": "3205",
-    "vehicle_label": "1205",
     "route_id": "3",
     "trip_id": "4653026",
     "bearing": 236,
-    "speed": 4.4704,
     "vehicle_timestamp": "2026-10-15T21:07:21Z"
    }
   },
@@ -1269,11 +1137,9 @@
    },
    "properties": {
     "vehicle_id": "3208",
-    "vehicle_label": "1208",
     "route_id": "4",
     "trip_id": "4654460_1",
     "bearing": 292,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:11Z"
    }
   },
@@ -1288,11 +1154,9 @@
    },
    "properties": {
     "vehicle_id": "3210",
-    "vehicle_label": "1210",
     "route_id": "137",
     "trip_id": "4650277",
     "bearing": 328,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -1307,11 +1171,9 @@
    },
    "properties": {
     "vehicle_id": "3211",
-    "vehicle_label": "1211",
     "route_id": "4",
     "trip_id": "4654464",
     "bearing": 164,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:17Z"
    }
   },
@@ -1326,11 +1188,9 @@
    },
    "properties": {
     "vehicle_id": "3212",
-    "vehicle_label": "1212",
     "route_id": "123",
     "trip_id": "4650147",
     "bearing": 292,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:09Z"
    }
   },
@@ -1345,11 +1205,9 @@
    },
    "properties": {
     "vehicle_id": "3213",
-    "vehicle_label": "1213",
     "route_id": "1",
     "trip_id": "4649390",
     "bearing": 120,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:08Z"
    }
   },
@@ -1364,11 +1222,9 @@
    },
    "properties": {
     "vehicle_id": "3214",
-    "vehicle_label": "1214",
     "route_id": "9B",
     "trip_id": "4661696",
     "bearing": 132,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:06:58Z"
    }
   },
@@ -1383,11 +1239,9 @@
    },
    "properties": {
     "vehicle_id": "3215",
-    "vehicle_label": "1215",
     "route_id": "29",
     "trip_id": "4652685",
     "bearing": 320,
-    "speed": 10.72896,
     "vehicle_timestamp": "2026-10-15T21:07:04Z"
    }
   },
@@ -1402,11 +1256,9 @@
    },
    "properties": {
     "vehicle_id": "3217",
-    "vehicle_label": "1217",
     "route_id": "10B",
     "trip_id": "4649779",
     "bearing": 220,
-    "speed": 2.2352,
     "vehicle_timestamp": "2026-10-15T21:07:15Z"
    }
   },
@@ -1421,11 +1273,9 @@
    },
    "properties": {
     "vehicle_id": "3218",
-    "vehicle_label": "1218",
     "route_id": "64",
     "trip_id": "4657139",
     "bearing": 168,
-    "speed": 4.4704,
     "vehicle_timestamp": "2026-10-15T21:07:07Z"
    }
   },
@@ -1440,11 +1290,9 @@
    },
    "properties": {
     "vehicle_id": "3219",
-    "vehicle_label": "1219",
     "route_id": "21",
     "trip_id": "4651347",
     "bearing": 315,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -1459,11 +1307,9 @@
    },
    "properties": {
     "vehicle_id": "3220",
-    "vehicle_label": "1220",
     "route_id": "8",
     "trip_id": "4659539",
     "bearing": 284,
-    "speed": 2.2352,
     "vehicle_timestamp": "2026-10-15T21:07:20Z"
    }
   },
@@ -1478,11 +1324,9 @@
    },
    "properties": {
     "vehicle_id": "3221",
-    "vehicle_label": "1221",
     "route_id": "2",
     "trip_id": "4651117",
     "bearing": 45,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:49Z"
    }
   },
@@ -1497,11 +1341,9 @@
    },
    "properties": {
     "vehicle_id": "3222",
-    "vehicle_label": "1222",
     "route_id": "138",
     "trip_id": "4650302",
     "bearing": 96,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:00Z"
    }
   },
@@ -1516,11 +1358,9 @@
    },
    "properties": {
     "vehicle_id": "3224",
-    "vehicle_label": "1224",
     "route_id": "192",
     "trip_id": "4650631",
     "bearing": 270,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:49Z"
    }
   },
@@ -1535,11 +1375,9 @@
    },
    "properties": {
     "vehicle_id": "3225",
-    "vehicle_label": "1225",
     "route_id": "84",
     "trip_id": "4660048",
     "bearing": 192,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:49Z"
    }
   },
@@ -1554,11 +1392,9 @@
    },
    "properties": {
     "vehicle_id": "3227",
-    "vehicle_label": "1227",
     "route_id": "2",
     "trip_id": "4651119",
     "bearing": 56,
-    "speed": 2.2352,
     "vehicle_timestamp": "2026-10-15T21:07:15Z"
    }
   },
@@ -1573,11 +1409,9 @@
    },
    "properties": {
     "vehicle_id": "3228",
-    "vehicle_label": "1228",
     "route_id": "5",
     "trip_id": "4655019",
     "bearing": 82,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:20Z"
    }
   },
@@ -1592,11 +1426,9 @@
    },
    "properties": {
     "vehicle_id": "3229",
-    "vehicle_label": "1229",
     "route_id": "30A",
     "trip_id": "4653322",
     "bearing": 340,
-    "speed": 13.4112,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -1611,11 +1443,9 @@
    },
    "properties": {
     "vehicle_id": "3230",
-    "vehicle_label": "1230",
     "route_id": "5",
     "trip_id": "4655089",
     "bearing": 252,
-    "speed": 4.02336,
     "vehicle_timestamp": "2026-10-15T21:06:58Z"
    }
   },
@@ -1630,11 +1460,9 @@
    },
    "properties": {
     "vehicle_id": "3231",
-    "vehicle_label": "1231",
     "route_id": "30B",
     "trip_id": "4653615",
     "bearing": 136,
-    "speed": 0.44704,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -1649,11 +1477,9 @@
    },
    "properties": {
     "vehicle_id": "3235",
-    "vehicle_label": "1235",
     "route_id": "90",
     "trip_id": "4660976",
     "bearing": 300,
-    "speed": 8.49376,
     "vehicle_timestamp": "2026-10-15T21:07:08Z"
    }
   },
@@ -1668,11 +1494,9 @@
    },
    "properties": {
     "vehicle_id": "3237",
-    "vehicle_label": "1237",
     "route_id": "10C",
     "trip_id": "4650096",
     "bearing": 315,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -1687,11 +1511,9 @@
    },
    "properties": {
     "vehicle_id": "3238",
-    "vehicle_label": "1238",
     "route_id": "138",
     "trip_id": "4650303",
     "bearing": 312,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:06:58Z"
    }
   },
@@ -1706,11 +1528,9 @@
    },
    "properties": {
     "vehicle_id": "3239",
-    "vehicle_label": "1239",
     "route_id": "24",
     "trip_id": "4651894",
     "bearing": 180,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -1725,11 +1545,9 @@
    },
    "properties": {
     "vehicle_id": "3240",
-    "vehicle_label": "1240",
     "route_id": "161",
     "trip_id": "4650380",
     "bearing": 116,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:14Z"
    }
   },
@@ -1744,11 +1562,9 @@
    },
    "properties": {
     "vehicle_id": "3243",
-    "vehicle_label": "1243",
     "route_id": "9B",
     "trip_id": "4661725",
     "bearing": 160,
-    "speed": 13.4112,
     "vehicle_timestamp": "2026-10-15T21:07:03Z"
    }
   },
@@ -1763,11 +1579,9 @@
    },
    "properties": {
     "vehicle_id": "3244",
-    "vehicle_label": "1244",
     "route_id": "24",
     "trip_id": "4651892",
     "bearing": 152,
-    "speed": 2.2352,
     "vehicle_timestamp": "2026-10-15T21:07:14Z"
    }
   },
@@ -1782,11 +1596,9 @@
    },
    "properties": {
     "vehicle_id": "3248",
-    "vehicle_label": "1248",
     "route_id": "10A",
     "trip_id": "4649512",
     "bearing": 252,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:03Z"
    }
   },
@@ -1801,11 +1613,9 @@
    },
    "properties": {
     "vehicle_id": "3249",
-    "vehicle_label": "1249",
     "route_id": "59",
     "trip_id": "4656526",
     "bearing": 90,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -1820,11 +1630,9 @@
    },
    "properties": {
     "vehicle_id": "3251",
-    "vehicle_label": "1251",
     "route_id": "10A",
     "trip_id": "4649491",
     "bearing": 315,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:14Z"
    }
   },
@@ -1839,11 +1647,9 @@
    },
    "properties": {
     "vehicle_id": "3254",
-    "vehicle_label": "1254",
     "route_id": "161",
     "trip_id": "4650379",
     "bearing": 352,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:03Z"
    }
   },
@@ -1858,11 +1664,9 @@
    },
    "properties": {
     "vehicle_id": "3255",
-    "vehicle_label": "1255",
     "route_id": "63",
     "trip_id": "4657002",
     "bearing": 224,
-    "speed": 13.4112,
     "vehicle_timestamp": "2026-10-15T21:07:15Z"
    }
   },
@@ -1877,11 +1681,9 @@
    },
    "properties": {
     "vehicle_id": "3256",
-    "vehicle_label": "1256",
     "route_id": "5",
     "trip_id": "4655088",
     "bearing": 287,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -1896,11 +1698,9 @@
    },
    "properties": {
     "vehicle_id": "3257",
-    "vehicle_label": "1257",
     "route_id": "10A",
     "trip_id": "4649513",
     "bearing": 160,
-    "speed": 2.2352,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -1915,11 +1715,9 @@
    },
    "properties": {
     "vehicle_id": "3258",
-    "vehicle_label": "1258",
     "route_id": "90",
     "trip_id": "4661025",
     "bearing": 32,
-    "speed": 4.02336,
     "vehicle_timestamp": "2026-10-15T21:06:54Z"
    }
   },
@@ -1934,11 +1732,9 @@
    },
    "properties": {
     "vehicle_id": "3259",
-    "vehicle_label": "1259",
     "route_id": "10B",
     "trip_id": "4649743",
     "bearing": 312,
-    "speed": 1.78816,
     "vehicle_timestamp": "2026-10-15T21:06:54Z"
    }
   },
@@ -1953,11 +1749,9 @@
    },
    "properties": {
     "vehicle_id": "3260",
-    "vehicle_label": "1260",
     "route_id": "8",
     "trip_id": "4659543",
     "bearing": 72,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:22Z"
    }
   },
@@ -1972,11 +1766,9 @@
    },
    "properties": {
     "vehicle_id": "3263",
-    "vehicle_label": "1263",
     "route_id": "10B",
     "trip_id": "4649782",
     "bearing": 308,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:07:15Z"
    }
   },
@@ -1991,11 +1783,9 @@
    },
    "properties": {
     "vehicle_id": "3264",
-    "vehicle_label": "1264",
     "route_id": "25",
     "trip_id": "4652078",
     "bearing": 286,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -2010,11 +1800,9 @@
    },
    "properties": {
     "vehicle_id": "3266",
-    "vehicle_label": "1266",
     "route_id": "72",
     "trip_id": "4658305",
     "bearing": 176,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:17Z"
    }
   },
@@ -2029,11 +1817,9 @@
    },
    "properties": {
     "vehicle_id": "3267",
-    "vehicle_label": "1267",
     "route_id": "10B",
     "trip_id": "4649780",
     "bearing": 344,
-    "speed": 0.44704,
     "vehicle_timestamp": "2026-10-15T21:07:21Z"
    }
   },
@@ -2048,11 +1834,9 @@
    },
    "properties": {
     "vehicle_id": "3268",
-    "vehicle_label": "1268",
     "route_id": "6B",
     "trip_id": "4657866",
     "bearing": 336,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:06:53Z"
    }
   },
@@ -2067,11 +1851,9 @@
    },
    "properties": {
     "vehicle_id": "3270",
-    "vehicle_label": "1270",
     "route_id": "8",
     "trip_id": "4659592",
     "bearing": 176,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:58Z"
    }
   },
@@ -2086,11 +1868,9 @@
    },
    "properties": {
     "vehicle_id": "3271",
-    "vehicle_label": "1271",
     "route_id": "168A",
     "trip_id": "4650425",
     "bearing": 324,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:07:19Z"
    }
   },
@@ -2105,11 +1885,9 @@
    },
    "properties": {
     "vehicle_id": "3272",
-    "vehicle_label": "1272",
     "route_id": "51B",
     "trip_id": "4655396",
     "bearing": 148,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -2124,11 +1902,9 @@
    },
    "properties": {
     "vehicle_id": "3273",
-    "vehicle_label": "1273",
     "route_id": "84",
     "trip_id": "4660051",
     "bearing": 135,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:42Z"
    }
   },
@@ -2143,11 +1919,9 @@
    },
    "properties": {
     "vehicle_id": "3274",
-    "vehicle_label": "1274",
     "route_id": "9A",
     "trip_id": "4661460",
     "bearing": 244,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:14Z"
    }
   },
@@ -2162,11 +1936,9 @@
    },
    "properties": {
     "vehicle_id": "3275",
-    "vehicle_label": "1275",
     "route_id": "9B",
     "trip_id": "4661697",
     "bearing": 135,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:28Z"
    }
   },
@@ -2181,11 +1953,9 @@
    },
    "properties": {
     "vehicle_id": "3276",
-    "vehicle_label": "1276",
     "route_id": "55",
     "trip_id": "4655922",
     "bearing": null,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -2200,11 +1970,9 @@
    },
    "properties": {
     "vehicle_id": "3278",
-    "vehicle_label": "1278",
     "route_id": "9A",
     "trip_id": "4661461",
     "bearing": 308,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:13Z"
    }
   },
@@ -2219,11 +1987,9 @@
    },
    "properties": {
     "vehicle_id": "3279",
-    "vehicle_label": "1279",
     "route_id": "3",
     "trip_id": "4653089",
     "bearing": 44,
-    "speed": 0.44704,
     "vehicle_timestamp": "2026-10-15T21:06:58Z"
    }
   },
@@ -2238,11 +2004,9 @@
    },
    "properties": {
     "vehicle_id": "3280",
-    "vehicle_label": "1280",
     "route_id": "6A",
     "trip_id": "4657707",
     "bearing": 120,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:00Z"
    }
   },
@@ -2257,11 +2021,9 @@
    },
    "properties": {
     "vehicle_id": "3284",
-    "vehicle_label": "1284",
     "route_id": "39",
     "trip_id": "4654104",
     "bearing": 308,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:07:17Z"
    }
   },
@@ -2276,11 +2038,9 @@
    },
    "properties": {
     "vehicle_id": "3285",
-    "vehicle_label": "1285",
     "route_id": "196",
     "trip_id": "4650665",
     "bearing": 270,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:03Z"
    }
   },
@@ -2295,11 +2055,9 @@
    },
    "properties": {
     "vehicle_id": "3286",
-    "vehicle_label": "1286",
     "route_id": "72",
     "trip_id": "4658275",
     "bearing": 270,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:12Z"
    }
   },
@@ -2314,11 +2072,9 @@
    },
    "properties": {
     "vehicle_id": "3289",
-    "vehicle_label": "1289",
     "route_id": "7B",
     "trip_id": "4659161",
     "bearing": 320,
-    "speed": 6.25856,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -2333,11 +2089,9 @@
    },
    "properties": {
     "vehicle_id": "3294",
-    "vehicle_label": "1294",
     "route_id": "56",
     "trip_id": "4656182",
     "bearing": 135,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:03Z"
    }
   },
@@ -2352,11 +2106,9 @@
    },
    "properties": {
     "vehicle_id": "3296",
-    "vehicle_label": "1296",
     "route_id": "64",
     "trip_id": "4657105",
     "bearing": 252,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:49Z"
    }
   },
@@ -2371,11 +2123,9 @@
    },
    "properties": {
     "vehicle_id": "3298",
-    "vehicle_label": "1298",
     "route_id": "165",
     "trip_id": "4650398",
     "bearing": 148,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -2390,11 +2140,9 @@
    },
    "properties": {
     "vehicle_id": "3299",
-    "vehicle_label": "1299",
     "route_id": "8",
     "trip_id": "4659593",
     "bearing": 261,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:00Z"
    }
   },
@@ -2409,11 +2157,9 @@
    },
    "properties": {
     "vehicle_id": "3300",
-    "vehicle_label": "1300",
     "route_id": "7A",
     "trip_id": "4658689",
     "bearing": 188,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:06Z"
    }
   },
@@ -2428,11 +2174,9 @@
    },
    "properties": {
     "vehicle_id": "3301",
-    "vehicle_label": "1301",
     "route_id": "3",
     "trip_id": "4653087",
     "bearing": 300,
-    "speed": 4.4704,
     "vehicle_timestamp": "2026-10-15T21:07:00Z"
    }
   },
@@ -2447,11 +2191,9 @@
    },
    "properties": {
     "vehicle_id": "3303",
-    "vehicle_label": "1303",
     "route_id": "2",
     "trip_id": "4651056",
     "bearing": null,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -2466,11 +2208,9 @@
    },
    "properties": {
     "vehicle_id": "3304",
-    "vehicle_label": "1304",
     "route_id": "9B",
     "trip_id": "4661727",
     "bearing": 312,
-    "speed": 15.6464,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -2485,11 +2225,9 @@
    },
    "properties": {
     "vehicle_id": "3305",
-    "vehicle_label": "1305",
     "route_id": "53",
     "trip_id": "4655626",
     "bearing": 268,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:14Z"
    }
   },
@@ -2504,11 +2242,9 @@
    },
    "properties": {
     "vehicle_id": "3306",
-    "vehicle_label": "1306",
     "route_id": "5",
     "trip_id": "4655020",
     "bearing": 316,
-    "speed": 6.25856,
     "vehicle_timestamp": "2026-10-15T21:06:58Z"
    }
   },
@@ -2523,11 +2259,9 @@
    },
    "properties": {
     "vehicle_id": "3308",
-    "vehicle_label": "1308",
     "route_id": "29",
     "trip_id": "4652684",
     "bearing": 114,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:17Z"
    }
   },
@@ -2542,11 +2276,9 @@
    },
    "properties": {
     "vehicle_id": "3311",
-    "vehicle_label": "1311",
     "route_id": "72",
     "trip_id": "4658304",
     "bearing": 96,
-    "speed": 15.19936,
     "vehicle_timestamp": "2026-10-15T21:07:05Z"
    }
   },
@@ -2561,11 +2293,9 @@
    },
    "properties": {
     "vehicle_id": "3312",
-    "vehicle_label": "1312",
     "route_id": "127",
     "trip_id": "4650190",
     "bearing": 188,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:01Z"
    }
   },
@@ -2580,11 +2310,9 @@
    },
    "properties": {
     "vehicle_id": "3313",
-    "vehicle_label": "1313",
     "route_id": "84",
     "trip_id": "4660084",
     "bearing": 45,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -2599,11 +2327,9 @@
    },
    "properties": {
     "vehicle_id": "3315",
-    "vehicle_label": "1315",
     "route_id": "159",
     "trip_id": "4650346",
     "bearing": 270,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -2618,11 +2344,9 @@
    },
    "properties": {
     "vehicle_id": "3317",
-    "vehicle_label": "1317",
     "route_id": "168B",
     "trip_id": "4650447",
     "bearing": 132,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:20Z"
    }
   },
@@ -2637,11 +2361,9 @@
    },
    "properties": {
     "vehicle_id": "3320",
-    "vehicle_label": "1320",
     "route_id": "64",
     "trip_id": "4657141",
     "bearing": 148,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:03Z"
    }
   },
@@ -2656,11 +2378,9 @@
    },
    "properties": {
     "vehicle_id": "3323",
-    "vehicle_label": "1323",
     "route_id": "4",
     "trip_id": "4654457",
     "bearing": 300,
-    "speed": 8.49376,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -2675,11 +2395,9 @@
    },
    "properties": {
     "vehicle_id": "3324",
-    "vehicle_label": "1324",
     "route_id": "185",
     "trip_id": "4650576",
     "bearing": 320,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:05Z"
    }
   },
@@ -2694,11 +2412,9 @@
    },
    "properties": {
     "vehicle_id": "3325",
-    "vehicle_label": "1325",
     "route_id": "4",
     "trip_id": "4654459",
     "bearing": 312,
-    "speed": 12.96416,
     "vehicle_timestamp": "2026-10-15T21:07:20Z"
    }
   },
@@ -2713,11 +2429,9 @@
    },
    "properties": {
     "vehicle_id": "3327",
-    "vehicle_label": "1327",
     "route_id": "4",
     "trip_id": "4654543",
     "bearing": 115,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -2732,11 +2446,9 @@
    },
    "properties": {
     "vehicle_id": "3328",
-    "vehicle_label": "1328",
     "route_id": "62",
     "trip_id": "4656816",
     "bearing": 132,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -2751,11 +2463,9 @@
    },
    "properties": {
     "vehicle_id": "3329",
-    "vehicle_label": "1329",
     "route_id": "84",
     "trip_id": "4660083_2",
     "bearing": 140,
-    "speed": 13.4112,
     "vehicle_timestamp": "2026-10-15T21:07:20Z"
    }
   },
@@ -2770,11 +2480,9 @@
    },
    "properties": {
     "vehicle_id": "3330",
-    "vehicle_label": "1330",
     "route_id": "29",
     "trip_id": "4652687",
     "bearing": 40,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:19Z"
    }
   },
@@ -2789,11 +2497,9 @@
    },
    "properties": {
     "vehicle_id": "3331",
-    "vehicle_label": "1331",
     "route_id": "3",
     "trip_id": "4653088",
     "bearing": 308,
-    "speed": 4.4704,
     "vehicle_timestamp": "2026-10-15T21:07:21Z"
    }
   },
@@ -2808,11 +2514,9 @@
    },
    "properties": {
     "vehicle_id": "3334",
-    "vehicle_label": "1334",
     "route_id": "88",
     "trip_id": "4660738",
     "bearing": 144,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:20Z"
    }
   },
@@ -2827,11 +2531,9 @@
    },
    "properties": {
     "vehicle_id": "3335",
-    "vehicle_label": "1335",
     "route_id": "182",
     "trip_id": "4650491",
     "bearing": 148,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:06:12Z"
    }
   },
@@ -2846,11 +2548,9 @@
    },
    "properties": {
     "vehicle_id": "3336",
-    "vehicle_label": "1336",
     "route_id": "91",
     "trip_id": "4661201",
     "bearing": 188,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:07:20Z"
    }
   },
@@ -2865,11 +2565,9 @@
    },
    "properties": {
     "vehicle_id": "3338",
-    "vehicle_label": "1338",
     "route_id": "168B",
     "trip_id": "4650448",
     "bearing": 90,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:17Z"
    }
   },
@@ -2884,11 +2582,9 @@
    },
    "properties": {
     "vehicle_id": "3339",
-    "vehicle_label": "1339",
     "route_id": "67",
     "trip_id": "4657445",
     "bearing": 135,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:53Z"
    }
   },
@@ -2903,11 +2599,9 @@
    },
    "properties": {
     "vehicle_id": "3340",
-    "vehicle_label": "1340",
     "route_id": "10C",
     "trip_id": "4650097",
     "bearing": 128,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:22Z"
    }
   },
@@ -2922,11 +2616,9 @@
    },
    "properties": {
     "vehicle_id": "3341",
-    "vehicle_label": "1341",
     "route_id": "63",
     "trip_id": "4656978",
     "bearing": 168,
-    "speed": 13.4112,
     "vehicle_timestamp": "2026-10-15T21:07:04Z"
    }
   },
@@ -2941,11 +2633,9 @@
    },
    "properties": {
     "vehicle_id": "3342",
-    "vehicle_label": "1342",
     "route_id": "159",
     "trip_id": "4650345",
     "bearing": 108,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -2960,11 +2650,9 @@
    },
    "properties": {
     "vehicle_id": "3345",
-    "vehicle_label": "1345",
     "route_id": "183",
     "trip_id": "4650531",
     "bearing": 344,
-    "speed": 0.44704,
     "vehicle_timestamp": "2026-10-15T21:06:53Z"
    }
   },
@@ -2979,11 +2667,9 @@
    },
    "properties": {
     "vehicle_id": "3346",
-    "vehicle_label": "1346",
     "route_id": "433",
     "trip_id": "4654643",
     "bearing": 9,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:58Z"
    }
   },
@@ -2998,11 +2684,9 @@
    },
    "properties": {
     "vehicle_id": "3348",
-    "vehicle_label": "1348",
     "route_id": "24",
     "trip_id": "4651926",
     "bearing": 255,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:18Z"
    }
   },
@@ -3017,11 +2701,9 @@
    },
    "properties": {
     "vehicle_id": "3349",
-    "vehicle_label": "1349",
     "route_id": "4",
     "trip_id": "4654544",
     "bearing": 72,
-    "speed": 6.25856,
     "vehicle_timestamp": "2026-10-15T21:06:57Z"
    }
   },
@@ -3036,11 +2718,9 @@
    },
    "properties": {
     "vehicle_id": "3350",
-    "vehicle_label": "1350",
     "route_id": "10C",
     "trip_id": "4650052",
     "bearing": 74,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:15Z"
    }
   },
@@ -3055,11 +2735,9 @@
    },
    "properties": {
     "vehicle_id": "3352",
-    "vehicle_label": "1352",
     "route_id": "86",
     "trip_id": "4660402",
     "bearing": 324,
-    "speed": 2.2352,
     "vehicle_timestamp": "2026-10-15T21:07:12Z"
    }
   },
@@ -3074,11 +2752,9 @@
    },
    "properties": {
     "vehicle_id": "3353",
-    "vehicle_label": "1353",
     "route_id": "87",
     "trip_id": "4660591",
     "bearing": 320,
-    "speed": 17.8816,
     "vehicle_timestamp": "2026-10-15T21:07:17Z"
    }
   },
@@ -3093,11 +2769,9 @@
    },
    "properties": {
     "vehicle_id": "3354",
-    "vehicle_label": "1354",
     "route_id": "136",
     "trip_id": "4650253",
     "bearing": 135,
-    "speed": 0.44704,
     "vehicle_timestamp": "2026-10-15T21:07:00Z"
    }
   },
@@ -3112,11 +2786,9 @@
    },
    "properties": {
     "vehicle_id": "3356",
-    "vehicle_label": "1356",
     "route_id": "83",
     "trip_id": "4659879",
     "bearing": 248,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:07:04Z"
    }
   },
@@ -3131,11 +2803,9 @@
    },
    "properties": {
     "vehicle_id": "3358",
-    "vehicle_label": "1358",
     "route_id": "8",
     "trip_id": "4659542",
     "bearing": 316,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:03Z"
    }
   },
@@ -3150,11 +2820,9 @@
    },
    "properties": {
     "vehicle_id": "3359",
-    "vehicle_label": "1359",
     "route_id": "5",
     "trip_id": "4655090",
     "bearing": 337,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:28Z"
    }
   },
@@ -3169,11 +2837,9 @@
    },
    "properties": {
     "vehicle_id": "3360",
-    "vehicle_label": "1360",
     "route_id": "185",
     "trip_id": "4650575",
     "bearing": 52,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:07:07Z"
    }
   },
@@ -3188,11 +2854,9 @@
    },
    "properties": {
     "vehicle_id": "3363",
-    "vehicle_label": "1363",
     "route_id": "7B",
     "trip_id": "4659236",
     "bearing": 132,
-    "speed": 6.25856,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -3207,11 +2871,9 @@
    },
    "properties": {
     "vehicle_id": "3365",
-    "vehicle_label": "1365",
     "route_id": "7A",
     "trip_id": "4658688",
     "bearing": 136,
-    "speed": 4.02336,
     "vehicle_timestamp": "2026-10-15T21:06:28Z"
    }
   },
@@ -3226,11 +2888,9 @@
    },
    "properties": {
     "vehicle_id": "3366",
-    "vehicle_label": "1366",
     "route_id": "29",
     "trip_id": "4652686",
     "bearing": 340,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -3245,11 +2905,9 @@
    },
    "properties": {
     "vehicle_id": "3369",
-    "vehicle_label": "1369",
     "route_id": "3",
     "trip_id": "4653025",
     "bearing": 270,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:53Z"
    }
   },
@@ -3264,11 +2922,9 @@
    },
    "properties": {
     "vehicle_id": "3370",
-    "vehicle_label": "1370",
     "route_id": "90",
     "trip_id": "4660978",
     "bearing": 333,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:49Z"
    }
   },
@@ -3283,11 +2939,9 @@
    },
    "properties": {
     "vehicle_id": "3371",
-    "vehicle_label": "1371",
     "route_id": "10A",
     "trip_id": "4649514",
     "bearing": 232,
-    "speed": 0.44704,
     "vehicle_timestamp": "2026-10-15T21:06:53Z"
    }
   },
@@ -3302,11 +2956,9 @@
    },
    "properties": {
     "vehicle_id": "3373",
-    "vehicle_label": "1373",
     "route_id": "90",
     "trip_id": "4660999",
     "bearing": 276,
-    "speed": 15.19936,
     "vehicle_timestamp": "2026-10-15T21:07:04Z"
    }
   },
@@ -3321,11 +2973,9 @@
    },
    "properties": {
     "vehicle_id": "3374",
-    "vehicle_label": "1374",
     "route_id": "123",
     "trip_id": "4650154",
     "bearing": 80,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:17Z"
    }
   },
@@ -3340,11 +2990,9 @@
    },
    "properties": {
     "vehicle_id": "3376",
-    "vehicle_label": "1376",
     "route_id": "330A",
     "trip_id": "4674846",
     "bearing": 300,
-    "speed": 26.8224,
     "vehicle_timestamp": "2026-10-15T21:07:17Z"
    }
   },
@@ -3359,11 +3007,9 @@
    },
    "properties": {
     "vehicle_id": "3377",
-    "vehicle_label": "1377",
     "route_id": "91",
     "trip_id": "4661177",
     "bearing": 328,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:04Z"
    }
   },
@@ -3378,11 +3024,9 @@
    },
    "properties": {
     "vehicle_id": "3378",
-    "vehicle_label": "1378",
     "route_id": "39",
     "trip_id": "4654073",
     "bearing": 88,
-    "speed": 2.2352,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -3397,11 +3041,9 @@
    },
    "properties": {
     "vehicle_id": "3379",
-    "vehicle_label": "1379",
     "route_id": "84",
     "trip_id": "4660059",
     "bearing": 52,
-    "speed": 15.6464,
     "vehicle_timestamp": "2026-10-15T21:07:03Z"
    }
   },
@@ -3416,11 +3058,9 @@
    },
    "properties": {
     "vehicle_id": "3381",
-    "vehicle_label": "1381",
     "route_id": "135",
     "trip_id": "4650219",
     "bearing": 60,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:17Z"
    }
   },
@@ -3435,11 +3075,9 @@
    },
    "properties": {
     "vehicle_id": "3382",
-    "vehicle_label": "1382",
     "route_id": "183",
     "trip_id": "4650530",
     "bearing": 308,
-    "speed": 4.4704,
     "vehicle_timestamp": "2026-10-15T21:07:05Z"
    }
   },
@@ -3454,11 +3092,9 @@
    },
    "properties": {
     "vehicle_id": "3383",
-    "vehicle_label": "1383",
     "route_id": "10C",
     "trip_id": "4650051",
     "bearing": 152,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:17Z"
    }
   },
@@ -3473,11 +3109,9 @@
    },
    "properties": {
     "vehicle_id": "3384",
-    "vehicle_label": "1384",
     "route_id": "24",
     "trip_id": "4651893",
     "bearing": 212,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -3492,11 +3126,9 @@
    },
    "properties": {
     "vehicle_id": "3387",
-    "vehicle_label": "1387",
     "route_id": "1",
     "trip_id": "4649391",
     "bearing": 124,
-    "speed": 1.78816,
     "vehicle_timestamp": "2026-10-15T21:06:54Z"
    }
   },
@@ -3511,11 +3143,9 @@
    },
    "properties": {
     "vehicle_id": "3388",
-    "vehicle_label": "1388",
     "route_id": "61",
     "trip_id": "4656673",
     "bearing": 184,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:01Z"
    }
   },
@@ -3530,11 +3160,9 @@
    },
    "properties": {
     "vehicle_id": "3389",
-    "vehicle_label": "1389",
     "route_id": "401",
     "trip_id": "4654598",
     "bearing": 40,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:07:22Z"
    }
   },
@@ -3549,11 +3177,9 @@
    },
    "properties": {
     "vehicle_id": "3390",
-    "vehicle_label": "1390",
     "route_id": "51A",
     "trip_id": "4655309",
     "bearing": 135,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:23Z"
    }
   },
@@ -3568,11 +3194,9 @@
    },
    "properties": {
     "vehicle_id": "3392",
-    "vehicle_label": "1392",
     "route_id": "9A",
     "trip_id": "4661522",
     "bearing": 315,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:13Z"
    }
   },
@@ -3587,11 +3211,9 @@
    },
    "properties": {
     "vehicle_id": "3393",
-    "vehicle_label": "1393",
     "route_id": "54",
     "trip_id": "4655793",
     "bearing": 168,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:04Z"
    }
   },
@@ -3606,11 +3228,9 @@
    },
    "properties": {
     "vehicle_id": "3397",
-    "vehicle_label": "1397",
     "route_id": "192",
     "trip_id": "4650630",
     "bearing": 44,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:06:53Z"
    }
   },
@@ -3625,11 +3245,9 @@
    },
    "properties": {
     "vehicle_id": "3398",
-    "vehicle_label": "1398",
     "route_id": "55",
     "trip_id": "4655941",
     "bearing": 208,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:06Z"
    }
   },
@@ -3644,11 +3262,9 @@
    },
    "properties": {
     "vehicle_id": "3399",
-    "vehicle_label": "1399",
     "route_id": "4",
     "trip_id": "4654542",
     "bearing": 162,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -3663,11 +3279,9 @@
    },
    "properties": {
     "vehicle_id": "3402",
-    "vehicle_label": "1402",
     "route_id": "91",
     "trip_id": "4661178",
     "bearing": 8,
-    "speed": 15.6464,
     "vehicle_timestamp": "2026-10-15T21:07:09Z"
    }
   },
@@ -3682,11 +3296,9 @@
    },
    "properties": {
     "vehicle_id": "3404",
-    "vehicle_label": "1404",
     "route_id": "39",
     "trip_id": "4654103",
     "bearing": 312,
-    "speed": 4.4704,
     "vehicle_timestamp": "2026-10-15T21:06:57Z"
    }
   },
@@ -3701,11 +3313,9 @@
    },
    "properties": {
     "vehicle_id": "3405",
-    "vehicle_label": "1405",
     "route_id": "3",
     "trip_id": "4653086",
     "bearing": 135,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:28Z"
    }
   },
@@ -3720,11 +3330,9 @@
    },
    "properties": {
     "vehicle_id": "3406",
-    "vehicle_label": "1406",
     "route_id": "5",
     "trip_id": "4655021",
     "bearing": 137,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:21Z"
    }
   },
@@ -3739,11 +3347,9 @@
    },
    "properties": {
     "vehicle_id": "3407",
-    "vehicle_label": "1407",
     "route_id": "182",
     "trip_id": "4650493",
     "bearing": 45,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:01Z"
    }
   },
@@ -3758,11 +3364,9 @@
    },
    "properties": {
     "vehicle_id": "3409",
-    "vehicle_label": "1409",
     "route_id": "87",
     "trip_id": "4660622",
     "bearing": 136,
-    "speed": 15.19936,
     "vehicle_timestamp": "2026-10-15T21:06:58Z"
    }
   },
@@ -3777,11 +3381,9 @@
    },
    "properties": {
     "vehicle_id": "3410",
-    "vehicle_label": "1410",
     "route_id": "182",
     "trip_id": "4650497",
     "bearing": 320,
-    "speed": 13.4112,
     "vehicle_timestamp": "2026-10-15T21:07:20Z"
    }
   },
@@ -3796,11 +3398,9 @@
    },
    "properties": {
     "vehicle_id": "3411",
-    "vehicle_label": "1411",
     "route_id": "6C",
     "trip_id": "4658085",
     "bearing": 120,
-    "speed": 6.25856,
     "vehicle_timestamp": "2026-10-15T21:07:03Z"
    }
   },
@@ -3815,11 +3415,9 @@
    },
    "properties": {
     "vehicle_id": "3412",
-    "vehicle_label": "1412",
     "route_id": "29",
     "trip_id": "4652638",
     "bearing": 48,
-    "speed": 6.25856,
     "vehicle_timestamp": "2026-10-15T21:06:53Z"
    }
   },
@@ -3834,11 +3432,9 @@
    },
    "properties": {
     "vehicle_id": "3414",
-    "vehicle_label": "1414",
     "route_id": "182",
     "trip_id": "4650492",
     "bearing": 348,
-    "speed": 13.4112,
     "vehicle_timestamp": "2026-10-15T21:07:17Z"
    }
   },
@@ -3853,11 +3449,9 @@
    },
    "properties": {
     "vehicle_id": "4001",
-    "vehicle_label": "2001",
     "route_id": "72",
     "trip_id": "4658274",
     "bearing": 72,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:07:18Z"
    }
   },
@@ -3872,11 +3466,9 @@
    },
    "properties": {
     "vehicle_id": "4002",
-    "vehicle_label": "2002",
     "route_id": "2",
     "trip_id": "4651054",
     "bearing": 270,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -3891,11 +3483,9 @@
    },
    "properties": {
     "vehicle_id": "4003",
-    "vehicle_label": "2003",
     "route_id": "415",
     "trip_id": "4654623",
     "bearing": 148,
-    "speed": 13.4112,
     "vehicle_timestamp": "2026-10-15T21:07:15Z"
    }
   },
@@ -3910,11 +3500,9 @@
    },
    "properties": {
     "vehicle_id": "4006",
-    "vehicle_label": "2006",
     "route_id": "24",
     "trip_id": "4651891",
     "bearing": 135,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:54Z"
    }
   },
@@ -3929,11 +3517,9 @@
    },
    "properties": {
     "vehicle_id": "4007",
-    "vehicle_label": "2007",
     "route_id": "3",
     "trip_id": "4653029",
     "bearing": 220,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:03Z"
    }
   },
@@ -3948,11 +3534,9 @@
    },
    "properties": {
     "vehicle_id": "4009",
-    "vehicle_label": "2009",
     "route_id": "29",
     "trip_id": "4652637",
     "bearing": 88,
-    "speed": 1.78816,
     "vehicle_timestamp": "2026-10-15T21:07:07Z"
    }
   },
@@ -3967,11 +3551,9 @@
    },
    "properties": {
     "vehicle_id": "4011",
-    "vehicle_label": "2011",
     "route_id": "21",
     "trip_id": "4651318",
     "bearing": 112,
-    "speed": 10.72896,
     "vehicle_timestamp": "2026-10-15T21:07:13Z"
    }
   },
@@ -3986,11 +3568,9 @@
    },
    "properties": {
     "vehicle_id": "4012",
-    "vehicle_label": "2012",
     "route_id": "2",
     "trip_id": "4651053",
     "bearing": 268,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:07:13Z"
    }
   },
@@ -4005,11 +3585,9 @@
    },
    "properties": {
     "vehicle_id": "4013",
-    "vehicle_label": "2013",
     "route_id": "7A",
     "trip_id": "4658758",
     "bearing": 304,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:13Z"
    }
   },
@@ -4024,11 +3602,9 @@
    },
    "properties": {
     "vehicle_id": "4014",
-    "vehicle_label": "2014",
     "route_id": "90",
     "trip_id": "4661044",
     "bearing": 96,
-    "speed": 8.49376,
     "vehicle_timestamp": "2026-10-15T21:07:13Z"
    }
   },
@@ -4043,11 +3619,9 @@
    },
    "properties": {
     "vehicle_id": "4019",
-    "vehicle_label": "2019",
     "route_id": "165",
     "trip_id": "4650399",
     "bearing": 260,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:18Z"
    }
   },
@@ -4062,11 +3636,9 @@
    },
    "properties": {
     "vehicle_id": "4020",
-    "vehicle_label": "2020",
     "route_id": "3",
     "trip_id": "4653027",
     "bearing": 225,
-    "speed": 0.44704,
     "vehicle_timestamp": "2026-10-15T21:06:42Z"
    }
   },
@@ -4081,11 +3653,9 @@
    },
    "properties": {
     "vehicle_id": "4021",
-    "vehicle_label": "2021",
     "route_id": "93",
     "trip_id": "4661226",
     "bearing": 308,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -4100,11 +3670,9 @@
    },
    "properties": {
     "vehicle_id": "4022",
-    "vehicle_label": "2022",
     "route_id": "65",
     "trip_id": "4657277",
     "bearing": 328,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:13Z"
    }
   },
@@ -4119,11 +3687,9 @@
    },
    "properties": {
     "vehicle_id": "4023",
-    "vehicle_label": "2023",
     "route_id": "91",
     "trip_id": "4661200",
     "bearing": 280,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:07:14Z"
    }
   },
@@ -4138,11 +3704,9 @@
    },
    "properties": {
     "vehicle_id": "4024",
-    "vehicle_label": "2024",
     "route_id": "168A",
     "trip_id": "4650424",
     "bearing": 90,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:20Z"
    }
   },
@@ -4157,11 +3721,9 @@
    },
    "properties": {
     "vehicle_id": "4025",
-    "vehicle_label": "2025",
     "route_id": "7A",
     "trip_id": "4658759",
     "bearing": 340,
-    "speed": 4.02336,
     "vehicle_timestamp": "2026-10-15T21:06:52Z"
    }
   },
@@ -4176,11 +3738,9 @@
    },
    "properties": {
     "vehicle_id": "4026",
-    "vehicle_label": "2026",
     "route_id": "28",
     "trip_id": "4652365",
     "bearing": 90,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:07Z"
    }
   },
@@ -4195,11 +3755,9 @@
    },
    "properties": {
     "vehicle_id": "4027",
-    "vehicle_label": "2027",
     "route_id": "29",
     "trip_id": "4652683",
     "bearing": 180,
-    "speed": 4.02336,
     "vehicle_timestamp": "2026-10-15T21:06:52Z"
    }
   },
@@ -4214,11 +3772,9 @@
    },
    "properties": {
     "vehicle_id": "4030",
-    "vehicle_label": "2030",
     "route_id": "183",
     "trip_id": "4650529",
     "bearing": 304,
-    "speed": 13.4112,
     "vehicle_timestamp": "2026-10-15T21:07:04Z"
    }
   },
@@ -4233,11 +3789,9 @@
    },
    "properties": {
     "vehicle_id": "4033",
-    "vehicle_label": "2033",
     "route_id": "137",
     "trip_id": "4650276",
     "bearing": 315,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:57Z"
    }
   },
@@ -4252,11 +3806,9 @@
    },
    "properties": {
     "vehicle_id": "4035",
-    "vehicle_label": "2035",
     "route_id": "186",
     "trip_id": "4650605",
     "bearing": 36,
-    "speed": 15.6464,
     "vehicle_timestamp": "2026-10-15T21:07:03Z"
    }
   },
@@ -4271,11 +3823,9 @@
    },
    "properties": {
     "vehicle_id": "4036",
-    "vehicle_label": "2036",
     "route_id": "185",
     "trip_id": "4650572",
     "bearing": 4,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:06:54Z"
    }
   },
@@ -4290,11 +3840,9 @@
    },
    "properties": {
     "vehicle_id": "4038",
-    "vehicle_label": "2038",
     "route_id": "6B",
     "trip_id": "4657895",
     "bearing": 136,
-    "speed": 12.96416,
     "vehicle_timestamp": "2026-10-15T21:06:58Z"
    }
   },
@@ -4309,11 +3857,9 @@
    },
    "properties": {
     "vehicle_id": "4039",
-    "vehicle_label": "2039",
     "route_id": "67",
     "trip_id": "4657444",
     "bearing": 270,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -4328,11 +3874,9 @@
    },
    "properties": {
     "vehicle_id": "4040",
-    "vehicle_label": "2040",
     "route_id": "22",
     "trip_id": "4651639",
     "bearing": 104,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:06:59Z"
    }
   },
@@ -4347,11 +3891,9 @@
    },
    "properties": {
     "vehicle_id": "4041",
-    "vehicle_label": "2041",
     "route_id": "182",
     "trip_id": "4650495",
     "bearing": 56,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:17Z"
    }
   },
@@ -4366,11 +3908,9 @@
    },
    "properties": {
     "vehicle_id": "4042",
-    "vehicle_label": "2042",
     "route_id": "136",
     "trip_id": "4650252",
     "bearing": 304,
-    "speed": 11.176,
     "vehicle_timestamp": "2026-10-15T21:07:17Z"
    }
   },
@@ -4385,11 +3925,9 @@
    },
    "properties": {
     "vehicle_id": "4043",
-    "vehicle_label": "2043",
     "route_id": "87",
     "trip_id": "4660592",
     "bearing": 90,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:12Z"
    }
   },
@@ -4404,11 +3942,9 @@
    },
    "properties": {
     "vehicle_id": "4044",
-    "vehicle_label": "2044",
     "route_id": "9A",
     "trip_id": "4661519",
     "bearing": 340,
-    "speed": 0.44704,
     "vehicle_timestamp": "2026-10-15T21:07:05Z"
    }
   },
@@ -4423,11 +3959,9 @@
    },
    "properties": {
     "vehicle_id": "4045",
-    "vehicle_label": "2045",
     "route_id": "185",
     "trip_id": "4650573",
     "bearing": 308,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:06:53Z"
    }
   },
@@ -4442,11 +3976,9 @@
    },
    "properties": {
     "vehicle_id": "4046",
-    "vehicle_label": "2046",
     "route_id": "67",
     "trip_id": "4657421",
     "bearing": 135,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:14Z"
    }
   },
@@ -4461,11 +3993,9 @@
    },
    "properties": {
     "vehicle_id": "4047",
-    "vehicle_label": "2047",
     "route_id": "22",
     "trip_id": "4651602",
     "bearing": 96,
-    "speed": 0.44704,
     "vehicle_timestamp": "2026-10-15T21:07:03Z"
    }
   },
@@ -4480,11 +4010,9 @@
    },
    "properties": {
     "vehicle_id": "4048",
-    "vehicle_label": "2048",
     "route_id": "82",
     "trip_id": "4659741",
     "bearing": 212,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:06:21Z"
    }
   },
@@ -4499,11 +4027,9 @@
    },
    "properties": {
     "vehicle_id": "4049",
-    "vehicle_label": "2049",
     "route_id": "136",
     "trip_id": "4650250",
     "bearing": 284,
-    "speed": 4.02336,
     "vehicle_timestamp": "2026-10-15T21:07:00Z"
    }
   },
@@ -4518,11 +4044,9 @@
    },
    "properties": {
     "vehicle_id": "4050",
-    "vehicle_label": "2050",
     "route_id": "64",
     "trip_id": "4657106",
     "bearing": 340,
-    "speed": 17.43456,
     "vehicle_timestamp": "2026-10-15T21:06:56Z"
    }
   },
@@ -4537,11 +4061,9 @@
    },
    "properties": {
     "vehicle_id": "4051",
-    "vehicle_label": "2051",
     "route_id": "186",
     "trip_id": "4650606",
     "bearing": 312,
-    "speed": 8.9408,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -4556,11 +4078,9 @@
    },
    "properties": {
     "vehicle_id": "4055",
-    "vehicle_label": "2055",
     "route_id": "24",
     "trip_id": "4651889",
     "bearing": 228,
-    "speed": 13.4112,
     "vehicle_timestamp": "2026-10-15T21:07:10Z"
    }
   },
@@ -4575,11 +4095,9 @@
    },
    "properties": {
     "vehicle_id": "4056",
-    "vehicle_label": "2056",
     "route_id": "182",
     "trip_id": "4650494",
     "bearing": 72,
-    "speed": 13.4112,
     "vehicle_timestamp": "2026-10-15T21:06:53Z"
    }
   },
@@ -4594,11 +4112,9 @@
    },
    "properties": {
     "vehicle_id": "4058",
-    "vehicle_label": "2058",
     "route_id": "135",
     "trip_id": "4650220",
     "bearing": 90,
-    "speed": null,
     "vehicle_timestamp": "2026-10-15T21:07:03Z"
    }
   },
@@ -4613,11 +4129,9 @@
    },
    "properties": {
     "vehicle_id": "4059",
-    "vehicle_label": "2059",
     "route_id": "10C",
     "trip_id": "4650050",
     "bearing": 140,
-    "speed": 6.7056,
     "vehicle_timestamp": "2026-10-15T21:06:57Z"
    }
   }

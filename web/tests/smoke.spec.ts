@@ -33,6 +33,7 @@ const fixture = (name: string): unknown =>
   );
 
 const COVERAGE = fixture("coverage.json");
+const META = fixture("meta.json");
 const ROUTES = fixture("routes.json");
 const ROUTES_PERFORMANCE = fixture("routes-performance.json");
 const ROUTE_ONE = fixture("route-1.json");
@@ -79,6 +80,7 @@ const LIVE_API = process.env.BT_LIVE === "1";
 async function serveApi(page: Page) {
   if (LIVE_API) return;
   await page.route("**/api/coverage", (route) => json(route, COVERAGE));
+  await page.route("**/api/meta", (route) => json(route, META));
   await page.route("**/api/vehicles/live", (route) => json(route, freshLive()));
   await page.route("**/api/routes/performance*", (route) => json(route, ROUTES_PERFORMANCE));
   await page.route("**/api/routes/*/performance*", (route) => json(route, ROUTE_ONE));
@@ -180,10 +182,13 @@ test("too few observations is said in words, not printed as a percentage", async
   await serveApi(page);
   await page.goto("/routes/1");
 
-  // Route 1's fixture holds 20 stops held back below the ranking floor, and hourly
-  // buckets thin enough to trip the display threshold. Wherever that happens the page
-  // must say so rather than print a number from a handful of rows.
-  await expect(page.getByText(/20 further stops were left out/i)).toBeVisible();
+  // Route 1's fixture holds stops below the ranking floor and hourly buckets below the
+  // display floor. Wherever that happens the page must say so rather than print a
+  // number from a handful of rows. The count is not asserted: it is a property of
+  // whichever week the fixture was captured from, and a test that pins it would fail
+  // on a re-capture rather than on a defect.
+  await expect(page.getByText(/further stops? (was|were) left out/i)).toBeVisible();
+  await expect(page.getByText(/Ranked among stops with at least \d+ derived/i)).toBeVisible();
 });
 
 test("the method page states the licence and that this is not official", async ({ page }) => {
