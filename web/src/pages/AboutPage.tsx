@@ -67,14 +67,18 @@ export default function AboutPage() {
       <h2>The number this site is least sure about</h2>
       <p>
         Because the feed holds one stop number for minutes, each stop arrives as a{" "}
-        <strong>window</strong> of positions rather than a moment. Taking that window's
-        start or its end as the arrival gives two different answers from the same data:
+        <strong>window</strong> of positions rather than a moment, and an arrival has to
+        be timed from one end of that window or the other. This site takes the{" "}
+        <strong>end</strong> of it.
+      </p>
+      <p>
+        The same week, derived both ways and with nothing else changed:
       </p>
       <div className="table-wrap">
         <table>
           <thead>
             <tr>
-              <th scope="col">The same 6,550 arrivals, 9 October</th>
+              <th scope="col">4&ndash;10 October 2026, 109,584 arrivals</th>
               <th scope="col">Window start</th>
               <th scope="col">Window end (used here)</th>
             </tr>
@@ -82,48 +86,92 @@ export default function AboutPage() {
           <tbody>
             <tr>
               <th scope="row">On time</th>
-              <td>49.0%</td>
+              <td>40.9%</td>
               <td>
-                <strong>70.2%</strong>
+                <strong>58.4%</strong>
               </td>
             </tr>
             <tr>
               <th scope="row">Early</th>
-              <td>37.8%</td>
-              <td>10.4%</td>
+              <td>35.5%</td>
+              <td>11.1%</td>
             </tr>
             <tr>
               <th scope="row">Late</th>
-              <td>13.1%</td>
-              <td>19.4%</td>
+              <td>23.6%</td>
+              <td>30.5%</td>
             </tr>
           </tbody>
         </table>
       </div>
       <p>
-        Nothing Halifax Transit did differs between those two columns.{" "}
         <strong>
-          The figure on this site moves 21 percentage points on our own definition of
-          “arrived” — further than anything the buses did that day.
+          17.5 percentage points, and not one bus behaved differently between those two
+          columns.
         </strong>{" "}
-        Both columns are published for that reason, rather than only the one in use.
+        Both are published for that reason.
       </p>
       <p>
-        The choice between them was measured rather than argued. The realtime feed has a
-        field that can say <code>STOPPED_AT</code>: the agency stating a bus is at a
-        stop, instead of us inferring it. Halifax fills it in on{" "}
-        <strong>0.40%</strong> of positions, far too few to build the measurement on —
-        but enough to judge the two candidates against. Where the agency does say{" "}
-        <code>STOPPED_AT</code>, it lands a median 80% of the way through the window,
-        and against those 597 cases the window&rsquo;s <strong>end</strong> is a median{" "}
-        <strong>61 seconds late</strong> while its start is a median{" "}
-        <strong>544 seconds early</strong>. The end is roughly nine times closer, so
-        that is the definition this site uses.
+        Which end to take was decided by measurement, not preference. The realtime feed
+        has a field that can say <code>STOPPED_AT</code>: the agency stating a bus is at
+        a stop, rather than us inferring it. Halifax fills it in on{" "}
+        <strong>0.40%</strong> of positions — far too few to measure with, and enough to
+        judge the two candidates against. The window&rsquo;s end lands a median{" "}
+        <strong>61 seconds late</strong>; its start, a median{" "}
+        <strong>544 seconds early</strong>.
       </p>
       <p>
-        Its remaining bias is about a minute late, and it is stated rather than
-        corrected: a correction worked out from 0.40% of the data would be a guess with
-        a number attached.
+        <strong>That remaining 61 seconds is named, not corrected.</strong> Removing it
+        from every arrival in the published week would move the figure from{" "}
+        <strong>58.4%</strong> to <strong>49.7%</strong> — a margin of{" "}
+        <strong>8.7 percentage points</strong>, which is this site&rsquo;s own margin of
+        error and the number the observation floors below are derived from.
+      </p>
+      <p>
+        Two limits on that, both measured and both pointing the same way.{" "}
+        <code>STOPPED_AT</code> is only reported where buses sit still: 27 of the 45
+        stops that ever send it are terminals or bays, and those windows are a median
+        815 seconds wide against 32 seconds for windows in general. And the bias{" "}
+        <em>grows</em> with the width of the window — a median of 0 seconds on windows
+        under a minute wide, against 211 seconds on those over fifteen minutes. So at an
+        ordinary stop the end of the window is close to the real arrival; at a terminal
+        where a bus lays over, it is minutes late. The 61 seconds is measured on the
+        awkward cases, which makes it cautious rather than flattering. It is not a
+        handful of buses either: 234 of the 366 vehicles ever seen report it at least
+        once.
+      </p>
+      <p>
+        <strong>One thing is worth stating plainly, because the two numbers look like a
+        contradiction otherwise.</strong> The two definitions sit at opposite ends of a
+        window that is often minutes wide, yet the median delay differs by only 74
+        seconds between them while the headline figure moves 8.7 points. Both are true,
+        because <strong>50.5% of the windows that produce an arrival contain a single
+        position</strong> — for half of all arrivals, the two definitions are the same
+        timestamp. Everything the choice changes comes from the other half.
+      </p>
+
+      <h2>How few observations is too few</h2>
+      <p>
+        One observation moves a percentage by 100/n points. This site publishes an
+        8.7-point margin of error, so a figure that a single bus could swing further
+        than that is describing its own sample size rather than the service. Two floors
+        follow from that, and both are computed from the margin rather than chosen:
+      </p>
+      <ul>
+        <li>
+          a percentage is shown at all only over <strong>12</strong> or more arrivals —
+          below that you will see &ldquo;too few observations&rdquo;
+        </li>
+        <li>
+          a route or stop is <strong>ranked</strong> only over <strong>46</strong> or
+          more, a quarter of the margin, because placing one route above another is a
+          stronger claim than printing its number
+        </li>
+      </ul>
+      <p>
+        Over the published week that costs little: 75 of the 81 observed routes clear
+        the ranking floor, and the median route has 302 arrivals. On a single day it
+        would cost most of them, which is one reason the default range is a week.
       </p>
 
       <h2>Matching an arrival to the schedule</h2>

@@ -246,3 +246,98 @@ percentage points on our own definition of "arrived" — further than anything H
 Transit did on 9 October.** Both percentages stay side by side, with the chosen
 definition named in plain words. A reader who knows the figure is definition-sensitive
 can judge it; one shown 70.2% as a fact cannot.
+
+## Is the calibration sample fair? Tested, and it is not — but not in the direction feared
+
+The decision above rests on 597 windows where the agency happened to report
+`STOPPED_AT`, out of roughly 7,100 that produce an arrival on a day. The senior reviewer
+asked whether that 8% is representative, on the grounds that if it is not, "61 seconds
+late" is a number about unusual stops rather than about Halifax. Two tests, both cheap.
+
+### (a) Window width — badly skewed, by a factor of 25
+
+| 9–10 October | windows | median width | p90 width | single-position windows |
+|---|---|---|---|---|
+| windows with a `STOPPED_AT` | 217 | **815s** | 1,473s | 0.9% |
+| all other windows | 41,778 | **32s** | 753s | 45.1% |
+
+So `STOPPED_AT` appears overwhelmingly on long windows. The reviewer's hypothesis was
+right that the sample is unrepresentative.
+
+### (b) Fleet concentration — not an artefact of a few buses
+
+| | |
+|---|---|
+| `STOPPED_AT` positions | 5,342 |
+| distinct vehicles reporting it | **234 of 366 ever seen (64%)** |
+| busiest single vehicle's share | 3.6% |
+| distinct stops where it is reported | **45 of 1,571 (2.9%)** |
+| of those stops, terminals or bays | **27 of 45** |
+
+So it is not one AVL firmware version on a handful of buses — most of the fleet reports
+it. It is concentrated by **place**: terminals, bays and park-and-rides. The top four
+are Fall River Park and Ride, a Marketplace Drive bay, Novalea Drive, and a Barrington
+Street bay.
+
+### Which way the skew runs, which is the part that matters
+
+The reviewer expected the skew to mean the true bias is *worse* than 61 seconds. It runs
+the other way, and the direction is measurable rather than arguable — bias against
+window width, on the windows where both are known:
+
+| window width | windows | median bias of the window's end | mean |
+|---|---|---|---|
+| under 60s | 21 | **0s** | 10s |
+| 60–180s | 73 | 30s | 36s |
+| 180–420s | 95 | 30s | 66s |
+| 420–900s | 280 | 32s | 105s |
+| over 900s | 293 | **211s** | 440s |
+
+The bias grows with the width of the window, and the calibration sample is composed
+almost entirely of wide windows. A typical window is 32 seconds wide, where the measured
+bias is **0 to 30 seconds**. So the pooled 61 seconds is measured on the awkward cases
+and is **conservative for an ordinary stop, not optimistic.**
+
+Which makes sense mechanically: the window for stop N is the approach to N plus the
+dwell at N, so its end is the departure. At an ordinary stop the dwell is seconds; at a
+terminal where a bus lays over for ten minutes, the end of the window is ten minutes
+after the arrival. The large biases are layovers, and they are exactly where the agency
+bothers to report `STOPPED_AT`.
+
+**So: `LAST_BEFORE_ADVANCE` stands, and the bias is published as a range rather than a
+single number** — near zero at an ordinary stop, minutes at a terminal, 61 seconds
+pooled across what can be checked. No correction is applied. What is honest to say is
+that the figure can only be verified where the agency reports being stopped, and that
+is at terminals.
+
+## The published week, both ways
+
+Re-derived over 4–10 October 2026 — 110,439 arrivals, 109,584 matched to a published
+time (99.2%) — changing nothing but the arrival moment:
+
+| | start of window | **end of window** (in force) |
+|---|---|---|
+| on time | 40.9% | **58.4%** |
+| early | 35.5% | 11.1% |
+| late | 23.6% | 30.5% |
+
+**17.5 percentage points**, on the published range, with no bus behaving differently.
+The single-day figure quoted earlier in this record (49.0% against 70.2%) was one
+partly-collected day and is superseded by the week; it is kept because the reconciliation
+below was derived from it.
+
+Two distinct margins now get published, and conflating them would be the easiest
+mistake a reader could make:
+
+- **17.5 points** — the gap between the two candidate definitions. A finding about how
+  much the question "what counts as arriving?" is worth.
+- **8.7 points** — the margin of error that remains after the question was answered:
+  58.4% as published against 49.7% with the named 61-second bias removed. This is the
+  figure the observation floors are derived from (ADR-017), because it is what the
+  project still does not know rather than a choice it has already made.
+
+And the reconciliation, restated because without it the two look contradictory: the
+definitions sit at opposite ends of a window often minutes wide, yet the median delay
+moves only 74 seconds. **50.5% of the 115,810 arrival-producing windows in the week
+contain a single position**, so for half of all arrivals both definitions are the same
+timestamp, and everything the choice changes comes from the other half.

@@ -25,9 +25,10 @@ were served and never mentioned. They are counted, never interpolated, and never
 reported as missed service.
 
 Two further honest limits, both measured and both below in [data
-quality](#data-quality): the published figure moves **21 percentage points** on our own
-definition of the moment of arrival, and the two data sources disagree about stop
-numbering on **21.5%** of arrivals.
+quality](#data-quality): the published figure moves **17.5 percentage points** on our
+own definition of the moment of arrival, carries an **8.7-point** margin of error after
+that definition was calibrated, and the two data sources disagree about stop numbering
+on **21.5%** of arrivals.
 
 Bunching, ghost buses and prediction accuracy are designed and not built. Prediction
 accuracy needs the trip-updates loader, which is sized and deferred for a measured
@@ -141,10 +142,13 @@ published zip does not list. Both are the agency's own data, published weeks apa
 **4.4% of live trip ids cannot join the schedule at all** without stripping a suffix
 the schedule has never used.
 
-**The honest headline is about us, not the buses.** The published on-time figure moves
-**21 percentage points** on an internal definition — which position in a vehicle's
-trail counts as the arrival — on identical data. Any single number from this project
-should be read with that in mind, which is why both columns are on the method page.
+**The honest headline is about us, not the buses.** On the same week's data, the
+on-time figure is **40.9%** or **58.4%** depending on which end of a stop's reporting
+window counts as the arrival — **17.5 points** on an internal definition, with no bus
+behaving differently. The definition was then settled against the agency's own
+`STOPPED_AT` positions, leaving a measured **8.7-point** margin of error. Any single
+number from this project should be read with both figures in mind, which is why both
+are on the method page permanently.
 
 ## Data quality
 
@@ -192,48 +196,120 @@ invented cancellations.
 percentage over eleven arrivals is not a percentage, and the API returns the
 denominator so the frontend can say so instead of printing a number.
 
-### The headline figure moves 21 points on our own definition of "arrived"
+### The published figure, and what it rests on
+
+**58.4% of arrivals were on time across 4–10 October 2026** — 63,991 of 109,584
+arrivals matched to a published time, out of 110,439 derived. 11.1% were more than a
+minute early and 30.5% more than five minutes late.
+
+The week is the figure. A single day is not representative of it:
+
+| service date | on time | median delay |
+|---|---|---|
+| Sun 4 Oct | 53.6% of 16,359 | +176s |
+| Mon 5 Oct | 60.8% of 13,750 | +121s |
+| Tue 6 Oct | 46.9% of 18,634 | +209s |
+| Wed 7 Oct | 58.5% of 21,818 | +125s |
+| Thu 8 Oct | 57.1% of 6,064 | +101s |
+| Fri 9 Oct | 64.2% of 14,583 | +100s |
+| Sat 10 Oct | 68.3% of 18,376 | +70s |
+| **week** | **58.4% of 109,584** | **+123s** |
+
+The spread between the best and worst day is **21.4 points** — wider than the
+17.5-point definitional gap and wider still than the 8.7-point margin of error. Quoting
+any single day as "Halifax's on-time performance" would have been quoting a number with
+more day-to-day variation in it than methodology.
+
+### What "arrived" means here, and the two margins that come with it
 
 The feed holds one stop number for minutes at a time, so each stop is reported as a
-**window** of positions rather than a moment. Taking the window's start or its end as
-the arrival gives two different answers from identical data:
+**window** of positions rather than a moment, and an arrival has to be timed from one
+end of it or the other. This site takes the **end** of the window.
 
-| the same 6,550 arrivals, 9 October | window start | **window end** (used) |
+The same week, derived both ways, changing nothing else:
+
+| 4–10 October 2026, 109,584 matched arrivals | start of window | **end of window** (used here) |
 |---|---|---|
-| **on time** | 49.0% | **70.2%** |
-| early | 37.8% | 10.4% |
-| late | 13.1% | 19.4% |
-| 10th percentile delay | −475s | −63s |
+| **on time** | 40.9% | **58.4%** |
+| early | 35.5% | 11.1% |
+| late | 23.6% | 30.5% |
 
-Nothing Halifax Transit did differs between those columns. **The published figure is
-more sensitive to our own definition of "arrived" than to anything the buses did that
-day**, which is why both columns stay here permanently rather than only the one we use.
+**17.5 percentage points**, and not one bus behaved differently between those columns.
+Both stay published, permanently, because a reader who knows the figure is
+definition-sensitive can judge it and one shown 58.4% as a bare fact cannot.
 
-The choice between them was settled by measurement, not taste. GTFS-Realtime has a
-field, `current_status`, that can say `STOPPED_AT` — the agency asserting a bus is *at*
-a stop instead of us inferring it. Halifax populates it on **0.40%** of positions, so it
-cannot be the rule: a detector built on it would measure the few vehicles that report it.
-But 0.40% is plenty to referee the two candidates. Where the agency does say
-`STOPPED_AT`, it falls a median **80% of the way through** the window, and scoring both
-definitions against those 597 windows:
+That is not a coin-flip, though. GTFS-Realtime has a field, `current_status`, which can say
+`STOPPED_AT` — the agency asserting a bus is *at* a stop rather than us inferring it.
+Halifax populates it on **0.40%** of positions, far too few to build the measurement
+on, but enough to judge the two candidate definitions against:
 
 | definition | median error against the agency's own `STOPPED_AT` |
 |---|---|
-| **window end** | **61s late** |
-| window start | 544s early |
+| **end of window** (used here) | **61s late** |
+| start of window | 544s early |
 
-So the window's end is nine times closer, and that is the definition in use. Its
-residual bias is late by about a minute — **named, not corrected**, because a
-correction factor inferred from a 0.40% subset would be a guess wearing a number's
-clothes. See
-[ADR-014](docs/decisions/014-the-arrival-rule-and-the-on-time-window.md).
+**The remaining bias is named, not corrected.** Removing that 61 seconds from every
+arrival in the week would move the published figure from 58.4% to **49.7% — 8.7
+points.**
 
-One figure in that story looked wrong and was worth checking rather than publishing:
-if the two definitions sit at opposite ends of a window that is minutes wide, the
-on-time medians should be minutes apart, and they differ by 74 seconds. The reason is
-that **50.6% of the windows that produce an arrival contain a single position**, so for
-half of all arrivals the two definitions are the same timestamp. The 21 points come
-almost entirely from the other half.
+The two margins mean different things and both are published:
+
+- **17.5 points** is the gap between the two candidate definitions. It is a *finding*
+  about how much the question "what counts as arriving?" is worth.
+- **8.7 points** is the residual margin of error of the definition that won, after it
+  was calibrated against the agency's own `STOPPED_AT` positions. It is the figure the
+  observation floors below are derived from, because it is what the project still does
+  not know rather than a choice it has already made.
+
+Two honest limits on that calibration, both measured:
+
+- **It can only be checked where the agency reports `STOPPED_AT`, which is at
+  terminals.** 27 of the 45 stops that ever report it are terminals or bays, and those
+  windows are a median 815 seconds wide against 32 seconds for windows in general. So
+  the calibration sample is 25× wider than typical.
+- **The bias grows with the width of the window**, which means the 61-second figure is
+  measured on the worst cases rather than the normal ones:
+
+  | window width | median bias of the window's end |
+  |---|---|
+  | under 60s | **0s** |
+  | 60–180s | 30s |
+  | 180–420s | 30s |
+  | 420–900s | 32s |
+  | over 900s | **211s** |
+
+  Read together: at an ordinary stop the end of the window is close to the arrival; at a
+  terminal where a bus lays over for ten minutes, it is minutes late. The pooled 61
+  seconds is published because it is the figure that can be checked, and it is
+  conservative for a typical stop rather than optimistic.
+
+It is **not** a handful of buses: 234 of the 366 vehicles ever seen report `STOPPED_AT`
+at least once, so this is the fleet, not one firmware version.
+
+**And the reconciliation, which matters more than either number:** the two definitions
+sit at opposite ends of a window that is often minutes wide, yet the median delay
+differs by only 74 seconds between them while the headline moves 8.7 points. Both are
+true, because **50.5% of the windows that produce an arrival contain a single
+position** — for half of all arrivals the two definitions are *the same timestamp*. The
+movement comes almost entirely from the other half. Without that sentence the two
+figures look like a contradiction; with it, they are the finding.
+
+See [ADR-014](docs/decisions/014-the-arrival-rule-and-the-on-time-window.md).
+
+### How few observations is too few
+
+A single observation moves a percentage by 100/n points. This project publishes an 8.7
+point margin of error, so a figure where one bus swings it further than that is
+describing its own sample size:
+
+- **a percentage is shown** only over **12** or more arrivals
+- **a route or stop is ranked** only over **46** or more — a quarter of the margin,
+  because placing one route above another is a stronger claim than printing its number
+
+Both are computed from the 8.7 in code and served to the site from `/api/meta`, so the
+floors cannot drift from the figure that justifies them. Over a week they cost little:
+75 of the 81 observed routes clear 46, and the median route has 302 arrivals. See
+[ADR-017](docs/decisions/017-how-few-observations-is-too-few.md).
 
 ### The two sources number the same trip's stops differently
 
