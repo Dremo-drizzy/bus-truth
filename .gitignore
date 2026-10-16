@@ -63,6 +63,12 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+# One exception, and it is not a secret: Vite reads build-time configuration from
+# .env.<mode> files, and web/.env.snapshot holds the single flag that makes the map
+# draw a named historical minute instead of watching a live feed. It has to be
+# committed or CI builds the wrong page — which is exactly what happened, and CI is
+# what caught it. The .env.* rule above still covers anything that does hold a secret.
+!web/.env.snapshot
 # Local-only Spring profile, holding the development database password. The
 # committed application.yml gives that property no default on purpose.
 application-local.yml
