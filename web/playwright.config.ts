@@ -30,6 +30,13 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
     },
     {
+      // The hosted site's build: the map draws one named minute instead of watching a
+      // feed. A separate project rather than a flag, because the two modes are
+      // genuinely different pages and both are worth loading in a browser.
+      name: "snapshot-mode",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
+    },
+    {
       name: "phone",
       // 400px wide, as specified. Not a device preset, because the number is the
       // requirement and a preset could change it under us in a later release.
@@ -38,7 +45,10 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "npm run preview -- --port 4173 --strictPort",
+    // Built with the map in snapshot mode so the hosted site's behaviour is the one
+    // under test; the live-mode path is exercised by the two live-state assertions
+    // against the /live fixture, and locally by running the collector.
+    command: "npm run build:snapshot && npm run preview -- --port 4173 --strictPort",
     url: "http://localhost:4173",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

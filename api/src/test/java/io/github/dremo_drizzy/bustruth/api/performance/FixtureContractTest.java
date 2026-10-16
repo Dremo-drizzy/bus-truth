@@ -3,6 +3,7 @@ package io.github.dremo_drizzy.bustruth.api.performance;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.dremo_drizzy.bustruth.api.live.VehicleFeatureCollection;
+import io.github.dremo_drizzy.bustruth.api.live.VehicleSnapshot;
 import io.github.dremo_drizzy.bustruth.api.performance.PerformanceRows.CoverageDay;
 import io.github.dremo_drizzy.bustruth.api.performance.PerformanceRows.Route;
 import io.github.dremo_drizzy.bustruth.api.performance.PerformanceRows.RouteDetail;
@@ -74,7 +75,9 @@ class FixtureContractTest {
                 new Fixture("summary.json",
                         types.constructType(PerformanceRows.NetworkSummary.class)),
                 new Fixture("vehicles-live.json",
-                        types.constructType(VehicleFeatureCollection.class)));
+                        types.constructType(VehicleFeatureCollection.class)),
+                new Fixture("vehicles-snapshot.json",
+                        types.constructType(VehicleSnapshot.class)));
     }
 
     @Test

@@ -93,9 +93,14 @@ cloud reads.
 cd ~/bus-truth                      # wherever the repo lives
 export PGPASSWORD=$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)
 
+# First, the one minute the hosted map draws. Without this the map has nothing to
+# show: the cloud has no collector, so /api/vehicles/live is empty there for ever.
+psql -h localhost -p 55432 -U bustruth -d bustruth -f scripts/pick_map_snapshot.sql
+
 pg_dump -h localhost -p 55432 -U bustruth -d bustruth \
   --no-owner --no-privileges --clean --if-exists \
   -t 'gtfs_*' -t arrival_events -t ontime_events -t ontime_quality \
+  -t map_snapshot_positions \
   -f bustruth-derived.sql
 
 ls -lh bustruth-derived.sql          # expect about 48 MB
@@ -123,6 +128,7 @@ What is in it, measured on the current database:
 | `arrival_events` | 113,841 | 1.9 MB |
 | `gtfs_trips` | 9,239 | 1.8 MB |
 | `gtfs_stops`, `gtfs_routes`, `gtfs_calendar*`, `gtfs_feed_versions`, `ontime_quality` | smaller | < 1 MB |
+| `map_snapshot_positions` | 290 | **72 kB** |
 
 Restore it through the **External** URL from step 3:
 
@@ -211,7 +217,7 @@ Environment**. Never as a literal in the file.
 Worth one look by eye: Dashboard → `bus-truth-api` → **Environment** should show
 `DATABASE_URL` as coming *from the database*, not as a typed value.
 
-## 8. Verify all eight endpoints
+## 8. Verify all nine endpoints
 
 ```bash
 API=https://bus-truth-api.onrender.com
@@ -219,6 +225,7 @@ R="from=2026-10-04&to=2026-10-10"
 
 for p in \
   "/api/vehicles/live" \
+  "/api/vehicles/snapshot" \
   "/api/routes" \
   "/api/routes/performance?$R" \
   "/api/routes/1/performance?$R" \
@@ -230,11 +237,20 @@ for p in \
 done
 ```
 
-All eight must be `200`. The first will be slow if the service was asleep.
+All nine must be `200`. The first will be slow if the service was asleep.
 
-`/api/vehicles/live` returning an empty feature collection is **correct**: the collector
-is not deployed, so nothing writes live positions, and the map shows its "no recent
-data" notice. That is one of the three states it exists to distinguish.
+`/api/vehicles/live` returning an empty feature collection is **correct**, and the
+hosted map does not use it: nothing in the cloud writes live positions. The map asks
+`/api/vehicles/snapshot` instead and draws one named minute — 290 vehicles at 17:08 on
+Tuesday 6 October 2026, the busiest minute of the network's worst hour on its worst day
+of the published week.
+
+That is a choice rather than a fallback. A live endpoint quietly answering with a
+fortnight-old snapshot would be the only dishonest thing on this site, so the
+historical minute has its own endpoint, its own response type with no freshness fields
+at all, and a page that labels itself with the date and time in words. The three live
+states stay in the code and stay correct — they are what a local collector drives, and
+`VITE_MAP_MODE` decides which behaviour a build has.
 
 ## 9. Verify all five pages
 
@@ -242,7 +258,7 @@ Open the static site URL and check each renders numbers rather than an error:
 
 | page | what to look for |
 |---|---|
-| `/` | the map draws; the "no recent data" notice is expected |
+| `/` | the map draws 290 dots and names the minute: "Tuesday 6 October 2026, 17:08" |
 | `/routes` | the overview (on time, by hour, by service date) and the ranked table |
 | `/routes/1` | two charts and a worst-stops table |
 | `/stops/8640` | Mumford Terminal, with a by-route table |

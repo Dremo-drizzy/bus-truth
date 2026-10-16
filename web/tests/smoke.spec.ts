@@ -35,6 +35,7 @@ const fixture = (name: string): unknown =>
 const COVERAGE = fixture("coverage.json");
 const META = fixture("meta.json");
 const SUMMARY = fixture("summary.json");
+const SNAPSHOT = fixture("vehicles-snapshot.json");
 const ROUTES = fixture("routes.json");
 const ROUTES_PERFORMANCE = fixture("routes-performance.json");
 const ROUTE_ONE = fixture("route-1.json");
@@ -84,6 +85,7 @@ async function serveApi(page: Page) {
   await page.route("**/api/meta", (route) => json(route, META));
   await page.route("**/api/performance/summary*", (route) => json(route, SUMMARY));
   await page.route("**/api/vehicles/live", (route) => json(route, freshLive()));
+  await page.route("**/api/vehicles/snapshot", (route) => json(route, SNAPSHOT));
   await page.route("**/api/routes/performance*", (route) => json(route, ROUTES_PERFORMANCE));
   await page.route("**/api/routes/*/performance*", (route) => json(route, ROUTE_ONE));
   await page.route("**/api/stops/*/reliability*", (route) => json(route, STOP));
@@ -240,6 +242,30 @@ test("a fast response never mentions waking up", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: /by hour of the day/i })).toBeVisible();
   await expect(page.getByText(/server is waking up/i)).toHaveCount(0);
+});
+
+test("the map names the minute it is showing, and does not claim to be live", async ({
+  page,
+}, testInfo) => {
+  // Only meaningful in the snapshot-mode build, which is what the hosted site is.
+  test.skip(
+    testInfo.project.name !== "snapshot-mode",
+    "the live-mode build watches the feed instead",
+  );
+  await serveApi(page);
+
+  await page.goto("/");
+
+  // The moment, in words — the same discipline as every figure on the site carrying
+  // its period.
+  await expect(page.getByText(/Tuesday 6 October 2026, 17:08/i).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText(/290 vehicles/).first()).toBeVisible();
+  // And it says plainly that this is not live.
+  await expect(page.getByText(/history, not a live feed/i)).toBeVisible();
+  await expect(page.getByText(/no recent data/i)).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: /the network, one minute/i })).toBeVisible();
 });
 
 test("the method page states the licence and that this is not official", async ({ page }) => {

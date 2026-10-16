@@ -161,6 +161,18 @@ services:
           type: web
           name: bus-truth-api
           property: host
+
+      # The map shows one named minute rather than watching a live feed, because
+      # nothing collects positions for this deployment: the restore carries the derived
+      # tables and a single curated minute, not the 1.4 million raw positions. Without
+      # this the map would answer empty for ever and show its "no recent data" notice,
+      # which is honest and reads as broken on the most visually compelling page here.
+      #
+      # It never pretends to be live: a separate endpoint, a separate response type
+      # with no freshness fields, and the page labels itself "Tuesday 6 October 2026,
+      # 17:08". Unset means live, which is what local development wants.
+      - key: VITE_MAP_MODE
+        value: snapshot
     routes:
       # THE REWRITE THAT MATTERS. React Router owns the paths: /routes/14 and
       # /stops/8640 are client-side routes with no file behind them. Without this,

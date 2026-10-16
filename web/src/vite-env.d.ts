@@ -15,6 +15,13 @@ interface ImportMetaEnv {
    * proxy and for any deployment that serves both from one host.
    */
   readonly VITE_API_BASE_URL?: string;
+
+  /**
+   * "snapshot" makes the map draw one named historical minute instead of watching a
+   * live feed. Set for deployments with no collector, where the live endpoint is
+   * permanently empty. Anything else, including unset, means live.
+   */
+  readonly VITE_MAP_MODE?: "live" | "snapshot";
 }
 
 interface ImportMeta {

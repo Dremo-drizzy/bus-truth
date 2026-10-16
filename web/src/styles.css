@@ -499,3 +499,15 @@ tbody a:hover {
 .daybar-value {
   white-space: nowrap;
 }
+
+/* The historical-moment notice. Deliberately not styled like the two failure
+   notices: this is the hosted site working as intended, not a warning. */
+.notice.moment {
+  color: var(--ink);
+  background: var(--surface);
+  border-color: var(--accent);
+}
+
+.notice.moment strong {
+  color: var(--accent);
+}
