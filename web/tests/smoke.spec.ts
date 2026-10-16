@@ -205,6 +205,43 @@ test("too few observations is said in words, not printed as a percentage", async
   await expect(page.getByText(/Ranked among stops with at least \d+ derived/i)).toBeVisible();
 });
 
+test("a slow first request explains itself instead of spinning", async ({ page }) => {
+  test.skip(LIVE_API, "needs a deliberately delayed response");
+
+  // The free instance sleeps and takes about thirty seconds to wake. A spinner that
+  // sits there reads as broken, so after three seconds the page says why. Delayed to
+  // five seconds here to cross that threshold.
+  await serveApi(page);
+  await page.route("**/api/performance/summary*", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(SUMMARY),
+    });
+  });
+
+  await page.goto("/routes");
+
+  await expect(page.getByText(/server is waking up/i)).toBeVisible({ timeout: 10_000 });
+  // And it goes away once the data lands, rather than persisting as a false warning.
+  await expect(page.getByRole("heading", { name: /by hour of the day/i })).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText(/server is waking up/i)).toHaveCount(0);
+});
+
+test("a fast response never mentions waking up", async ({ page }) => {
+  // The fixtures answer in milliseconds, so the notice must never appear — otherwise
+  // every page in this suite would be carrying a warning about a problem it does not
+  // have.
+  await serveApi(page);
+  await page.goto("/routes");
+
+  await expect(page.getByRole("heading", { name: /by hour of the day/i })).toBeVisible();
+  await expect(page.getByText(/server is waking up/i)).toHaveCount(0);
+});
+
 test("the method page states the licence and that this is not official", async ({ page }) => {
   await serveApi(page);
   await page.goto("/about");

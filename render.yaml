@@ -49,9 +49,25 @@ services:
     # The repo root, because the api module depends on common and Maven needs the
     # whole reactor.
     dockerContext: .
-    # Render watches this to decide when the instance is healthy, and the free plan
-    # spins the instance down when idle — so this path is also what wakes it up.
-    healthCheckPath: /actuator/health
+    # LIVENESS ONLY, and the path matters more than it looks.
+    #
+    # /actuator/health includes a database health indicator, so with an empty or
+    # unreachable database it answers HTTP 503 DOWN — measured, not assumed. Render
+    # would then mark every deploy unhealthy and restart the service in a loop, which
+    # sits between you and the one-time restore that would have fixed it. A health
+    # check that fails when a dependency is down produces cascading restarts instead
+    # of signal.
+    #
+    # /actuator/health/liveness answers 200 UP in the same state: the process is up
+    # and serving.
+    #
+    # Measured, because the obvious assumption is wrong: /actuator/health/readiness
+    # ALSO answers 200 UP with no database. Both probe groups contain only Spring's
+    # own state indicators, and the datasource indicator sits in the root health group
+    # alone. So /actuator/health is the one to curl when you want to know whether the
+    # database is reachable — it is just not the one to hand a platform that restarts
+    # on failure.
+    healthCheckPath: /actuator/health/liveness
     envVars:
       # ---- the JVM inside a 512 MB container -------------------------------------
       # Capped explicitly. Left to itself a modern JVM takes a quarter of what it

@@ -35,7 +35,8 @@ export default function RouteDetailPage() {
       : `/api/routes/${encodeURIComponent(routeId)}/performance?${query}`,
   );
 
-  if (result.state === "loading") return <Loading what={`route ${routeId}`} />;
+  if (result.state === "loading")
+    return <Loading what={`route ${routeId}`} slow={result.slow} />;
   if (result.state === "failed") {
     if (result.error.status === 404) {
       return (

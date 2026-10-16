@@ -21,7 +21,8 @@ export default function RoutesPage() {
     query === null ? null : `/api/routes/performance?${query}`,
   );
 
-  if (result.state === "loading") return <Loading what="route performance" />;
+  if (result.state === "loading")
+    return <Loading what="route performance" slow={result.slow} />;
   if (result.state === "failed") {
     return <Failed what="route performance" detail={result.error.message} />;
   }

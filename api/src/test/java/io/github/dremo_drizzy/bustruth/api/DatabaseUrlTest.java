@@ -58,6 +58,68 @@ class DatabaseUrlTest {
         assertThat(translation.toString()).doesNotContain("hunter2").contains("***");
     }
 
+    @Test
+    @DisplayName("a password containing @ : and / survives — the host does not move")
+    void passwordWithReservedCharacters() {
+        // Render generates the password; nobody picks it. If one arrives with an @ in
+        // it and the parse takes the FIRST @ as the host delimiter, the JDBC url ends
+        // up pointing at a hostname made of half the password, and the error reads as
+        // a DNS failure.
+        var translation = DatabaseUrl.translate(
+                "postgres://bustruth:pa@ss:wo/rd@dpg-abc-a.virginia-postgres.render.com:5432/bustruth")
+                .orElseThrow();
+
+        assertThat(translation.jdbcUrl()).isEqualTo(
+                "jdbc:postgresql://dpg-abc-a.virginia-postgres.render.com:5432/bustruth");
+        assertThat(translation.username()).isEqualTo("bustruth");
+        assertThat(translation.password()).isEqualTo("pa@ss:wo/rd");
+    }
+
+    @Test
+    @DisplayName("a percent-encoded password is decoded before the driver sees it")
+    void percentEncodedPassword() {
+        // The password goes to the driver as a property, not inside the url, so it has
+        // to be the decoded form. Handing the driver "p%40ss" would authenticate with
+        // a literal percent-four-zero and fail with "password authentication failed",
+        // which looks like the wrong credential rather than a parsing bug.
+        var translation = DatabaseUrl.translate(
+                "postgres://bust%72uth:p%40ss%2Fword@host:5432/bustruth").orElseThrow();
+
+        assertThat(translation.username()).isEqualTo("bustruth");
+        assertThat(translation.password()).isEqualTo("p@ss/word");
+    }
+
+    @Test
+    @DisplayName("a plus in the password stays a plus, not a space")
+    void plusIsNotASpace() {
+        // The reason this does not use URLDecoder: that treats + as a space, which is
+        // right for form encoding and wrong for a credential. A generated password with
+        // a plus in it would authenticate with a space in its place and fail as a bad
+        // password rather than a parsing bug.
+        var translation = DatabaseUrl.translate("postgres://u:ab+cd@host/db").orElseThrow();
+
+        assertThat(translation.password()).isEqualTo("ab+cd");
+    }
+
+    @Test
+    @DisplayName("a stray percent that is not an escape is left alone")
+    void strayPercentSurvives() {
+        var translation = DatabaseUrl.translate("postgres://u:100%sure@host/db").orElseThrow();
+
+        assertThat(translation.password()).isEqualTo("100%sure");
+    }
+
+    @Test
+    @DisplayName("sslmode and other parameters are carried onto the JDBC url")
+    void keepsEveryQueryParameter() {
+        var translation = DatabaseUrl.translate(
+                "postgres://u:p@host:5432/db?sslmode=require&connect_timeout=10")
+                .orElseThrow();
+
+        assertThat(translation.jdbcUrl())
+                .isEqualTo("jdbc:postgresql://host:5432/db?sslmode=require&connect_timeout=10");
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {
             "", "   ",

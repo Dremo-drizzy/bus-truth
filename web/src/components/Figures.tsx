@@ -65,10 +65,28 @@ export function Delay({ seconds }: { seconds: number | null }) {
   );
 }
 
-export function Loading({ what }: { what: string }) {
+/**
+ * Loading, and — if it is taking a while — why.
+ *
+ * The API runs on a free instance that sleeps when idle, so the first request after a
+ * quiet spell waits for the container to start: about thirty seconds. Saying that
+ * plainly costs five lines and is the difference between a visitor waiting and a
+ * visitor closing the tab. It is also the same principle as everything else here:
+ * state the limitation rather than let the reader guess at it.
+ */
+export function Loading({ what, slow = false }: { what: string; slow?: boolean }) {
   return (
     <p className="state" role="status">
       Loading {what}…
+      {slow && (
+        <>
+          <br />
+          <small className="muted">
+            The server is waking up. It sleeps when nobody is using it, which is what
+            makes this free to run, and takes about thirty seconds to start.
+          </small>
+        </>
+      )}
     </p>
   );
 }

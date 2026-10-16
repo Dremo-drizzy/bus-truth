@@ -188,11 +188,28 @@ async function getJson<T>(path: string, signal: AbortSignal): Promise<T> {
   return (await response.json()) as T;
 }
 
-/** Loading, loaded or failed — the three states every page has to render. */
+/**
+ * Loading, loaded or failed — the three states every page has to render.
+ *
+ * `slow` is the fourth thing worth saying. The API is hosted on a free instance that
+ * spins down after about fifteen minutes idle, and the first request after that waits
+ * for the container to be scheduled and the JVM to boot — call it thirty seconds. The
+ * site itself is static and appears instantly, so without this the visitor watches a
+ * spinner for half a minute and concludes the thing is broken.
+ */
 export type Loadable<T> =
-  | { state: "loading" }
+  | { state: "loading"; slow: boolean }
   | { state: "loaded"; data: T }
   | { state: "failed"; error: ApiError };
+
+/**
+ * How long a request may take before the page admits something is up.
+ *
+ * Three seconds: long enough that a warm response never trips it — the slowest
+ * endpoint measured locally answers in well under one — and short enough that nobody
+ * has yet decided the page is dead.
+ */
+const SLOW_REQUEST_MS = 3_000;
 
 
 /**
@@ -203,15 +220,22 @@ export type Loadable<T> =
  * overwrite it. That race is invisible in development and routine on a phone.
  */
 export function useApi<T>(path: string | null): Loadable<T> {
-  const [result, setResult] = useState<Loadable<T>>({ state: "loading" });
+  const [result, setResult] = useState<Loadable<T>>({ state: "loading", slow: false });
 
   useEffect(() => {
     if (path === null) {
-      setResult({ state: "loading" });
+      setResult({ state: "loading", slow: false });
       return;
     }
     const controller = new AbortController();
-    setResult({ state: "loading" });
+    setResult({ state: "loading", slow: false });
+
+    // Only promotes an existing loading state, so a response that has already arrived
+    // can never be overwritten by a late timer.
+    const slowTimer = setTimeout(
+      () => setResult((current) => (current.state === "loading" ? { ...current, slow: true } : current)),
+      SLOW_REQUEST_MS,
+    );
 
     getJson<T>(path, controller.signal)
       .then((data) => setResult({ state: "loaded", data }))
@@ -224,7 +248,10 @@ export function useApi<T>(path: string | null): Loadable<T> {
         });
       });
 
-    return () => controller.abort();
+    return () => {
+      clearTimeout(slowTimer);
+      controller.abort();
+    };
   }, [path]);
 
   return result;

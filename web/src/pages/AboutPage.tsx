@@ -243,7 +243,7 @@ export default function AboutPage() {
         Collection has run on a laptop, and the laptop has slept. The table below is
         live, not written down — it is the same data the rest of the site is built from.
       </p>
-      {coverage.state === "loading" && <Loading what="coverage" />}
+      {coverage.state === "loading" && <Loading what="coverage" slow={coverage.slow} />}
       {coverage.state === "failed" && (
         <Failed what="coverage" detail={coverage.error.message} />
       )}

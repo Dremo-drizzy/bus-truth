@@ -46,16 +46,31 @@ public class WebOriginConfig implements WebMvcConfigurer {
         this.webOrigin = webOrigin == null ? "" : webOrigin.trim();
     }
 
+    /**
+     * Scheme and host, with no trailing slash.
+     *
+     * <p>Two corrections, both of which fail in the same misleading way. The Blueprint
+     * can only inject a bare hostname, so a missing scheme is added rather than
+     * rejected — a deployment should not break because a generated value had no
+     * {@code https://} on it. And a trailing slash is removed, because an allowed
+     * origin is compared to the browser's {@code Origin} header as an exact string:
+     * {@code https://site.com/} never matches {@code https://site.com}, so every
+     * request is refused and the page reports the API as unreachable. Nothing in the
+     * logs says "trailing slash".
+     */
+    static String normalise(String webOrigin) {
+        String trimmed = webOrigin.trim();
+        String withScheme = trimmed.startsWith("http") ? trimmed : "https://" + trimmed;
+        return withScheme.replaceAll("/+$", "");
+    }
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         if (webOrigin.isEmpty()) {
             log.info("no web origin configured; serving same-origin only, no CORS headers");
             return;
         }
-        // The Blueprint can only inject a hostname, not a URL, so a bare host is
-        // normalised rather than rejected — a deployment should not fail because a
-        // scheme was missing from a generated value.
-        String origin = webOrigin.startsWith("http") ? webOrigin : "https://" + webOrigin;
+        String origin = normalise(webOrigin);
         log.info("allowing cross-origin GETs from {}", origin);
 
         registry.addMapping("/api/**")

@@ -23,7 +23,8 @@ export default function StopPage() {
       : `/api/stops/${encodeURIComponent(stopId)}/reliability?${query}`,
   );
 
-  if (result.state === "loading") return <Loading what={`stop ${stopId}`} />;
+  if (result.state === "loading")
+    return <Loading what={`stop ${stopId}`} slow={result.slow} />;
   if (result.state === "failed") {
     if (result.error.status === 404) {
       return (

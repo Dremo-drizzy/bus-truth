@@ -30,9 +30,10 @@ table can be rebuilt from it — but the site stops working. See
 [ADR-016](decisions/016-how-it-is-deployed.md).
 
 **Free web services sleep.** After roughly 15 minutes without traffic the API spins
-down, and the next request waits for it to start — about 12 seconds, measured locally.
-Someone who does not know that will think the site is broken. Step 10 is where you
-decide whether that is worth $7/month.
+down, and the next visitor waits for it: about 12 seconds of JVM boot plus however long
+Render takes to schedule the container, so budget 30 seconds. The site tells them that
+rather than spinning silently — but it is still 30 seconds. Step 10 is where you decide
+whether it is worth paying to avoid.
 
 ---
 
@@ -56,7 +57,12 @@ healthy yet, and that is expected:
 
 - `bus-truth-db` — ready in a minute or so
 - `bus-truth-api` — builds the Docker image (5–10 minutes the first time), then starts
-  and **returns errors**, because the database is empty
+  and **passes its health check while returning errors from `/api/...`**, because the
+  database is empty. That combination is deliberate: the health check is liveness only
+  (`/actuator/health/liveness`), so Render leaves the service running instead of
+  restarting it in a loop before you have had a chance to load the data. Measured: with
+  no database, `/actuator/health` answers **503 DOWN** while
+  `/actuator/health/liveness` answers **200 UP**
 - `bus-truth-web` — builds in 1–2 minutes and succeeds, but every page shows an error,
   because the API has nothing to answer with
 
@@ -92,8 +98,21 @@ pg_dump -h localhost -p 55432 -U bustruth -d bustruth \
   -t 'gtfs_*' -t arrival_events -t ontime_events -t ontime_quality \
   -f bustruth-derived.sql
 
-ls -lh bustruth-derived.sql          # expect roughly 60-80 MB
+ls -lh bustruth-derived.sql          # expect about 48 MB
 ```
+
+**Measured, not estimated:**
+
+| | |
+|---|---|
+| the dump file | **47.8 MB** |
+| the same file gzipped | 6.8 MB |
+| **restored size in the cloud, with indexes** | **139 MB** |
+| of which table data | 83 MB |
+| against the free tier's 1 GB | **14% used** |
+
+So storage is not a constraint — there is room for roughly six more weeks of derived
+data before the limit matters, and the database expires long before that.
 
 What is in it, measured on the current database:
 
@@ -112,13 +131,22 @@ psql "postgres://bustruth:...@dpg-xxxx-a.virginia-postgres.render.com/bustruth" 
   -v ON_ERROR_STOP=1 -f bustruth-derived.sql
 ```
 
-**Expect 10–30 minutes.** Almost all of it is `gtfs_stop_times`, going over the public
-internet to Virginia, so your upstream speed decides. It prints a line per object; the
-`DROP ... IF EXISTS` notices at the start are normal on a first run.
+**Expect 5–15 minutes**, and the time is not the upload. 48 MB goes over a home
+connection in a couple of minutes; the rest is PostgreSQL rebuilding indexes on a free
+instance with a shared CPU. It prints a line per object, and the `DROP ... IF EXISTS`
+notices at the start are normal on a first run.
 
-If it fails with a disk or quota error, the free database is smaller than the dump.
-`gtfs_stop_times` is the table to thin — the API only reads `feed_version`, `trip_id`,
-`stop_sequence`, `stop_id`, `arrival_time` and `departure_time`.
+If your upstream is slow, gzip makes the transfer about seven times smaller:
+
+```bash
+gzip -9 bustruth-derived.sql                     # 47.8 MB -> 6.8 MB
+gunzip -c bustruth-derived.sql.gz | psql "<external url>" -v ON_ERROR_STOP=1
+```
+
+At 139 MB restored against a 1 GB free tier there is no need to thin anything. If a
+future load does hit the limit, `gtfs_stop_times` is the table to cut — the API reads
+only `feed_version`, `trip_id`, `stop_sequence`, `stop_id`, `arrival_time` and
+`departure_time`.
 
 Confirm it arrived:
 
@@ -248,13 +276,24 @@ the blueprint sets:
 **It fits, with headroom.** 512 MB is not the constraint — the startup spike is the
 largest figure and it is still three fifths of the limit.
 
-So the $7/month question is not about memory. It is about the sleep: free services spin
-down after about 15 minutes idle and cold-start in roughly 12 seconds. If you are
-sending this link to interviewers, a 12-second first load is the argument for paying.
-**Your call; nothing here requires it.**
+So the $7/month question is not about memory. It is about the sleep.
 
-To upgrade, change only `plan:` on `bus-truth-api` in `render.yaml` and re-apply the
-blueprint. Leave the database free until it expires.
+A free service spins down after about 15 minutes idle. 12 seconds of that is the JVM
+booting, measured; the visitor also waits for Render to schedule the container, so
+**expect something closer to 30 seconds** and do not be surprised by it.
+
+The site itself is static and never sleeps, so the page appears instantly — the only
+question was what it shows while waiting. It now says so: after three seconds the
+loading line adds that the server is waking up, that it sleeps when nobody is using it,
+and that this takes about thirty seconds. Both behaviours are asserted in the browser
+suite, including that a fast response never shows it.
+
+**If you only ever pay for one thing, pay for the database, not the API.** The API
+sleeping is cosmetic and now explained; the database expiring takes the whole site down
+30 days after you create it. Roughly $6 for Postgres against $7 for the API, and the
+failure modes are not comparable.
+
+To upgrade either, change only its `plan:` in `render.yaml` and re-apply the blueprint.
 
 ---
 
@@ -278,9 +317,10 @@ deliberately does not do.
 
 | symptom | cause |
 |---|---|
-| API health check fails, logs show a connection error | the restore has not run (step 4), or the database expired |
+| API health check fails | not the database — liveness does not touch it. Check the build logs and the JVM flags |
+| health check passes but `/api/...` returns errors | the restore has not run (step 4), or the database expired. `curl $API/actuator/health` answers 503 when the database is unreachable, which is the one to ask |
 | every page shows "Could not load" | `VITE_API_BASE_URL` was not set at build time — check the static site's Environment, then **Clear build cache & deploy** |
 | pages work when clicked but a pasted URL 404s | the SPA rewrite is missing (step 9) |
-| the browser console shows a CORS error | `BUSTRUTH_API_WEB_ORIGIN` on the API does not match the site's origin |
+| the browser console shows a CORS error | `BUSTRUTH_API_WEB_ORIGIN` does not match the site's origin exactly. It is compared as a literal string, so a **trailing slash** refuses every request and looks identical to the API being down. The API normalises both the missing scheme and the trailing slash, so if this happens the value is wrong in some other way — check the API's logs for the line beginning "allowing cross-origin GETs from" |
 | the API restarts every few minutes | out of memory — compare Metrics against step 10 |
 | it all worked, now the database is gone | the free database expired: 14-day grace to upgrade, then deletion |

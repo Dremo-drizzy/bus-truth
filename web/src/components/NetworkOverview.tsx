@@ -17,7 +17,8 @@ export function NetworkOverview({ query }: { query: string | null }) {
     query === null ? null : `/api/performance/summary?${query}`,
   );
 
-  if (result.state === "loading") return <Loading what="the network summary" />;
+  if (result.state === "loading")
+    return <Loading what="the network summary" slow={result.slow} />;
   if (result.state === "failed") {
     return <Failed what="the network summary" detail={result.error.message} />;
   }
