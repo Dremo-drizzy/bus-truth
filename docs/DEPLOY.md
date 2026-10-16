@@ -25,91 +25,95 @@ does.
 
 ### What the sizing rules out immediately
 
-- **The brief's option B — a free managed PostgreSQL tier — is dead.** Neon's and
-  Supabase's free tiers are around 0.5 GB. The database is already 353 MB after sixteen
-  partly-collected days and grows about 7.5 GB a month. It would exhaust a free tier
-  within the first week of real collection.
-- **A 40 GB server is a few weeks of runway**, and an 80 GB one a couple of months,
-  against 27 GB a month of archive. Whatever host is chosen needs expandable block
-  storage, not just a bigger root disk.
+- **The brief's option B — a managed PostgreSQL tier — is dead, and not only the free
+  one.** Supabase's free tier is 500 MB of database storage and Neon's is about 0.5 GB
+  per project; the database is already **353 MB** after sixteen partly-collected days
+  and grows about **7.5 GB a month**. It would exhaust either free tier within the first
+  week of real collection — and Supabase's Pro tier, at $25 a month, tops out at 8 GB
+  per project, which is roughly one month of growth. Paying more than the whole VPS
+  costs to run out of room by Christmas is not a trade worth making.
+  ([Supabase pricing](https://www.activepieces.com/blog/supabase-pricing-free-tier-limits-pro-costs-egress.md),
+  [Neon pricing](https://neon.com/pricing) — the free storage figure is from
+  third-party summaries, as Neon's own page did not state it in the text I could
+  retrieve.)
+- **Archiving all three feeds on any affordable host is a dead end.** At 910 MB a day,
+  a 160 GB disk is about 143 days and a 40 GB one is six weeks. This is what ADR-018
+  settles, and it is why the recommendation below needs no block-storage volume at
+  all.
 
-### The lever worth deciding before spending anything
+### The feed that drives the bill, and the ruling on it
 
-**94% of the archive is trip updates, and nothing in the project reads them yet.** They
-exist for prediction accuracy, which is R9 and out of scope. Two honest choices:
+**94% of the archive is trip updates**, at a mean 202.4 kB a snapshot against 3.8 kB
+for vehicle positions. They are also the agency's own *predictions* and the only
+possible basis for R9 — and October 2026's predictions cannot be collected in December.
 
-| | archive growth | one year |
-|---|---|---|
-| keep all three feeds | ~910 MB/day | ~330 GB |
-| pause the trip-updates feed | **~56 MB/day** | **~20 GB** |
+**They keep being collected. Nothing is paused and nothing is deleted** (the senior
+reviewer's ruling, and it is right). But the arithmetic rules out archiving them on the
+host: 130 GB of usable disk at 910 MB a day is **about 143 days**, before PostgreSQL
+and before the existing 16 GB. With only positions and alerts — 6% of the bytes, about
+55 MB a day — the same disk lasts over five years.
 
-That is a **16× difference in the thing that drives the bill.** Keeping them preserves
-the option to build prediction accuracy from history that cannot be re-collected later;
-pausing them makes this project cheap to run indefinitely. ADR-005 says raw data is kept
-forever, which argues for keeping them — but ADR-005 was written when the archive was
-megabytes. This is a decision for Daniel and the reviewer, not for me, and it is worth
-making before a disk is paid for. A third option exists — keep collecting them but move
-snapshots older than a month to object storage — and that is an architecture change,
-so it needs the reviewer rather than a commit from me.
+So the host archives positions and alerts, and trip updates stay on the laptop until
+the archive can be written to object storage. That is scoped at a day and a half,
+mostly because the archive is not write-only — `ArchiveBackfill` replays it off the
+filesystem, so a remote archive needs a remote read path or replay silently stops
+working. Over the reviewer's one-day threshold, so it waits.
+[ADR-018](decisions/018-where-the-archive-lives-once-it-is-hosted.md) has the estimate,
+the fallback and what the fallback costs. The switch is already built:
+`bustruth.collector.trip-updates.enabled=false` on the host.
 
-### The host: Hetzner Cloud, one server plus a volume
+### The host: Hetzner CPX31 in Ashburn, not Germany
 
-Chosen over Fly.io, Railway and Render for one reason that follows from the table
-above: this workload is **a long-running collector with a large and steadily growing
-disk**, which is the shape those three price least favourably and a plain VPS prices
-best. It also keeps the archive and the database on the same machine, so rebuilding the
-database by replaying the archive — hours of work — never crosses a network.
+The first version of this plan put the site in Nuremberg, which was wrong for a reason
+that has nothing to do with money: **this is a Halifax transit site built for Canadian
+employers to look at.** Serving it from Germany adds roughly 100 ms to every request
+for exactly the audience that matters.
 
-Verified from Hetzner's own product pages (specifications only — see the caveat below):
+Verified from Hetzner's own plan pages: the **CX** line and the EU **CPX** plans exist
+only in `FSN1`/`NBG1`/`HEL1` (and `SIN1`). The North American locations are `ASH1`
+(Ashburn, Virginia) and `HIL1` (Hillsboro, Oregon), and they carry a separate CPX
+series:
 
-| plan | vCPU | RAM | included NVMe | included traffic |
-|---|---|---|---|---|
-| CX23 | 2 | 4 GB | 40 GB | 20 TB |
-| CX33 | 4 | 8 GB | 80 GB | 20 TB |
-| CX43 | 8 | 16 GB | 160 GB | 20 TB |
+| plan | vCPU | RAM | NVMe | included traffic | locations |
+|---|---|---|---|---|---|
+| CPX21 | 3 AMD | 4 GB | 80 GB | 2 TB | HIL1, ASH1 |
+| **CPX31** | **4 AMD** | **8 GB** | **160 GB** | **3 TB** | **HIL1, ASH1** |
+| CPX41 | 8 AMD | 16 GB | 240 GB | 4 TB | HIL1, ASH1 |
 
-**CX33 (4 vCPU, 8 GB, 80 GB) plus a block-storage volume** is the recommendation. The
-collector, the api, nginx and PostgreSQL together idle well under 8 GB; the 80 GB root
-disk holds the operating system, the images and the database, and the archive goes on a
-volume that can be grown as it fills. Starting at a 50 GB volume covers today's 16 GB
-with about a year of headroom at the reduced growth rate, or four months at the full
-one.
+**CPX31 in ASH1** is the plan: four AMD vCPUs, 8 GB, and a 160 GB NVMe disk — double
+the disk of the EU CX33 this replaces, about 1,000 km from Halifax instead of 6,000.
+The traffic allowance drops from 20 TB to 3 TB, which this project will not approach: a
+GeoJSON response for 240 vehicles is about 40 kB, so 3 TB is tens of millions of map
+refreshes a month.
 
-### What I could not verify, and will not invent
+No separate volume is needed under ADR-018. At ~55 MB of archive a day the 160 GB disk
+is years of runway, and a volume can be added later without moving anything.
 
-**I cannot give you a monthly figure I trust.** Hetzner renders every price on its
-pricing pages in the browser, so the fetched pages carry the plan names, specifications
-and included traffic but no amounts, and every plan currently reads "currently
-unavailable" in the fetched text. Third-party guides disagree with each other — one
-quotes CX23 at €3.99 rising to €5.49, another CX22 at €4.35, another $7.69 for a CX32 —
-and several note a price increase during 2026 and a renaming of the CX line, so the
-figures a search returns may describe retired plans. **Block storage price per GB is
-not on the volumes page at all.**
+### The price: pending, and deliberately not guessed
 
-Quoting one of those numbers as a cost would be exactly the mistake this project exists
-to avoid. So the three things to check, which take a minute in the Hetzner Console:
+**The monthly figure is not obtainable from the public site, and I am not going to
+average third-party guesses into a number that looks like a fact.** Every amount on
+Hetzner's Cost-Optimized and Regular Performance pages renders empty — `from /month`
+with nothing in it — and every plan simultaneously reads "currently unavailable". Both
+symptoms have one cause: the price and stock data load only after their cookie banner
+is accepted, so neither is a finding about availability. The senior reviewer checked
+this independently in a browser and got the same result.
 
-1. the monthly price of **CX33** in EUR, including VAT and any IPv4 surcharge
-2. the **volume price per GB per month**, and the minimum volume size
-3. whether the shared-vCPU plans are actually orderable in the Nuremberg or Helsinki
-   regions today
+Third-party guides disagree with each other (€3.99, €4.35, $7.69 for comparable plans)
+and several report both a 2026 price rise and a renaming of the CX line, so a searched
+figure may be describing a retired plan.
 
-Multiply (2) by 50 GB, add (1), and that is the monthly cost of the plan above. My
-expectation is that it lands in the region of €10–15 a month, and that is an
-expectation, not a quote.
+**Where the real number comes from:** signing up is free, and the console and the
+Hetzner Cloud API both show live prices per plan per location. Three things to read
+there, which takes a minute:
 
-### What happens on Daniel's go
+1. **CPX31 in ASH1**, monthly, including VAT and any IPv4 surcharge
+2. whether an IPv4 address is charged separately
+3. whether CPX31 is actually orderable in ASH1 today
 
-1. He creates the account and the server; I do not create anything that costs money.
-2. `docker compose -f infra/docker-compose.prod.yml up -d --build`, which is already
-   written and validated — all three images build, and the api image has been run and
-   serves real data.
-3. Prove the hard requirement on the host the same way it was proved locally:
-   `docker compose -f infra/docker-compose.prod.yml config | grep published` must print
-   `web: published: "80"` and nothing else. **PostgreSQL must not be reachable from the
-   internet on any host — no `ports:` key, no public bind, no exception.**
-4. Start the 24-hour observation and report `/api/coverage` for that period. Above 99%
-   is the brief's bar for done, and it is the last unmet one.
+My expectation is that it lands near the low tens of euros a month. **That is an
+expectation, not a quote**, and no figure goes in the README until it is read from the
+console.
 
 ## The two options the brief allows
 
