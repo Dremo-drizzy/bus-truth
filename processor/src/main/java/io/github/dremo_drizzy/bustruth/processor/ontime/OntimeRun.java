@@ -62,6 +62,11 @@ public class OntimeRun {
             throw new IllegalArgumentException("to (" + to + ") is before from (" + from + ")");
         }
 
+        // Same reason as the detection run: the window decides every on-time verdict
+        // in the range, so it goes in the log beside the result.
+        log.info("settings: on-time window {}s to +{}s",
+                settings.onTimeEarly().toSeconds(), settings.onTimeLate().toSeconds());
+
         int cleared = repository.deleteRange(from, to);
         log.info("cleared {} existing on-time rows for {} .. {}", cleared, from, to);
 

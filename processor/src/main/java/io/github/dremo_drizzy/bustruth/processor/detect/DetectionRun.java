@@ -40,6 +40,15 @@ public class DetectionRun {
             throw new IllegalArgumentException("to (" + to + ") is before from (" + from + ")");
         }
 
+        // The settings, every run, before anything else. They decide what the project
+        // publishes, and a run that does not state them lets a stale configuration
+        // value pass unnoticed — which is exactly what happened: application.yml
+        // pinned the old arrival moment and quietly overrode the code's default for a
+        // full week's run.
+        log.info("settings: arrival moment {}, on-time window {}s to +{}s, max trail gap {}s",
+                settings.arrivalMoment(), settings.onTimeEarly().toSeconds(),
+                settings.onTimeLate().toSeconds(), settings.maxTrailGap().toSeconds());
+
         int cleared = repository.deleteRange(from, to);
         log.info("cleared {} existing arrivals for {} .. {}", cleared, from, to);
 
