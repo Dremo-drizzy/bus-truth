@@ -45,15 +45,22 @@ public final class PublishedUncertainty {
     public static final double HEADLINE_SENSITIVITY_POINTS = 8.7;
 
     /**
-     * How much stricter a ranking has to be than a bare figure.
+     * How many figures a claim rests on.
      *
-     * <p>This is the one editorial choice left in here, and it is named rather than
-     * buried. Showing "62.9% of 679 arrivals" is a weak claim; placing a route above
-     * or below another is a strong one, so the noise behind a ranking should be a
-     * fraction of the disclosed uncertainty rather than merely smaller than it. A
-     * quarter is the factor; its consequence is in ADR-017's table.
+     * <p>Showing a percentage rests on one figure. Ranking rests on two — "this route
+     * is worse than that one" is a statement about a pair, and each side carries its
+     * own sampling noise, so the noise behind the comparison is twice the noise behind
+     * either number.
+     *
+     * <p>This replaced a chosen constant. The ranking floor was previously "a quarter
+     * of the margin", which read like arithmetic and was taste: a free parameter hidden
+     * inside a derivation, which is the same shape as the invented threshold this
+     * project has already had to withdraw once. Two is not a preference — it is how
+     * many percentages are involved in a comparison.
      */
-    private static final double RANKING_STRICTNESS = 4;
+    private static final int FIGURES_IN_A_SHOWN_PERCENTAGE = 1;
+
+    private static final int FIGURES_IN_A_COMPARISON = 2;
 
     private PublishedUncertainty() {
     }
@@ -65,29 +72,40 @@ public final class PublishedUncertainty {
      * published uncertainty.
      */
     public static int displayFloor() {
-        return smallestSampleWhereOneObservationMovesLessThan(HEADLINE_SENSITIVITY_POINTS);
+        return smallestSampleWhereNoiseStaysWithinTheMargin(FIGURES_IN_A_SHOWN_PERCENTAGE);
     }
 
     /**
      * Fewest observations for which a route or stop may take a position in a ranking.
      */
     public static int rankingFloor() {
-        return smallestSampleWhereOneObservationMovesLessThan(
-                HEADLINE_SENSITIVITY_POINTS / RANKING_STRICTNESS);
+        return smallestSampleWhereNoiseStaysWithinTheMargin(FIGURES_IN_A_COMPARISON);
     }
 
     /**
-     * The smallest n such that {@code 100/n < points}.
+     * The smallest sample in which the noise behind a claim stays inside the margin.
      *
-     * <p>Computed rather than tabulated so that changing the measured sensitivity moves
-     * both floors by itself. Floored at 2, because a percentage over a single
-     * observation is never anything but 0% or 100%.
+     * <p>One observation moves a percentage by {@code 100/n} points, and a claim
+     * resting on {@code figures} percentages carries that much noise per figure. So the
+     * requirement is {@code figures * 100/n < margin}, and the answer is the smallest n
+     * that satisfies it.
+     *
+     * <p>Computed rather than tabulated, so re-measuring the margin moves both floors
+     * by itself. Floored at 2, because a percentage over a single observation is never
+     * anything but 0% or 100%.
      */
-    static int smallestSampleWhereOneObservationMovesLessThan(double points) {
-        if (points <= 0) {
-            throw new IllegalArgumentException("uncertainty must be positive: " + points);
+    static int smallestSampleWhereNoiseStaysWithinTheMargin(int figures) {
+        return smallestSampleWhereNoiseStaysWithin(HEADLINE_SENSITIVITY_POINTS, figures);
+    }
+
+    static int smallestSampleWhereNoiseStaysWithin(double margin, int figures) {
+        if (margin <= 0) {
+            throw new IllegalArgumentException("the margin must be positive: " + margin);
         }
-        int n = (int) Math.floor(100.0 / points) + 1;
+        if (figures < 1) {
+            throw new IllegalArgumentException("a claim rests on at least one figure");
+        }
+        int n = (int) Math.floor(figures * 100.0 / margin) + 1;
         return Math.max(2, n);
     }
 }

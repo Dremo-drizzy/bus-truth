@@ -117,10 +117,10 @@ bucket rather than the pooled estimate, and the pooled estimate is what gets pub
 
 ### The floors that follow
 
-| | one observation may move the figure by | floor |
-|---|---|---|
-| showing a percentage at all | less than 8.7 points | **12** |
-| holding a position in a ranking | less than 2.175 points, a quarter of it | **46** |
+| claim | figures it rests on | its noise must stay under | floor |
+|---|---|---|---|
+| showing a percentage at all | 1 | 8.7 points | **12** |
+| holding a position in a ranking | 2 | 8.7 points | **23** |
 
 Both are now **computed in code** from a single constant,
 `PublishedUncertainty.HEADLINE_SENSITIVITY_POINTS`, with the floors derived by
@@ -129,8 +129,35 @@ Both are now **computed in code** from a single constant,
 is the reviewer's instruction, and the reason for it is this very section: two numbers
 in two places, justified by a third in a document, drifted apart within a day.
 
-The factor of four separating the two floors is the one judgement left, and it is named
-in the code rather than buried.
+### The factor separating them is not a choice either
+
+An earlier version of this record set the ranking floor at "a quarter of the margin",
+and the senior reviewer was right to reject it: a quarter is a free parameter hidden
+inside something that looks like arithmetic — the same shape as the invented 50% gate
+this project already had to withdraw, only better disguised.
+
+There is no need for it. **Showing a percentage rests on one figure; ranking rests on
+two.** "This route is worse than that one" is a statement about a pair, and each side
+carries its own sampling noise, so the noise behind the comparison is twice the noise
+behind either number:
+
+| | requirement | floor |
+|---|---|---|
+| showing | `100/n < 8.7` | 12 |
+| ranking | `2 × 100/n < 8.7` | 23 |
+
+Two is not a preference; it is how many percentages a comparison involves. The code now
+takes the number of figures as its only other input, so nothing in the derivation is
+chosen.
+
+One alternative was measured and rejected. A stricter standard would be that sampling
+noise must not reorder *adjacent* routes in the table, which sounds appealing until it
+is measured: the median gap between neighbouring routes on the published week is **0.54
+points**, so that standard demands a floor of about 186 arrivals. It over-constrains a
+claim the site never makes — nobody asserts that route 37 is worse than route 38 — while
+excluding most of the network. The leaderboard's real claims are at the ends of the
+table, and those are comparisons between two figures, which is what the floor above
+covers.
 
 ### What the stricter floors cost — almost nothing, now
 
@@ -141,15 +168,21 @@ week, where the median route has **302**:
 | floor | routes clearing it | share of the 81 observed |
 |---|---|---|
 | 5 | 81 | 100% |
-| 12 | 79 | 97.5% |
-| **46** | **75** | **92.6%** |
-| 50 | 74 | 91.4% |
+| **12** (showing) | **79** | **97.5%** |
+| **23** (ranking) | **78** | **96.3%** |
+| 46 | 75 | 92.6% |
 
-So the ranking floor nearly quadrupled and the leaderboard lost three routes. The worry
-was real on one day's data and is not on a week's — which is the same point the original
-"revisit if" made about absolute counts against ranges, now with numbers attached.
+So the ranking floor roughly quintupled from the original five and the leaderboard lost
+three routes. The worry was real on one day's data and is not on a week's — the same
+point the original "revisit if" made about absolute counts against ranges, now with
+numbers attached. The median route has 302 arrivals in the published week.
 
 Note the direction, because it reads backwards at first: **a narrower published
 uncertainty makes the floors stricter, not looser.** Sampling noise that once sat
 comfortably inside a 21-point methodological uncertainty now stands out against an
 8.7-point one. Improving the method shortens the leaderboard, and that is correct.
+
+Revisit if: the margin is re-measured, which moves both floors on its own — that is the
+point of computing them. Or if the leaderboard's claims change shape: a site that
+started asserting a full ordering rather than ends of a table would need the adjacent-gap
+standard and its floor of about 186, and would have to say so.
