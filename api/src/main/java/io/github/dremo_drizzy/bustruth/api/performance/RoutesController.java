@@ -25,20 +25,13 @@ public class RoutesController {
      * How many arrivals a route or stop needs before it can take a position in a
      * ranking.
      *
-     * <p>Twenty, and the number is measured rather than chosen (ADR-017). The test it
-     * has to pass: <b>one bus must not move the figure by more than the uncertainty
-     * this project already discloses.</b> The arrival-moment definition is worth 21
-     * percentage points (ADR-014), so a sample where a single observation swings the
-     * percentage further than that is reporting its own sample size. One arrival moves
-     * a percentage by 100/n points — 20 points at a floor of five, 10 at ten, 5 at
-     * twenty.
-     *
-     * <p>Twenty also keeps the leaderboard worth publishing: on 9 October, 37 of the
-     * 67 observed routes cleared it, against 23 at a floor of fifty. Overridable per
-     * request, and the value applied comes back in the response so the page can state
-     * it.
+     * <p>Derived, not chosen: {@link PublishedUncertainty} computes it from the one
+     * uncertainty this project publishes, so the floor cannot drift from the figure
+     * that justifies it. ADR-017 has the measurement and the trade-off table.
+     * Overridable per request, and the value applied comes back in the response so the
+     * page can state it.
      */
-    private static final int DEFAULT_MIN_ARRIVALS = 20;
+    private static final int DEFAULT_MIN_ARRIVALS = PublishedUncertainty.rankingFloor();
 
     private static final int WORST_STOPS = 10;
 

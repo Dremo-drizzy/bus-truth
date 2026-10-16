@@ -277,14 +277,20 @@ class PerformanceIT {
     @Test
     @DisplayName("the default floor is the measured one, and it holds stops back")
     void worstStopsAppliesTheMeasuredFloor() throws Exception {
-        // Route 1's stops have seven, five and two arrivals, so none clears the measured
-        // floor of twenty. The response returns an empty ranking and says how many stops
+        // Route 1's stops have seven, five and two arrivals, so none of them clears the
+        // measured floor. The response returns an empty ranking and says how many stops
         // it held back, rather than ranking three stops on a handful of observations and
         // calling one of them the route's worst.
+        //
+        // The expected floor is read from PublishedUncertainty rather than written as a
+        // number here: it is derived from the project's published margin of error, and a
+        // test asserting a literal would have to be edited every time that margin is
+        // re-measured — which is the drift this whole arrangement exists to prevent.
         mockMvc.perform(get("/api/routes/1/performance")
                         .param("from", DAY_ONE.toString()).param("to", DAY_TWO.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.min_arrivals_applied").value(20))
+                .andExpect(jsonPath("$.min_arrivals_applied")
+                        .value(PublishedUncertainty.rankingFloor()))
                 .andExpect(jsonPath("$.stops_below_threshold").value(3))
                 .andExpect(jsonPath("$.worst_stops.length()").value(0));
     }

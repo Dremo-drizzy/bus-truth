@@ -17,6 +17,11 @@ Two different questions were hiding behind one number, and they get different an
 2. **May this route or stop take a position in a ranking?** A much stronger claim: this
    route is better or worse than that one, and this stop is the route's worst.
 
+> **The derivation in this section was re-done.** It is kept because the method is the
+> same and the reasoning is worth following, but the input it uses — 21 points — is no
+> longer the uncertainty this project publishes. Skip to *Re-derived, because the input
+> changed* for the figures in force.
+
 ## The test a floor has to pass
 
 A single observation moves a percentage by `100/n` points. This project already
@@ -84,3 +89,67 @@ Also revisit if: the default range stops being a single service day. Both floors
 absolute counts, so a week of data clears them far more easily than a day does. The
 honest version of that observation is that a floor should perhaps be expressed per
 service day rather than per range, and this record does not do that.
+
+## Re-derived, because the input changed
+
+The floors above were derived from a 21-point uncertainty. That was the right method
+and the wrong input, as the senior reviewer pointed out: **21 points was the gap between
+two candidate arrival definitions while the choice was still open.** The choice is now
+settled by measurement against the agency's own `STOPPED_AT` positions (ADR-014), so
+what the project still admits to is not the gap between the candidates but the residual
+bias of the one that won — a narrower thing. Floors justified by 21 points were resting
+on a figure the README no longer claims.
+
+### The new input, measured
+
+The end-of-window definition runs late by a median of 61 seconds where that can be
+checked. Shifting every arrival in the week 4–10 October earlier by exactly that much:
+
+| | on time |
+|---|---|
+| as published | **58.4%** |
+| with the 61-second bias removed | 49.7% |
+| **published uncertainty** | **8.7 points** |
+
+8.7 points, not 21. For reference, at the opposite extreme — the 211-second median bias
+measured on the widest windows — the figure falls to 26.3%, but that is the worst
+bucket rather than the pooled estimate, and the pooled estimate is what gets published.
+
+### The floors that follow
+
+| | one observation may move the figure by | floor |
+|---|---|---|
+| showing a percentage at all | less than 8.7 points | **12** |
+| holding a position in a ranking | less than 2.175 points, a quarter of it | **46** |
+
+Both are now **computed in code** from a single constant,
+`PublishedUncertainty.HEADLINE_SENSITIVITY_POINTS`, with the floors derived by
+`smallestSampleWhereOneObservationMovesLessThan`. The API serves the display floor from
+`/api/meta` and the frontend reads it from there rather than keeping a second copy. That
+is the reviewer's instruction, and the reason for it is this very section: two numbers
+in two places, justified by a third in a document, drifted apart within a day.
+
+The factor of four separating the two floors is the one judgement left, and it is named
+in the code rather than buried.
+
+### What the stricter floors cost — almost nothing, now
+
+The first derivation worried about losing routes, because it was measured against a
+single service day where the median route had 31 arrivals. The published range is a
+week, where the median route has **302**:
+
+| floor | routes clearing it | share of the 81 observed |
+|---|---|---|
+| 5 | 81 | 100% |
+| 12 | 79 | 97.5% |
+| **46** | **75** | **92.6%** |
+| 50 | 74 | 91.4% |
+
+So the ranking floor nearly quadrupled and the leaderboard lost three routes. The worry
+was real on one day's data and is not on a week's — which is the same point the original
+"revisit if" made about absolute counts against ranges, now with numbers attached.
+
+Note the direction, because it reads backwards at first: **a narrower published
+uncertainty makes the floors stricter, not looser.** Sampling noise that once sat
+comfortably inside a 21-point methodological uncertainty now stands out against an
+8.7-point one. Improving the method shortens the leaderboard, and that is correct.

@@ -1,18 +1,20 @@
 import type { Share } from "../api";
-import { TOO_FEW, formatDelay, tooFew } from "../api";
+import { formatDelay, tooFew } from "../api";
+import { useRange } from "../range";
 
 /**
  * The small pieces every page shares, and the one rule they all enforce.
  *
  * A share never renders as a bare number here. Either it renders with its
- * denominator, or — below {@link TOO_FEW} observations — it refuses to render a
- * percentage at all and says why. That refusal is the whole point of the site: the
+ * denominator, or — below the floor the API derives and serves — it refuses to render
+ * a percentage at all and says why. That refusal is the whole point of the site: the
  * feed reports a trip's position about 6.8 times across 38.3 stops, so thin
  * denominators are the normal case, and "0% on time" over two arrivals is a false
  * claim about a bus route rather than a measurement of one.
  */
 
 export function SharePercent({ share }: { share: Share }) {
+  const { displayFloor } = useRange();
   if (share.percent === null) {
     return (
       <span className="figure muted" title="Nothing was observed in this range">
@@ -20,11 +22,11 @@ export function SharePercent({ share }: { share: Share }) {
       </span>
     );
   }
-  if (tooFew(share)) {
+  if (tooFew(share, displayFloor)) {
     return (
       <span
         className="figure muted"
-        title={`${share.count} of ${share.of} arrivals — too few to report a percentage`}
+        title={`${share.count} of ${share.of} arrivals — fewer than the ${displayFloor} this project will report a percentage over`}
       >
         too few observations
       </span>
@@ -42,8 +44,9 @@ export function SharePercent({ share }: { share: Share }) {
 
 /** A share as one line, for table cells too narrow for the stacked form. */
 export function ShareInline({ share }: { share: Share }) {
+  const { displayFloor } = useRange();
   if (share.percent === null) return <span className="muted">no data</span>;
-  if (tooFew(share)) {
+  if (tooFew(share, displayFloor)) {
     return <span className="muted">too few ({share.of})</span>;
   }
   return (

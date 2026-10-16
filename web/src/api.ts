@@ -98,26 +98,31 @@ export type CoverageDay = {
 };
 
 /**
- * Below this many observations a share is shown as "too few observations" rather than
- * as a number.
+ * What the API says about its own figures.
  *
- * Five, for a measured reason rather than a round one (ADR-017). One observation moves
- * a percentage by 100/n points, and this project already discloses that its headline
- * figure moves 21 points on the arrival-moment definition alone. Below five arrivals a
- * single bus swings the percentage further than that acknowledged uncertainty, so the
- * number says more about the sample than the service.
- *
- * This is a lower bar than the API's ranking floor of twenty, and deliberately: showing
- * a figure with its count is a weaker claim than ranking one route against another.
- * Arrival detection observes about 17.5% of scheduled stop-events, so thin denominators
- * are the normal case here — an hour of one route's service is often a handful of
- * arrivals, and suppressing every one of those would leave the pages empty rather than
- * honest.
+ * The display floor is derived server-side from the project's published uncertainty
+ * (ADR-017), so the site cannot hold a second copy of a number that is computed in one
+ * place. The first version of this file did hold one, and it went stale the moment the
+ * uncertainty was re-measured.
  */
-export const TOO_FEW = 5;
+export type Meta = {
+  headline_sensitivity_points: number;
+  display_floor: number;
+  ranking_floor: number;
+};
 
-export function tooFew(share: Share): boolean {
-  return share.of < TOO_FEW;
+/**
+ * Used only until `/api/meta` answers, and chosen to fail safe.
+ *
+ * Deliberately high rather than low: while the real floor is in flight, this suppresses
+ * a percentage that might have been publishable rather than printing one that is not.
+ * Saying "too few observations" for a moment is recoverable; printing "0% on time" over
+ * two arrivals is not.
+ */
+export const DISPLAY_FLOOR_FALLBACK = 50;
+
+export function tooFew(share: Share, displayFloor: number): boolean {
+  return share.of < displayFloor;
 }
 
 export class ApiError extends Error {
