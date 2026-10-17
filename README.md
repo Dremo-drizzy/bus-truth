@@ -89,34 +89,60 @@ _Daniel writes this section._
 
 ## Data quality
 
+### The feed shows 6.8 of a trip's 38.3 stops
+
+The single most important number in this project, and it bounds everything else.
+Halifax Transit's realtime feed reports a vehicle's `current_stop_sequence`
+**correctly** — it agrees exactly with the published schedule's numbering — but it only
+*updates* that value about **6.8 times across an average 38.3-stop trip**: 17.8% of the
+stops. One observed vehicle reported "at stop 20" for eight minutes, then "at stop 34".
+The twelve stops in between were served and never mentioned.
+
+So arrival detection derives an arrival for **17.5%** of scheduled stop-events — and
+17.5% against 17.8% visible is the proof that the detector extracts essentially
+everything the feed exposes. **The ceiling is the data source, not the code.** Polling
+five times faster would fetch the same stale value five times as often.
+
+**The unobserved stops were served, not missed.** The buses called at them; the agency
+simply did not report it. Nothing here presents them as missed service, and the
+counter is named `stopsUnobserved` for that reason.
+
+### Collection coverage
+
 Collection has run since **24 September 2026** and is ongoing. The archive holds
-**152,036 realtime snapshots** across the three feeds plus **16 daily captures** of the
+**152,036 realtime snapshots** across the three feeds plus **22 daily captures** of the
 static schedule.
 
-Coverage is **incomplete and uneven**, and that is stated rather than hidden: the archiver
-runs on a laptop, so it stops when the machine sleeps or is closed.
+Coverage is **incomplete and uneven**, and that is stated rather than hidden: the
+archiver runs on a laptop, so it stops when the machine sleeps or is closed.
 
 | | vehicle positions |
 |---|---|
-| days captured | 16 (24 September – 9 October 2026) |
-| snapshots | 50,925 |
+| days captured | 22 (24 September – 15 October 2026) |
+| snapshots | 50,925+ |
 | coverage against a continuous 20-second capture | **73.7%** |
-| best day | 99.9% (1 October) |
-| worst day | 42.4% (5 October) |
+| best day | 99.9% |
+| worst day | 42.4% |
 
-Gaps are not interpolated or filled. A missing snapshot is simply absent, and any future
-analysis has to treat the archive as a sample rather than a census — which is why the
-per-day table above exists instead of a single headline number.
+Gaps are not interpolated or filled. A missing snapshot is simply absent, and the
+detector refuses to derive arrivals across one — without that rule a sleeping laptop
+would be indistinguishable from a cancelled trip, and the project would publish
+invented cancellations.
 
-Two known data-quality limits, both measured, both documented in
-[docs/stages/stage-3.md](docs/stages/stage-3.md):
+**Every percentage this project publishes carries the count it was computed from.** A
+percentage over eleven arrivals is not a percentage, and the API returns the
+denominator so the frontend can say so instead of printing a number.
+
+### Two further measured limits
 
 - **4.4% of live trip ids carry an `_N` suffix** from the agency's trip-modification
   extension, and none of the 9,239 trip ids in the published schedule contains an
-  underscore. A naive join drops those trips silently.
-- **The agency's own `delay` field is present on 34.8% of stop-time updates**, ranging from
-  0% between 02:00 and 04:00 to about 70% late evening — so it cannot be used as a fallback
-  without introducing a bias that varies by time of day.
+  underscore. Stripping the suffix recovers the join in every observed case, and those
+  arrivals are marked with lower confidence because the recovery rests on an
+  unverified assumption. See [ADR-013](docs/decisions/013-trip-id-join-rule.md).
+- **The agency's own `delay` field is present on 34.8% of stop-time updates**, ranging
+  from 0% between 02:00 and 04:00 to about 70% late evening — so it cannot be used as a
+  fallback without introducing a bias that varies by time of day.
 
 ## What I would do next
 

@@ -2,5 +2,33 @@ spring:
   application:
     name: processor
 
+  datasource:
+    # 55432, not 5432: native PostgreSQL services on this machine own 5432.
+    url: jdbc:postgresql://localhost:55432/${POSTGRES_DB:bustruth}
+    username: ${POSTGRES_USER:bustruth}
+    # No default, deliberately.
+    password: ${POSTGRES_PASSWORD}
+
+  # The collector owns the schema; the processor reads and writes its tables.
+  flyway:
+    enabled: false
+
 server:
   port: 8083
+
+bustruth:
+  processor:
+    # NEEDS DANIEL'S REVIEW — the four judgement calls, at the build brief's suggested
+    # values. These decide what the project publishes.
+    #
+    # FIRST_SIGHTING: the arrival is timed from the first position reporting the stop,
+    # which answers "when did it get there". LAST_BEFORE_ADVANCE answers "when did it
+    # leave" and is also implemented.
+    arrival-moment: FIRST_SIGHTING
+    on-time-early: -60s
+    on-time-late: 300s
+    # Mandatory. Coverage was 73.7% overall and 42.4% on the worst day because the
+    # laptop slept; across a sleep a bus's sequence appears to jump, which is
+    # indistinguishable from skipped stops. Deriving across it would publish invented
+    # service.
+    max-trail-gap: 120s
