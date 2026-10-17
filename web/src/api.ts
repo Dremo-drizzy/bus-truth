@@ -112,9 +112,12 @@ export type StopReliability = {
 
 export type CoverageDay = {
   service_date: string;
-  snapshots_captured: number;
+  /** Null when the day was never counted — not zero, which would claim nothing was recorded. */
+  snapshots_captured: number | null;
   snapshots_expected: number;
-  coverage: Share;
+  coverage: Share | null;
+  /** When the count was taken. A deployed copy stops growing; this says how stale it is. */
+  coverage_computed_at: string | null;
   arrivals_derived: number;
 };
 
