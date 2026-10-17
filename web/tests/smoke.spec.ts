@@ -244,6 +244,61 @@ test("a fast response never mentions waking up", async ({ page }) => {
   await expect(page.getByText(/server is waking up/i)).toHaveCount(0);
 });
 
+/**
+ * The map is actually drawn, not merely initialised.
+ *
+ * Every other check on this page passed while the deployed map was invisible: no
+ * console errors, no overflow, real numbers in the status line, and MapLibre's
+ * controls present — they are absolutely positioned and do not need the container.
+ * The container itself was 0px tall, because maplibre-gl.css (loaded later, in the
+ * map's own chunk) overrode our `position: absolute` with `relative`, and a relative
+ * `height: 100%` had no definite height to resolve against.
+ *
+ * Three assertions, because each alone can pass against that bug. MapLibre falls back
+ * to a 300px canvas inside a 0px container, so "the canvas has a size" passed; and in
+ * headless Chromium that strip still fetched a few tiles, so "a tile was requested"
+ * passed too. What failed was the container: it must fill the space laid out for it.
+ */
+test("the map fills its space and fetches basemap tiles", async ({ page }) => {
+  await serveApi(page);
+  // Registered before navigation: the first tiles can arrive before the page settles.
+  const tile = page.waitForRequest(/tiles\.openfreemap\.org\/planet\/.+\.pbf/, {
+    timeout: 20_000,
+  });
+  await page.goto("/");
+  await expect(page.locator(".maplibregl-canvas")).toBeVisible();
+
+  const measure = () =>
+    page.evaluate(() => {
+      const height = (selector: string) =>
+        document.querySelector(selector)?.getBoundingClientRect().height ?? -1;
+      const canvas = document.querySelector<HTMLCanvasElement>(".maplibregl-canvas");
+      return {
+        wrap: height(".map-wrap"),
+        map: height(".maplibregl-map"),
+        canvas: height(".maplibregl-canvas"),
+        canvasPixels: canvas ? canvas.width * canvas.height : 0,
+      };
+    });
+
+  // Polled, not read once. The status line fills in after the data arrives and can
+  // wrap onto a second line on a phone, shrinking the space by a line; MapLibre's
+  // resize observer then re-fits the canvas a frame later. What must hold is that it
+  // settles — a map that never re-measured would fail here after five seconds.
+  await expect
+    .poll(async () => {
+      const { wrap, map, canvas } = await measure();
+      // Within a pixel, for sub-pixel rounding.
+      return Math.abs(map - wrap) <= 1 && Math.abs(canvas - wrap) <= 1;
+    }, { message: "map and canvas fill the space laid out for them", timeout: 5_000 })
+    .toBe(true);
+
+  const sizes = await measure();
+  expect(sizes.wrap, "the space laid out for the map").toBeGreaterThan(200);
+  expect(sizes.canvasPixels).toBeGreaterThan(0);
+  await tile;
+});
+
 test("the map names the minute it is showing, and does not claim to be live", async ({
   page,
 }, testInfo) => {
