@@ -14,16 +14,18 @@ release.properties
 # only its downloaded jar, if a script ever fetches one, is not.
 .mvn/wrapper/maven-wrapper.jar
 
-# --- Node / Next.js (web/) --------------------------------------------------
+# --- Node / Vite (web/) -----------------------------------------------------
 node_modules/
-.next/
+# Vite's build output. Derived from src/ by `npm run build`, so committing it would
+# mean two sources of truth for what the site is, and the one in git would be stale
+# the moment anybody edited a component.
+dist/
 out/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 *.tsbuildinfo
-next-env.d.ts
 
 # --- Python (scripts/, gtfs-loader) ---------------------------------------
 __pycache__/

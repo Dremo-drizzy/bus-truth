@@ -74,8 +74,9 @@ jobs:
         run: npm ci
         working-directory: web
 
-      # next build type-checks the whole app, so a TypeScript error fails here rather
-      # than being discovered by someone opening the page.
+      # npm run build is `tsc --noEmit && vite build`: vite does not type-check on its
+      # own, unlike the next build this replaced, so the type-check is spelled out.
+      # Without it a TypeScript error would be discovered by someone opening the page.
       - name: Build
         run: npm run build
         working-directory: web
