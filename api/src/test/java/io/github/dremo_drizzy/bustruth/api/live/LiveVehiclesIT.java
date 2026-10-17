@@ -1,13 +1,16 @@
 package io.github.dremo_drizzy.bustruth.api.live;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -61,7 +64,15 @@ class LiveVehiclesIT {
                     first_feed_timestamp timestamptz not null,
                     primary key (vehicle_id, vehicle_timestamp))
                 """).update();
-        jdbcClient.sql("truncate table raw_vehicle_positions").update();
+        jdbcClient.sql("""
+                create table if not exists map_snapshot_positions (
+                    snapshot_at timestamptz not null, vehicle_id text not null,
+                    route_id text, trip_id text,
+                    latitude real not null, longitude real not null, bearing real,
+                    vehicle_timestamp timestamptz not null,
+                    primary key (snapshot_at, vehicle_id))
+                """).update();
+        jdbcClient.sql("truncate table raw_vehicle_positions, map_snapshot_positions").update();
     }
 
     @Test
@@ -177,5 +188,66 @@ class LiveVehiclesIT {
 
     private static Instant minutesAgo(int minutes) {
         return Instant.now().minus(Duration.ofMinutes(minutes));
+    }
+
+    @Test
+    @DisplayName("the snapshot endpoint names the minute it is showing")
+    void snapshotNamesItsMoment() throws Exception {
+        // 17:08 local on 6 October 2026, which is what the hosted map draws.
+        OffsetDateTime moment = OffsetDateTime.parse("2026-10-06T20:08:00Z");
+        insertSnapshotPosition(moment, "1234", 44.65f, -63.57f);
+        insertSnapshotPosition(moment, "1235", 44.66f, -63.58f);
+
+        mockMvc.perform(get("/api/vehicles/snapshot"))
+                .andExpect(status().isOk())
+                // The moment, and no freshness fields at all: a historical timestamp in
+                // a generated_at or newest_position_at would let the page render
+                // history as live, which is the one thing this map must not do.
+                .andExpect(jsonPath("$.snapshot_at").value("2026-10-06T20:08:00Z"))
+                .andExpect(jsonPath("$.generated_at").doesNotExist())
+                .andExpect(jsonPath("$.newest_position_at").doesNotExist())
+                .andExpect(jsonPath("$.vehicle_count").value(2))
+                .andExpect(jsonPath("$.features.length()").value(2))
+                .andExpect(jsonPath("$.features[0].geometry.coordinates[0]").value(-63.57))
+                .andExpect(jsonPath("$.features[0].geometry.coordinates[1]").value(44.65));
+    }
+
+    @Test
+    @DisplayName("with no curated minute loaded, the snapshot is empty and says nothing about time")
+    void snapshotWithNothingLoaded() throws Exception {
+        // What a deployment looks like before the restore. The page treats this as a
+        // missing load rather than drawing an empty map.
+        mockMvc.perform(get("/api/vehicles/snapshot"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.snapshot_at").value(nullValue()))
+                .andExpect(jsonPath("$.vehicle_count").value(0))
+                .andExpect(jsonPath("$.features.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("the snapshot and the live endpoint are independent")
+    void snapshotDoesNotLeakIntoLive() throws Exception {
+        insertSnapshotPosition(OffsetDateTime.parse("2026-10-06T20:08:00Z"), "1234",
+                44.65f, -63.57f);
+
+        // A curated minute must never appear as live data. If these two ever share a
+        // source, the hosted map starts reporting a fortnight-old position as current.
+        mockMvc.perform(get("/api/vehicles/live"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.vehicle_count").value(0))
+                .andExpect(jsonPath("$.features.length()").value(0));
+    }
+
+    private void insertSnapshotPosition(
+            OffsetDateTime snapshotAt, String vehicleId, float latitude, float longitude) {
+        jdbcClient.sql("""
+                        insert into map_snapshot_positions
+                            (snapshot_at, vehicle_id, route_id, trip_id,
+                             latitude, longitude, bearing, vehicle_timestamp)
+                        values (:at, :vehicle, '1', 'trip-1', :lat, :lon, 90, :at)
+                        """)
+                .param("at", snapshotAt).param("vehicle", vehicleId)
+                .param("lat", latitude).param("lon", longitude)
+                .update();
     }
 }

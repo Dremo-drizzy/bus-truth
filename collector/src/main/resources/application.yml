@@ -3,9 +3,11 @@ spring:
     name: collector
 
   datasource:
-    # 55432, not 5432: native PostgreSQL services on this machine own 5432, and the
-    # clash is silent. See docs/stages/stage-3.md.
-    url: jdbc:postgresql://localhost:55432/${POSTGRES_DB:bustruth}
+    # Host and port are variables with local defaults: in production the database is
+    # a service name on a private network, and in development it is localhost:55432 —
+    # 55432, not 5432, because native PostgreSQL services on this machine own 5432
+    # and the clash is silent. See docs/stages/stage-3.md.
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:55432}/${POSTGRES_DB:bustruth}
     username: ${POSTGRES_USER:bustruth}
     # No default, deliberately. A default password in a committed file is a password
     # that reaches production by accident; local development supplies it through the

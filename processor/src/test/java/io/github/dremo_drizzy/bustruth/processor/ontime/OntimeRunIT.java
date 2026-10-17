@@ -110,8 +110,17 @@ class OntimeRunIT {
                     primary key (trip_id, service_date, stop_sequence))
                 """).update();
 
-        jdbcClient.sql("truncate table arrival_events, ontime_events, gtfs_stop_times, "
-                + "gtfs_trips, gtfs_calendar, gtfs_feed_versions").update();
+        jdbcClient.sql("""
+                create table if not exists ontime_quality (
+                    service_date date primary key, feed_version text not null,
+                    arrivals_considered integer not null, matched integer not null,
+                    unmatched integer not null, unusable_schedule_time integer not null,
+                    implausible_delays_refused integer not null,
+                    computed_at timestamptz not null default clock_timestamp())
+                """).update();
+
+        jdbcClient.sql("truncate table arrival_events, ontime_events, ontime_quality, "
+                + "gtfs_stop_times, gtfs_trips, gtfs_calendar, gtfs_feed_versions").update();
 
         feedVersion(IN_FORCE, "20260824", "20261129", OffsetDateTime.parse("2026-08-06T00:00Z"));
         trip(IN_FORCE, "4659595", "1");
@@ -288,6 +297,61 @@ class OntimeRunIT {
         // here would let the strongest claim on the site rest on the weakest rows
         // without saying so.
         assertThat(onlyRow()).containsEntry("arrival_confidence", "SPARSE_TRAIL");
+    }
+
+    @Test
+    @DisplayName("a delay beyond half a day is counted and not published")
+    void refusesAnImplausibleDelay() throws Exception {
+        // The real shape of this: a trip published at 24:00:00 whose arrival was
+        // observed a minute before midnight the evening before, so the service date and
+        // the published time disagree by a day. Three such rows survived the
+        // service-day repair in the published week. A bus is never twenty-four hours
+        // early, and storing one would poison every average computed over it.
+        stopTime(IN_FORCE, "4659595", 7, "8191", "24:00:00");
+        arrival("4659595", 7, "8191", "2026-10-14T02:58:48Z", "HIGH");
+
+        OntimeCounts counts = ontimeRun.run(SERVICE_DATE, SERVICE_DATE);
+
+        assertThat(counts.implausibleDelay()).isEqualTo(1);
+        assertThat(counts.matched()).isZero();
+        assertThat(rowCount()).isZero();
+    }
+
+    @Test
+    @DisplayName("what the run refused is recorded, not just logged")
+    void recordsWhatItRefused() {
+        stopTime(IN_FORCE, "4659595", 7, "8191", "24:00:00");
+        arrival("4659595", 7, "8191", "2026-10-14T02:58:48Z", "HIGH");  // implausible
+        arrival("9999999", 1, "8184", "2026-10-14T11:02:30Z", "HIGH");  // unmatched
+        arrival("4659595", 1, "8184", "2026-10-14T11:02:30Z", "HIGH");  // matched
+
+        ontimeRun.run(SERVICE_DATE, SERVICE_DATE);
+
+        // A guard whose refusals live only in a log line cannot be published, and a
+        // guard refusing three looks like one refusing nine thousand.
+        Map<String, Object> quality = jdbcClient.sql("""
+                        select feed_version, arrivals_considered, matched, unmatched,
+                               implausible_delays_refused
+                        from ontime_quality where service_date = :date
+                        """).param("date", SERVICE_DATE).query().singleRow();
+
+        assertThat(quality).containsEntry("feed_version", IN_FORCE)
+                .containsEntry("arrivals_considered", 3)
+                .containsEntry("matched", 1)
+                .containsEntry("unmatched", 1)
+                .containsEntry("implausible_delays_refused", 1);
+    }
+
+    @Test
+    @DisplayName("re-running rewrites the record rather than accumulating rows")
+    void rerunningRewritesTheQualityRecord() {
+        arrival("4659595", 1, "8184", "2026-10-14T11:02:30Z", "HIGH");
+
+        ontimeRun.run(SERVICE_DATE, SERVICE_DATE);
+        ontimeRun.run(SERVICE_DATE, SERVICE_DATE);
+
+        assertThat(jdbcClient.sql("select count(*) from ontime_quality")
+                .query(Long.class).single()).isEqualTo(1);
     }
 
     @Test

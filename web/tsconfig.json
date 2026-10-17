@@ -14,7 +14,11 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["vite/client"]
+    // vite/client for import.meta and asset imports; node because the Playwright
+    // config and specs use process.env and node: imports. Without "node" here the
+    // app compiles locally — where @types/node lingers in node_modules from an older
+    // dependency — and fails in CI, which installs only the lockfile.
+    "types": ["vite/client", "node"]
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "tests", "vite.config.ts", "playwright.config.ts"]
 }

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { RoutePerformance } from "../api";
 import { routeLabel, useApi } from "../api";
 import { Delay, Empty, Failed, Loading, ShareInline } from "../components/Figures";
+import { NetworkOverview } from "../components/NetworkOverview";
 import { rangeQuery, useRange } from "../range";
 
 /**
@@ -20,7 +21,8 @@ export default function RoutesPage() {
     query === null ? null : `/api/routes/performance?${query}`,
   );
 
-  if (result.state === "loading") return <Loading what="route performance" />;
+  if (result.state === "loading")
+    return <Loading what="route performance" slow={result.slow} />;
   if (result.state === "failed") {
     return <Failed what="route performance" detail={result.error.message} />;
   }
@@ -37,6 +39,8 @@ export default function RoutesPage() {
         percentage shows the number of arrivals behind it.
       </p>
 
+      <NetworkOverview query={query} />
+
       {ranked.length === 0 && thin.length === 0 && (
         <Empty>
           No arrivals were derived in this range. That is a gap in our collection, not
@@ -50,9 +54,12 @@ export default function RoutesPage() {
         <section className="aside">
           <h2>Too thinly observed to rank</h2>
           <p className="muted">
-            {thin.length} {thin.length === 1 ? "route" : "routes"} had fewer than five
-            derived arrivals in this range. Their percentages are arithmetically true
-            and tell you nothing about the service, so they are not ranked.
+            {thin.length} {thin.length === 1 ? "route" : "routes"} had too few derived
+            arrivals in this range to hold a position. Each percentage below is
+            arithmetically true and tells you almost nothing about the service: where a
+            single bus moves the figure further than this project's own margin of
+            uncertainty, the number describes the sample rather than the route. The
+            arrival count is beside each one.
           </p>
           <RouteTable routes={thin} />
         </section>

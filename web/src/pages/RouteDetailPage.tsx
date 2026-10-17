@@ -12,7 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import type { RouteDetail } from "../api";
-import { TOO_FEW, routeLabel, useApi } from "../api";
+import { routeLabel, useApi } from "../api";
 import { Delay, Empty, Failed, Loading, SharePercent } from "../components/Figures";
 import { rangeQuery, useRange } from "../range";
 
@@ -27,6 +27,7 @@ import { rangeQuery, useRange } from "../range";
 export default function RouteDetailPage() {
   const { routeId = "" } = useParams();
   const range = useRange();
+  const displayFloor = range.displayFloor;
   const query = rangeQuery(range);
   const result = useApi<RouteDetail>(
     query === null
@@ -34,7 +35,8 @@ export default function RouteDetailPage() {
       : `/api/routes/${encodeURIComponent(routeId)}/performance?${query}`,
   );
 
-  if (result.state === "loading") return <Loading what={`route ${routeId}`} />;
+  if (result.state === "loading")
+    return <Loading what={`route ${routeId}`} slow={result.slow} />;
   if (result.state === "failed") {
     if (result.error.status === 404) {
       return (
@@ -67,6 +69,13 @@ export default function RouteDetailPage() {
         <span className="badge big">{routeLabel(route)}</span>{" "}
         {route.route_long_name}
       </h1>
+      {/* The period travels with the figures. A percentage without the days it covers
+          invites being quoted as "this route's on-time performance", and the
+          day-to-day spread across a week is wider than this project's own margin of
+          error. */}
+      <p className="lede">
+        {range.from} to {range.to}
+      </p>
 
       <section className="cards">
         <div className="card">
@@ -99,7 +108,8 @@ export default function RouteDetailPage() {
           <section>
             <h2>By hour of the day</h2>
             <p className="muted">
-              Local time in Halifax. Faded bars had fewer than {TOO_FEW} arrivals.
+              Local time in Halifax. Faded bars had fewer than {displayFloor} arrivals,
+              too few for a percentage to mean much.
             </p>
             <div className="chart">
               <ResponsiveContainer width="100%" height={240}>
@@ -120,7 +130,7 @@ export default function RouteDetailPage() {
                     {hours.map((hour) => (
                       <Cell
                         key={hour.hour}
-                        fill={hour.on_time.of < TOO_FEW ? "#c7d2fe" : "#1d4ed8"}
+                        fill={hour.on_time.of < displayFloor ? "#c7d2fe" : "#1d4ed8"}
                       />
                     ))}
                   </Bar>

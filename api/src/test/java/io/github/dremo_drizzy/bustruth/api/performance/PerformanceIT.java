@@ -109,8 +109,17 @@ class PerformanceIT {
                     primary key (feed_version, stop_id))
                 """).update();
 
-        jdbcClient.sql("truncate table ontime_events, arrival_events, raw_vehicle_positions, "
-                + "gtfs_routes, gtfs_stops, gtfs_feed_versions").update();
+        jdbcClient.sql("""
+                create table if not exists ontime_quality (
+                    service_date date primary key, feed_version text not null,
+                    arrivals_considered integer not null, matched integer not null,
+                    unmatched integer not null, unusable_schedule_time integer not null,
+                    implausible_delays_refused integer not null,
+                    computed_at timestamptz not null default clock_timestamp())
+                """).update();
+
+        jdbcClient.sql("truncate table ontime_events, ontime_quality, arrival_events, "
+                + "raw_vehicle_positions, gtfs_routes, gtfs_stops, gtfs_feed_versions").update();
 
         jdbcClient.sql("""
                 insert into gtfs_feed_versions (feed_version, loaded_at, source_sha256, source_bytes)
@@ -153,6 +162,16 @@ class PerformanceIT {
         // eleven, four and two arrivals between them.
         ontime("3", "trip-3-0", "8184", 1, DAY_ONE, 20, true, 11);
 
+        // What the on-time run counted and refused on day one, so coverage can publish
+        // it. Day two has no record, which must read as null rather than zero.
+        jdbcClient.sql("""
+                        insert into ontime_quality
+                            (service_date, feed_version, arrivals_considered, matched,
+                             unmatched, unusable_schedule_time, implausible_delays_refused)
+                        values (:date, :feed, 120, 117, 3, 0, 2)
+                        """)
+                .param("date", DAY_ONE).param("feed", FEED).update();
+
         // Collection record: two days, one of them thin.
         snapshots(DAY_ONE, 300);
         snapshots(DAY_TWO, 50);
@@ -186,10 +205,13 @@ class PerformanceIT {
                 .andExpect(jsonPath("$[0].on_time.of").value(100))
                 .andExpect(jsonPath("$[0].on_time.percent").value(90.0))
                 .andExpect(jsonPath("$[0].trips_observed").value(100))
-                .andExpect(jsonPath("$[1].route_id").value("1"))
-                .andExpect(jsonPath("$[1].on_time.count").value(7))
-                .andExpect(jsonPath("$[1].on_time.of").value(14))
-                .andExpect(jsonPath("$[1].on_time.percent").value(50.0))
+                // Only route 10 clears the floor of twenty, so the others sort below it
+                // by share: route 3 at 100% of one, route 1 at 50% of fourteen, route 2
+                // at 0% of two.
+                .andExpect(jsonPath("$[2].route_id").value("1"))
+                .andExpect(jsonPath("$[2].on_time.count").value(7))
+                .andExpect(jsonPath("$[2].on_time.of").value(14))
+                .andExpect(jsonPath("$[2].on_time.percent").value(50.0))
                 .andExpect(jsonPath("$[3].route_id").value("2"))
                 .andExpect(jsonPath("$[3].on_time.percent").value(0.0))
                 // Two observations, and the response says so rather than only "0%".
@@ -209,18 +231,20 @@ class PerformanceIT {
                 .andExpect(jsonPath("$.length()").value(4))
                 .andExpect(jsonPath("$[0].route_id").value("10"))
                 .andExpect(jsonPath("$[0].rankable").value(true))
-                .andExpect(jsonPath("$[1].route_id").value("1"))
-                .andExpect(jsonPath("$[1].rankable").value(true))
-                .andExpect(jsonPath("$[2].route_id").value("3"))
-                .andExpect(jsonPath("$[2].on_time.percent").value(100.0))
-                .andExpect(jsonPath("$[2].on_time.of").value(1))
+                // Route 1 has fourteen arrivals, so at the measured floor of twenty it
+                // cannot hold a position either: one bus would move it seven points.
+                .andExpect(jsonPath("$[1].route_id").value("3"))
+                .andExpect(jsonPath("$[1].rankable").value(false))
+                .andExpect(jsonPath("$[2].route_id").value("1"))
+                .andExpect(jsonPath("$[1].on_time.percent").value(100.0))
+                .andExpect(jsonPath("$[1].on_time.of").value(1))
                 .andExpect(jsonPath("$[2].rankable").value(false))
                 .andExpect(jsonPath("$[3].route_id").value("2"))
                 .andExpect(jsonPath("$[3].rankable").value(false));
     }
 
     @Test
-    @DisplayName("lowering the leaderboard threshold lets the thin route rank")
+    @DisplayName("lowering the leaderboard floor lets the thin route rank")
     void theLeaderboardThresholdIsOverridable() throws Exception {
         mockMvc.perform(get("/api/routes/performance")
                         .param("from", DAY_ONE.toString()).param("to", DAY_TWO.toString())
@@ -242,9 +266,9 @@ class PerformanceIT {
         mockMvc.perform(get("/api/routes/performance")
                         .param("from", DAY_ONE.toString()).param("to", DAY_TWO.toString()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[1].route_id").value("1"))
-                .andExpect(jsonPath("$[1].median_delay_seconds").value(60))
-                .andExpect(jsonPath("$[1].p90_delay_seconds").value(600));
+                .andExpect(jsonPath("$[2].route_id").value("1"))
+                .andExpect(jsonPath("$[2].median_delay_seconds").value(60))
+                .andExpect(jsonPath("$[2].p90_delay_seconds").value(600));
     }
 
     @Test
@@ -270,13 +294,33 @@ class PerformanceIT {
     }
 
     @Test
-    @DisplayName("the worst-stops ranking excludes thinly observed stops, and says how many")
-    void worstStopsRespectsTheThreshold() throws Exception {
-        // Route 1's stops: 8184 has seven arrivals, 8185 two, 8186 five. At the default
-        // threshold of five, 8185 cannot be ranked — and the response reports that one
-        // stop was held back rather than presenting the ranking as complete.
+    @DisplayName("the default floor is the measured one, and it holds stops back")
+    void worstStopsAppliesTheMeasuredFloor() throws Exception {
+        // Route 1's stops have seven, five and two arrivals, so none of them clears the
+        // measured floor. The response returns an empty ranking and says how many stops
+        // it held back, rather than ranking three stops on a handful of observations and
+        // calling one of them the route's worst.
+        //
+        // The expected floor is read from PublishedUncertainty rather than written as a
+        // number here: it is derived from the project's published margin of error, and a
+        // test asserting a literal would have to be edited every time that margin is
+        // re-measured — which is the drift this whole arrangement exists to prevent.
         mockMvc.perform(get("/api/routes/1/performance")
                         .param("from", DAY_ONE.toString()).param("to", DAY_TWO.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.min_arrivals_applied")
+                        .value(PublishedUncertainty.rankingFloor()))
+                .andExpect(jsonPath("$.stops_below_threshold").value(3))
+                .andExpect(jsonPath("$.worst_stops.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("the floor is overridable, and the response states the one it used")
+    void theThresholdIsOverridable() throws Exception {
+        // At five, 8185's two arrivals are still held back; at one, everything ranks.
+        mockMvc.perform(get("/api/routes/1/performance")
+                        .param("from", DAY_ONE.toString()).param("to", DAY_TWO.toString())
+                        .param("minArrivals", "5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.min_arrivals_applied").value(5))
                 .andExpect(jsonPath("$.stops_below_threshold").value(1))
@@ -286,11 +330,7 @@ class PerformanceIT {
                 .andExpect(jsonPath("$.worst_stops[0].stop_name").value("Quinpool Rd"))
                 .andExpect(jsonPath("$.worst_stops[0].on_time.of").value(5))
                 .andExpect(jsonPath("$.worst_stops[1].stop_id").value("8184"));
-    }
 
-    @Test
-    @DisplayName("lowering the threshold admits the thin stop, and the response shows which")
-    void theThresholdIsOverridable() throws Exception {
         mockMvc.perform(get("/api/routes/1/performance")
                         .param("from", DAY_ONE.toString()).param("to", DAY_TWO.toString())
                         .param("minArrivals", "1"))
@@ -318,6 +358,42 @@ class PerformanceIT {
     }
 
     @Test
+    @DisplayName("GET /api/performance/summary carries the period and every day in it")
+    void networkSummary() throws Exception {
+        // The whole point of this endpoint: a figure for a range never travels without
+        // the days it averages, because the day-to-day spread in the real data is
+        // wider than any methodological choice in the project.
+        mockMvc.perform(get("/api/performance/summary")
+                        .param("from", DAY_ONE.toString()).param("to", DAY_TWO.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.from").value(DAY_ONE.toString()))
+                .andExpect(jsonPath("$.to").value(DAY_TWO.toString()))
+                // 14 of route 1, 100 of route 10, 2 of route 2, 1 of route 3.
+                .andExpect(jsonPath("$.arrivals").value(117))
+                .andExpect(jsonPath("$.on_time.count").value(98))
+                .andExpect(jsonPath("$.on_time.of").value(117))
+                .andExpect(jsonPath("$.by_day.length()").value(2))
+                .andExpect(jsonPath("$.by_day[0].service_date").value(DAY_ONE.toString()))
+                .andExpect(jsonPath("$.by_day[1].service_date").value(DAY_TWO.toString()))
+                // Day two is route 1's four late arrivals and nothing else.
+                .andExpect(jsonPath("$.by_day[1].arrivals").value(4))
+                .andExpect(jsonPath("$.by_day[1].on_time.count").value(0));
+    }
+
+    @Test
+    @DisplayName("an empty range summarises as zeros with a null percentage")
+    void networkSummaryOverAnEmptyRange() throws Exception {
+        LocalDate quiet = LocalDate.of(2026, 1, 1);
+
+        mockMvc.perform(get("/api/performance/summary")
+                        .param("from", quiet.toString()).param("to", quiet.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.arrivals").value(0))
+                .andExpect(jsonPath("$.on_time.percent").value(nullValue()))
+                .andExpect(jsonPath("$.by_day.length()").value(0));
+    }
+
+    @Test
     @DisplayName("GET /api/coverage publishes the project's own gaps")
     void coverage() throws Exception {
         mockMvc.perform(get("/api/coverage"))
@@ -328,11 +404,21 @@ class PerformanceIT {
                 .andExpect(jsonPath("$[0].snapshots_expected").value(4320))
                 .andExpect(jsonPath("$[0].coverage.percent").value(6.9))
                 .andExpect(jsonPath("$[0].arrivals_derived").value(2))
+                // What the run refused is published, not just logged: a guard that
+                // drops two rows must be distinguishable from one dropping two
+                // thousand.
+                .andExpect(jsonPath("$[0].arrivals_matched").value(117))
+                .andExpect(jsonPath("$[0].arrivals_unmatched").value(3))
+                .andExpect(jsonPath("$[0].implausible_delays_refused").value(2))
                 .andExpect(jsonPath("$[1].snapshots_captured").value(50))
                 // A day with snapshots but no derived arrivals is visible as such: the
                 // detector has not been run over it, which is a different failure from
                 // no buses running.
-                .andExpect(jsonPath("$[1].arrivals_derived").value(0));
+                .andExpect(jsonPath("$[1].arrivals_derived").value(0))
+                // And a day the on-time stage never ran over reports null, not zero —
+                // "we did not compare" is not "we compared and found nothing".
+                .andExpect(jsonPath("$[1].arrivals_matched").value(nullValue()))
+                .andExpect(jsonPath("$[1].implausible_delays_refused").value(nullValue()));
     }
 
     @Test

@@ -134,6 +134,88 @@ public class PerformanceRepository {
                 .list();
     }
 
+    /** The whole network's totals for a range. */
+    public Totals networkTotals(LocalDate from, LocalDate to) {
+        return jdbcClient.sql("""
+                        select count(*) as arrivals,
+                               count(*) filter (where on_time) as on_time,
+                               percentile_disc(0.5) within group (order by delay_seconds)
+                                   as median_delay,
+                               percentile_disc(0.9) within group (order by delay_seconds)
+                                   as p90_delay
+                        from ontime_events
+                        where service_date between :from and :to
+                        """)
+                .param("from", from).param("to", to)
+                .query((rs, rowNum) -> new Totals(
+                        rs.getInt("arrivals"),
+                        rs.getInt("on_time"),
+                        rs.getObject("median_delay", Integer.class),
+                        rs.getObject("p90_delay", Integer.class)))
+                .single();
+    }
+
+    /**
+     * The whole network, one row per service date.
+     *
+     * <p>Exists so that no page has to lead with a single percentage. The day-to-day
+     * spread across the published week is 21 points — wider than any methodological
+     * choice in this project — so a figure for a range is only honest beside the days
+     * it averages.
+     */
+    public List<Day> networkByDay(LocalDate from, LocalDate to) {
+        return jdbcClient.sql("""
+                        select service_date,
+                               count(*) as arrivals,
+                               count(*) filter (where on_time) as on_time,
+                               percentile_disc(0.5) within group (order by delay_seconds)
+                                   as median_delay
+                        from ontime_events
+                        where service_date between :from and :to
+                        group by 1
+                        order by 1
+                        """)
+                .param("from", from).param("to", to)
+                .query((rs, rowNum) -> new Day(
+                        rs.getObject("service_date", LocalDate.class),
+                        rs.getInt("arrivals"),
+                        Share.of(rs.getInt("on_time"), rs.getInt("arrivals")),
+                        rs.getObject("median_delay", Integer.class)))
+                .list();
+    }
+
+    /**
+     * The whole network, one row per hour of the local day.
+     *
+     * <p>This is the structure worth publishing. Across the published week the share
+     * on time runs from 45.3% at 17:00 to 79.4% at 06:00, with the median delay rising
+     * from 37 seconds to 267 — a 34-point swing with an obvious mechanism. The
+     * day-to-day spread looks similar in size but is partly an artefact of which hours
+     * each day was observed, so the hour is the honest breakdown and the day needs its
+     * coverage stated beside it (ADR-019).
+     */
+    public List<HourOfDay> networkByHour(LocalDate from, LocalDate to) {
+        return jdbcClient.sql("""
+                        select extract(hour from
+                                   observed_arrival_at at time zone 'America/Halifax')::int as hour,
+                               count(*) as arrivals,
+                               count(*) filter (where on_time) as on_time,
+                               percentile_disc(0.5) within group (order by delay_seconds)
+                                   as median_delay
+                        from ontime_events
+                        where service_date between :from and :to
+                        group by 1
+                        order by 1
+                        """)
+                .param("from", from).param("to", to)
+                .query((rs, rowNum) -> new HourOfDay(
+                        rs.getInt("hour"),
+                        rs.getInt("arrivals"),
+                        Share.of(rs.getInt("on_time"), rs.getInt("arrivals")),
+                        rs.getObject("median_delay", Integer.class)))
+                .list();
+    }
+
     /** One route's totals for the range, or empty when it was never observed. */
     public Optional<Totals> routeTotals(String routeId, LocalDate from, LocalDate to) {
         return totals("""
@@ -362,9 +444,13 @@ public class PerformanceRepository {
                             group by 1)
                         select coalesce(c.day, d.day) as day,
                                coalesce(c.snapshots, 0) as snapshots,
-                               coalesce(d.arrivals, 0) as arrivals
+                               coalesce(d.arrivals, 0) as arrivals,
+                               -- Left joined, so a date the on-time stage has not run
+                               -- over reports null rather than a misleading zero.
+                               q.matched, q.unmatched, q.implausible_delays_refused
                         from captured c
                         full join derived d on d.day = c.day
+                        left join ontime_quality q on q.service_date = coalesce(c.day, d.day)
                         order by 1
                         """)
                 .query((rs, rowNum) -> {
@@ -374,7 +460,10 @@ public class PerformanceRepository {
                             captured,
                             expectedPerDay,
                             Share.of(captured, expectedPerDay),
-                            rs.getInt("arrivals"));
+                            rs.getInt("arrivals"),
+                            rs.getObject("matched", Integer.class),
+                            rs.getObject("unmatched", Integer.class),
+                            rs.getObject("implausible_delays_refused", Integer.class));
                 })
                 .list();
     }

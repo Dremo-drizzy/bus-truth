@@ -17,7 +17,15 @@ import org.springframework.stereotype.Component;
 // Polling is on unless switched off. A test that boots this application does not
 // want three schedulers fetching live data and writing rows underneath its
 // assertions, and an operator may want the service up without it collecting.
-@ConditionalOnProperty(prefix = "bustruth.collector", name = "polling-enabled",
+// Two switches, both default-on, and either one off stops this poller.
+// polling-enabled is the global one, off in every test that boots the context.
+// trip-updates.enabled is per feed, because the host and the laptop do not collect the
+// same feeds: archiving trip updates on the host would fill its disk in about
+// five months, so that feed stays on the laptop (ADR-018). Listing both names in
+// one annotation means every one of them must be absent or true.
+@ConditionalOnProperty(
+        name = {"bustruth.collector.polling-enabled",
+                "bustruth.collector.trip-updates.enabled"},
         matchIfMissing = true)
 public class TripUpdatePoller extends FeedPoller<TripUpdate> {
 

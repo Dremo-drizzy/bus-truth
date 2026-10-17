@@ -64,13 +64,145 @@ export default function AboutPage() {
         Publishing an invented arrival, or an invented cancellation, would be a false
         claim about a transit agency.
       </p>
+      <h2>The number this site is least sure about</h2>
       <p>
-        One consequence is worth stating plainly: the headline on-time figure is
-        sensitive to our own definition of the moment of arrival. Timing an arrival from
-        the first sighting of a stop rather than the last one before the bus moves on
-        changes the figure for the same day's data by about{" "}
-        <strong>21 percentage points</strong>. The site uses the second definition,
-        because the first counts a bus idling at its origin terminus as already arrived.
+        Because the feed holds one stop number for minutes, each stop arrives as a{" "}
+        <strong>window</strong> of positions rather than a moment, and an arrival has to
+        be timed from one end of that window or the other. This site takes the{" "}
+        <strong>end</strong> of it.
+      </p>
+      <p>
+        The same week, derived both ways and with nothing else changed:
+      </p>
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">4&ndash;10 October 2026, 109,584 arrivals</th>
+              <th scope="col">Window start</th>
+              <th scope="col">Window end (used here)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">On time</th>
+              <td>40.9%</td>
+              <td>
+                <strong>58.4%</strong>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">Early</th>
+              <td>35.5%</td>
+              <td>11.1%</td>
+            </tr>
+            <tr>
+              <th scope="row">Late</th>
+              <td>23.6%</td>
+              <td>30.5%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>
+          17.5 percentage points, and not one bus behaved differently between those two
+          columns.
+        </strong>{" "}
+        Both are published for that reason.
+      </p>
+      <p>
+        Which end to take was decided by measurement, not preference. The realtime feed
+        has a field that can say <code>STOPPED_AT</code>: the agency stating a bus is at
+        a stop, rather than us inferring it. Halifax fills it in on{" "}
+        <strong>0.40%</strong> of positions — far too few to measure with, and enough to
+        judge the two candidates against. The window&rsquo;s end lands a median{" "}
+        <strong>61 seconds late</strong>; its start, a median{" "}
+        <strong>544 seconds early</strong>.
+      </p>
+      <p>
+        <strong>That remaining 61 seconds is named, not corrected.</strong> Removing it
+        from every arrival in the published week would move the figure from{" "}
+        <strong>58.4%</strong> to <strong>49.7%</strong> — a margin of{" "}
+        <strong>8.7 percentage points</strong>, which is this site&rsquo;s own margin of
+        error and the number the observation floors below are derived from.
+      </p>
+      <p>
+        Two limits on that, both measured and both pointing the same way.{" "}
+        <code>STOPPED_AT</code> is only reported where buses sit still: 27 of the 45
+        stops that ever send it are terminals or bays, and those windows are a median
+        815 seconds wide against 32 seconds for windows in general. And the bias{" "}
+        <em>grows</em> with the width of the window — a median of 0 seconds on windows
+        under a minute wide, against 211 seconds on those over fifteen minutes. So at an
+        ordinary stop the end of the window is close to the real arrival; at a terminal
+        where a bus lays over, it is minutes late. The 61 seconds is measured on the
+        awkward cases, which makes it cautious rather than flattering. It is not a
+        handful of buses either: 234 of the 366 vehicles ever seen report it at least
+        once.
+      </p>
+      <p>
+        <strong>One thing is worth stating plainly, because the two numbers look like a
+        contradiction otherwise.</strong> The two definitions sit at opposite ends of a
+        window that is often minutes wide, yet the median delay differs by only 74
+        seconds between them while the headline figure moves 8.7 points. Both are true,
+        because <strong>50.5% of the windows that produce an arrival contain a single
+        position</strong> — for half of all arrivals, the two definitions are the same
+        timestamp. Everything the choice changes comes from the other half.
+      </p>
+
+      <h2>Is the figure biased by when we were collecting?</h2>
+      <p>
+        It would be easy for it to be. On-time performance varies 34 points across the
+        day, and this project&rsquo;s collection was uneven — so if the hours we watched
+        are not distributed like the hours Halifax runs buses, the headline is weighted
+        by our uptime rather than by the service.
+      </p>
+      <p>
+        So it is checked rather than assumed. Each hour&rsquo;s observed rate was
+        reweighted by that hour&rsquo;s share of <strong>scheduled</strong> service —
+        907,323 scheduled stop-events across the week, counted from the schedule&rsquo;s
+        own calendar. The reweighted figure is <strong>60.1%</strong>, the same as the
+        raw one to within <strong>0.0 points</strong>.
+      </p>
+      <p>
+        That is a near-cancellation rather than luck, and the reason is worth knowing:
+        we under-observed the morning and over-observed the late evening. Missing the
+        evening peak would have flattered the figure; missing the early morning, which
+        runs at 79%, penalises it. The two offset. Weighting every hour equally would
+        give 63.9%, peak hours alone 45.6% — so the mix can move this number by 26
+        points, and it happens not to here.
+      </p>
+      <p>
+        One limit: reweighting fixes the <em>mix</em> of hours observed, not the hours
+        missed entirely. Thursday 8 October has no observed arrivals between 07:00 and
+        18:59, and no amount of reweighting can produce a figure for a day we did not
+        watch.
+      </p>
+
+      <h2>How few observations is too few</h2>
+      <p>
+        One observation moves a percentage by 100/n points. This site publishes an
+        8.7-point margin of error, so a figure that a single bus could swing further
+        than that is describing its own sample size rather than the service. Two floors
+        follow from that, and both are computed from the margin rather than chosen:
+      </p>
+      <ul>
+        <li>
+          a percentage is shown at all only over <strong>12</strong> or more arrivals —
+          below that you will see &ldquo;too few observations&rdquo;
+        </li>
+        <li>
+          a route or stop is <strong>ranked</strong> only over <strong>23</strong> or
+          more, because a ranking compares two percentages and carries both their
+          noise
+        </li>
+      </ul>
+      <p>
+        Neither number is chosen: the only difference between them is how many figures
+        the claim rests on. Over the published week they cost little — 78 of the 81
+        observed routes can be ranked, and the median route has 302 arrivals. On a
+        single day they would exclude most of them, which is one reason the default
+        range is a week.
       </p>
 
       <h2>Matching an arrival to the schedule</h2>
@@ -111,7 +243,7 @@ export default function AboutPage() {
         Collection has run on a laptop, and the laptop has slept. The table below is
         live, not written down — it is the same data the rest of the site is built from.
       </p>
-      {coverage.state === "loading" && <Loading what="coverage" />}
+      {coverage.state === "loading" && <Loading what="coverage" slow={coverage.slow} />}
       {coverage.state === "failed" && (
         <Failed what="coverage" detail={coverage.error.message} />
       )}

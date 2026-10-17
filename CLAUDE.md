@@ -114,13 +114,19 @@ Revisit if:
 
 ## Current stage
 
-**Phase R · Stage R5 — scheduled vs actual.** Governed by `docs/BUILD-BRIEF.md` and
+**Phase R · Stage R8 — cloud and ship.** Governed by `docs/BUILD-BRIEF.md` and
 `docs/BUILD-BRIEF-AMENDMENT.md`; where they disagree the amendment wins.
 
 Done: R0 (fresh repo) · R1 (batch, no queue) · R2 (static GTFS loaded) · R3 (trip-id
 join rule) · R4 (arrival detection, and why 17.5% is its ceiling) · R5 (on-time
-events). Next: R6 (API), R7 (web), R8 (ship).
+events) · R6 (six API endpoints) · R7 (Vite + React, five pages) · R8 (deployment
+built and validated — **not deployed**: the host is Daniel's choice, see
+`docs/DEPLOY.md`).
 
-Everything marked **NEEDS DANIEL'S REVIEW** is still waiting on him: the arrival rule
-and the four constants (ADR-014), the trip-id join (ADR-013), the schedule match
-(ADR-015), and the README findings section.
+R9 (prediction accuracy) stays out of scope.
+
+Everything marked **NEEDS DANIEL'S REVIEW** is waiting on him, and the markers are the
+to-do list for the curriculum phase: the arrival rule and the four constants (ADR-014),
+the trip-id join (ADR-013), the schedule match (ADR-015), the streaming-to-batch
+decision (ADR-012), the README findings section, and the method page text.
+`docs/defence-notes.md` has 40 questions and no answers, deliberately.

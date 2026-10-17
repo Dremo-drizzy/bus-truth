@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import type { CoverageDay } from "./api";
-import { useApi } from "./api";
+import type { CoverageDay, Meta } from "./api";
+import { DISPLAY_FLOOR_FALLBACK, useApi } from "./api";
 
 /**
  * The date range every performance page is asked about, and where its default comes
@@ -24,6 +24,10 @@ type Range = {
   ready: boolean;
   setRange: (from: string, to: string) => void;
   coverage: CoverageDay[];
+  /** From /api/meta, so the site and the API agree on one derived number. */
+  displayFloor: number;
+  /** How far the published on-time share moves under the bias we do not correct. */
+  headlineSensitivityPoints: number | null;
 };
 
 const RangeContext = createContext<Range | null>(null);
@@ -31,6 +35,7 @@ const RangeContext = createContext<Range | null>(null);
 export function RangeProvider({ children }: { children: React.ReactNode }) {
   const [params, setParams] = useSearchParams();
   const coverage = useApi<CoverageDay[]>("/api/coverage");
+  const meta = useApi<Meta>("/api/meta");
 
   const days = coverage.state === "loaded" ? coverage.data : [];
   const withArrivals = days.filter((day) => day.arrivals_derived > 0);
@@ -53,9 +58,13 @@ export function RangeProvider({ children }: { children: React.ReactNode }) {
         setParams(next, { replace: true });
       },
       coverage: days,
+      displayFloor:
+        meta.state === "loaded" ? meta.data.display_floor : DISPLAY_FLOOR_FALLBACK,
+      headlineSensitivityPoints:
+        meta.state === "loaded" ? meta.data.headline_sensitivity_points : null,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params, coverage.state, withArrivals.length, days.length]);
+  }, [params, coverage.state, withArrivals.length, days.length, meta.state]);
 
   return <RangeContext.Provider value={value}>{children}</RangeContext.Provider>;
 }

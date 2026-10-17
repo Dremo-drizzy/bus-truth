@@ -22,14 +22,16 @@ import org.springframework.web.server.ResponseStatusException;
 public class RoutesController {
 
     /**
-     * Below this many arrivals a stop is left out of the worst-stops ranking.
+     * How many arrivals a route or stop needs before it can take a position in a
+     * ranking.
      *
-     * <p>A presentation guard, not a judgement about service: sorting stops by a
-     * percentage over two observations ranks the stops with the fewest observations,
-     * not the least reliable ones. Overridable per request, and the value applied comes
-     * back in the response so the page can state it.
+     * <p>Derived, not chosen: {@link PublishedUncertainty} computes it from the one
+     * uncertainty this project publishes, so the floor cannot drift from the figure
+     * that justifies it. ADR-017 has the measurement and the trade-off table.
+     * Overridable per request, and the value applied comes back in the response so the
+     * page can state it.
      */
-    private static final int DEFAULT_MIN_ARRIVALS = 5;
+    private static final int DEFAULT_MIN_ARRIVALS = PublishedUncertainty.rankingFloor();
 
     private static final int WORST_STOPS = 10;
 

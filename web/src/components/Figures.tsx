@@ -1,18 +1,20 @@
 import type { Share } from "../api";
-import { TOO_FEW, formatDelay, tooFew } from "../api";
+import { formatDelay, tooFew } from "../api";
+import { useRange } from "../range";
 
 /**
  * The small pieces every page shares, and the one rule they all enforce.
  *
  * A share never renders as a bare number here. Either it renders with its
- * denominator, or — below {@link TOO_FEW} observations — it refuses to render a
- * percentage at all and says why. That refusal is the whole point of the site: the
+ * denominator, or — below the floor the API derives and serves — it refuses to render
+ * a percentage at all and says why. That refusal is the whole point of the site: the
  * feed reports a trip's position about 6.8 times across 38.3 stops, so thin
  * denominators are the normal case, and "0% on time" over two arrivals is a false
  * claim about a bus route rather than a measurement of one.
  */
 
 export function SharePercent({ share }: { share: Share }) {
+  const { displayFloor } = useRange();
   if (share.percent === null) {
     return (
       <span className="figure muted" title="Nothing was observed in this range">
@@ -20,11 +22,11 @@ export function SharePercent({ share }: { share: Share }) {
       </span>
     );
   }
-  if (tooFew(share)) {
+  if (tooFew(share, displayFloor)) {
     return (
       <span
         className="figure muted"
-        title={`${share.count} of ${share.of} arrivals — too few to report a percentage`}
+        title={`${share.count} of ${share.of} arrivals — fewer than the ${displayFloor} this project will report a percentage over`}
       >
         too few observations
       </span>
@@ -42,8 +44,9 @@ export function SharePercent({ share }: { share: Share }) {
 
 /** A share as one line, for table cells too narrow for the stacked form. */
 export function ShareInline({ share }: { share: Share }) {
+  const { displayFloor } = useRange();
   if (share.percent === null) return <span className="muted">no data</span>;
-  if (tooFew(share)) {
+  if (tooFew(share, displayFloor)) {
     return <span className="muted">too few ({share.of})</span>;
   }
   return (
@@ -62,10 +65,28 @@ export function Delay({ seconds }: { seconds: number | null }) {
   );
 }
 
-export function Loading({ what }: { what: string }) {
+/**
+ * Loading, and — if it is taking a while — why.
+ *
+ * The API runs on a free instance that sleeps when idle, so the first request after a
+ * quiet spell waits for the container to start: about thirty seconds. Saying that
+ * plainly costs five lines and is the difference between a visitor waiting and a
+ * visitor closing the tab. It is also the same principle as everything else here:
+ * state the limitation rather than let the reader guess at it.
+ */
+export function Loading({ what, slow = false }: { what: string; slow?: boolean }) {
   return (
     <p className="state" role="status">
       Loading {what}…
+      {slow && (
+        <>
+          <br />
+          <small className="muted">
+            The server is waking up. It sleeps when nobody is using it, which is what
+            makes this free to run, and takes about thirty seconds to start.
+          </small>
+        </>
+      )}
     </p>
   );
 }

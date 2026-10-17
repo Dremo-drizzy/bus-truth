@@ -32,6 +32,10 @@ import org.springframework.transaction.annotation.Transactional;
  * a transit agency. Unmatched arrivals are counted and reported instead, which is why
  * the match rate is published with every on-time figure.
  *
+ * <p><b>It will not publish a delay it cannot believe.</b> A delay beyond half a day is
+ * not a late bus, it is a disagreement about which service day the trip belongs to, so
+ * the row is counted and dropped rather than averaged with real ones.
+ *
  * <p><b>It will not guess at a published time it cannot read.</b> A schedule value
  * that will not parse is counted separately from an unmatched one, because the first
  * is a bug here and the second is a disagreement between two sources.
@@ -48,6 +52,34 @@ public class OntimeRun {
 
     private static final Logger log = LoggerFactory.getLogger(OntimeRun.class);
 
+    /**
+     * Beyond this, a delay is not a delay.
+     *
+     * <p>Half a day, and the figure comes from the schedule rather than taste. A
+     * Halifax service day spans 04:20 to 26:01 — about twenty-two hours — and the
+     * largest delay ever observed in the published week is 4.5 hours. A delay of twelve
+     * hours or more cannot be a late bus; it can only be the service date and the
+     * published time disagreeing about which day the trip belongs to, which is a
+     * labelling fault somewhere upstream (ADR-019).
+     *
+     * <p>{@link io.github.dremo_drizzy.bustruth.processor.detect.ServiceDay} repairs
+     * the cause that was measured — 2,657 of 2,660 cases. This is the guard behind it:
+     * it catches whatever is left, and whatever arrives next, instead of letting a
+     * twenty-four-hour error into an average where nobody would see it.
+     */
+    private static final Duration IMPLAUSIBLE_DELAY = Duration.ofHours(12);
+
+    /**
+     * How many refusals are expected, as a share of the day's arrivals.
+     *
+     * <p>Measured: the week 4-10 October produced 3 refusals out of 112,951 matched
+     * arrivals, which is 0.003%. The threshold is set at 0.1% — about thirty times the
+     * observed rate — so ordinary noise is silent and a new labelling fault is loud.
+     * Recorded here rather than chosen quietly, because a guard whose output nobody
+     * reads is the same as no guard (ADR-019).
+     */
+    private static final double REFUSALS_WORTH_A_WARNING = 0.001;
+
     private final OntimeEventRepository repository;
     private final DetectionSettings settings;
 
@@ -62,6 +94,11 @@ public class OntimeRun {
             throw new IllegalArgumentException("to (" + to + ") is before from (" + from + ")");
         }
 
+        // Same reason as the detection run: the window decides every on-time verdict
+        // in the range, so it goes in the log beside the result.
+        log.info("settings: on-time window {}s to +{}s",
+                settings.onTimeEarly().toSeconds(), settings.onTimeLate().toSeconds());
+
         int cleared = repository.deleteRange(from, to);
         log.info("cleared {} existing on-time rows for {} .. {}", cleared, from, to);
 
@@ -73,7 +110,7 @@ public class OntimeRun {
                 // Loudly, because this is the one failure that would otherwise look
                 // like a day on which no buses ran.
                 log.warn("{}: no published schedule covers this date, skipping", day);
-                total = total.plus(new OntimeCounts(0, 0, 0, 0, 0, 0, 0, 0, 0, 1));
+                total = total.plus(new OntimeCounts(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1));
                 continue;
             }
 
@@ -82,14 +119,41 @@ public class OntimeRun {
             OntimeCounts dayCounts = compare(arrivals, feedVersion, events);
 
             int written = repository.insertAll(events);
+            repository.recordQuality(day, feedVersion, dayCounts);
             total = total.plus(dayCounts);
 
             log.info("{} against {}: {} — {} rows written",
                     day, feedVersion, dayCounts, written);
+            warnIfRefusingTooMuch(day, dayCounts);
         }
 
         log.info("on-time run complete for {} .. {}: {}", from, to, total);
         return total;
+    }
+
+    /**
+     * Says so, loudly, when the plausibility guard is doing more than mopping up.
+     *
+     * <p>Three refusals in a week is the measured background rate and needs no
+     * attention. A hundred would mean the feed had changed how it labels service days
+     * again, and the figures for that day would be resting on a shrinking subset
+     * without anybody noticing.
+     */
+    private static void warnIfRefusingTooMuch(LocalDate day, OntimeCounts counts) {
+        if (counts.arrivalsConsidered() == 0 || counts.implausibleDelay() == 0) {
+            return;
+        }
+        double share = (double) counts.implausibleDelay() / counts.arrivalsConsidered();
+        if (share >= REFUSALS_WORTH_A_WARNING) {
+            log.warn("{}: refused {} of {} arrivals for an implausible delay ({}%), above the"
+                            + " {}% worth investigating — the feed may have changed how it"
+                            + " labels service days",
+                    day, counts.implausibleDelay(), counts.arrivalsConsidered(),
+                    Math.round(share * 1000) / 10.0, REFUSALS_WORTH_A_WARNING * 100);
+        } else {
+            log.info("{}: refused {} arrivals for an implausible delay, within the measured"
+                    + " background rate", day, counts.implausibleDelay());
+        }
     }
 
     /** Compares one day's arrivals, appending the matched ones to {@code events}. */
@@ -103,6 +167,7 @@ public class OntimeRun {
         int late = 0;
         int sequenceDisagreements = 0;
         int ambiguous = 0;
+        int implausible = 0;
 
         for (ScheduledArrival arrival : arrivals) {
             if (!arrival.matched()) {
@@ -118,6 +183,14 @@ public class OntimeRun {
             }
 
             Duration delay = Duration.between(scheduled, arrival.observedArrivalAt());
+
+            if (delay.abs().compareTo(IMPLAUSIBLE_DELAY) >= 0) {
+                // Counted, never stored. Publishing it would put a twenty-four-hour
+                // error into the same average as real delays.
+                implausible++;
+                continue;
+            }
+
             boolean tooEarly = delay.compareTo(settings.onTimeEarly()) < 0;
             boolean tooLate = delay.compareTo(settings.onTimeLate()) > 0;
 
@@ -159,7 +232,7 @@ public class OntimeRun {
                     arrival.ambiguous()));
         }
 
-        return new OntimeCounts(arrivals.size(), matched, unmatched, unusable,
+        return new OntimeCounts(arrivals.size(), matched, unmatched, unusable, implausible,
                 onTime, early, late, sequenceDisagreements, ambiguous, 0);
     }
 }

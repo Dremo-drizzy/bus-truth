@@ -126,6 +126,29 @@ public final class PerformanceRows {
             @JsonProperty("stops_below_threshold") int stopsBelowThreshold) {
     }
 
+    /**
+     * The whole network for a range, with the days it averages.
+     *
+     * <p>The days are not decoration. On the published week the spread between the
+     * best and worst day is 21 points — wider than the 17.5-point gap between the two
+     * candidate arrival definitions and wider still than the 8.7-point margin of error
+     * — so a single figure for a range, standing alone, implies a precision the data
+     * does not have. Any page showing {@code onTime} shows {@code byDay} beside it.
+     *
+     * @param from the first service date included, so no figure travels without its
+     *             period
+     */
+    public record NetworkSummary(
+            @JsonProperty("from") LocalDate from,
+            @JsonProperty("to") LocalDate to,
+            @JsonProperty("arrivals") int arrivals,
+            @JsonProperty("on_time") Share onTime,
+            @JsonProperty("median_delay_seconds") Integer medianDelaySeconds,
+            @JsonProperty("p90_delay_seconds") Integer p90DelaySeconds,
+            @JsonProperty("by_day") List<Day> byDay,
+            @JsonProperty("by_hour") List<HourOfDay> byHour) {
+    }
+
     /** Everything the stop page draws. */
     public record StopReliability(
             @JsonProperty("stop_id") String stopId,
@@ -149,12 +172,26 @@ public final class PerformanceRows {
      *                          produce
      * @param coverage          captured as a share of expected
      * @param arrivalsDerived   arrivals derived for that service date
+     * @param arrivalsMatched   of those, how many found a published time to compare
+     *                          against. Null when the on-time stage has not been run
+     *                          over the date, which is different from zero
+     * @param arrivalsUnmatched arrivals with no published time for that trip and stop
+     * @param implausibleDelaysRefused arrivals whose delay exceeded twelve hours and
+     *                          were therefore counted and dropped rather than averaged:
+     *                          a bus is never twelve hours early, so the row is a
+     *                          service-date labelling fault, not a delay (ADR-019).
+     *                          Published for the same reason every percentage carries
+     *                          its count — a guard nobody can see is the same as no
+     *                          guard
      */
     public record CoverageDay(
             @JsonProperty("service_date") LocalDate serviceDate,
             @JsonProperty("snapshots_captured") int snapshotsCaptured,
             @JsonProperty("snapshots_expected") int snapshotsExpected,
             @JsonProperty("coverage") Share coverage,
-            @JsonProperty("arrivals_derived") int arrivalsDerived) {
+            @JsonProperty("arrivals_derived") int arrivalsDerived,
+            @JsonProperty("arrivals_matched") Integer arrivalsMatched,
+            @JsonProperty("arrivals_unmatched") Integer arrivalsUnmatched,
+            @JsonProperty("implausible_delays_refused") Integer implausibleDelaysRefused) {
     }
 }

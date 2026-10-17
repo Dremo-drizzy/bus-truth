@@ -18,6 +18,12 @@ package io.github.dremo_drizzy.bustruth.processor.ontime;
  *                             a time at all; counted separately because a parse
  *                             failure is a bug in us, while an unmatched row is a
  *                             disagreement between two sources
+ * @param implausibleDelay     matched rows whose delay exceeded half a day, which is
+ *                             not a delay but the service date and the published time
+ *                             disagreeing about which day the trip belongs to. Counted
+ *                             and not stored: a bus is never twenty-four hours early,
+ *                             and a row saying so would poison every average computed
+ *                             over it
  * @param onTime               inside the window
  * @param early                earlier than the window allows
  * @param late                 later than the window allows
@@ -39,6 +45,7 @@ public record OntimeCounts(
         int matched,
         int unmatched,
         int unusableScheduleTime,
+        int implausibleDelay,
         int onTime,
         int early,
         int late,
@@ -47,7 +54,7 @@ public record OntimeCounts(
         int daysWithoutSchedule) {
 
     public static OntimeCounts zero() {
-        return new OntimeCounts(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        return new OntimeCounts(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 
     public OntimeCounts plus(OntimeCounts other) {
@@ -56,6 +63,7 @@ public record OntimeCounts(
                 matched + other.matched,
                 unmatched + other.unmatched,
                 unusableScheduleTime + other.unusableScheduleTime,
+                implausibleDelay + other.implausibleDelay,
                 onTime + other.onTime,
                 early + other.early,
                 late + other.late,
@@ -79,9 +87,10 @@ public record OntimeCounts(
         return ("%,d arrivals, %,d matched (%.1f%% of %,d), %,d unmatched, "
                 + "%,d on time (%.1f%% of %,d matched), %,d early, %,d late, "
                 + "%,d numbered differently by the schedule, %,d ambiguous stop matches, "
-                + "%,d days without a schedule")
+                + "%,d implausible delays refused, %,d days without a schedule")
                 .formatted(arrivalsConsidered, matched, matchRate() * 100, arrivalsConsidered,
                         unmatched, onTime, onTimeRate() * 100, matched, early, late,
-                        sequenceDisagreements, ambiguousStopMatches, daysWithoutSchedule);
+                        sequenceDisagreements, ambiguousStopMatches, implausibleDelay,
+                        daysWithoutSchedule);
     }
 }
