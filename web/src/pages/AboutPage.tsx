@@ -1,6 +1,7 @@
 import type { CoverageDay } from "../api";
 import { useApi } from "../api";
 import { Failed, Loading, ShareInline } from "../components/Figures";
+import { describeDay } from "../moment";
 
 /**
  * How the numbers on this site are made, and what they cannot tell you.
@@ -9,10 +10,25 @@ import { Failed, Loading, ShareInline } from "../components/Figures";
  * by Claude Code so the page is not empty; every figure in it is measured and
  * reproducible, but the words are not yet the author's own.
  *
- * <p>The coverage table is live rather than written down, because a methodology page
- * quoting a coverage figure from the day it was written is the same mistake as a
- * percentage without its denominator.
+ * <p>The coverage table is served by the API rather than written into this page,
+ * because a methodology page quoting a coverage figure from the day it was written is
+ * the same mistake as a percentage without its denominator. The counts themselves are
+ * stored, though, not recounted on each visit — the hosted database does not hold the
+ * raw positions — so the page says in words when they were taken.
  */
+/**
+ * The newest date any coverage count was taken, or null if none was.
+ *
+ * The newest rather than the oldest because the counts are refreshed together; if they
+ * ever were not, the table still carries each row's own date for anyone who asks.
+ */
+function countedAt(days: CoverageDay[]): string | null {
+  return days
+    .map((day) => day.coverage_computed_at)
+    .filter((at): at is string => at !== null)
+    .reduce<string | null>((newest, at) => (newest === null || at > newest ? at : newest), null);
+}
+
 export default function AboutPage() {
   const coverage = useApi<CoverageDay[]>("/api/coverage");
 
@@ -241,11 +257,21 @@ export default function AboutPage() {
       <p>
         Every figure on this site depends on the recorder having been running.
         Collection has run on a laptop, and the laptop has slept. The table below is
-        live, not written down — it is the same data the rest of the site is built from.
+        counted from the same recording the rest of the site is built from.
       </p>
       {coverage.state === "loading" && <Loading what="coverage" slow={coverage.slow} />}
       {coverage.state === "failed" && (
         <Failed what="coverage" detail={coverage.error.message} />
+      )}
+      {coverage.state === "loaded" && (
+        <p data-testid="coverage-counted-at">
+          {(() => {
+            const at = countedAt(coverage.data);
+            return at === null
+              ? "These counts carry no date, so how current they are is unknown."
+              : `These counts were taken on ${describeDay(at)}. Recording may have carried on since, and anything it captured after that is not counted here.`;
+          })()}
+        </p>
       )}
       {coverage.state === "loaded" && (
         <div className="table-wrap">
@@ -263,13 +289,23 @@ export default function AboutPage() {
                 <tr key={day.service_date}>
                   <th scope="row">{day.service_date}</th>
                   <td>
-                    {day.snapshots_captured.toLocaleString()}{" "}
-                    <span className="muted">
-                      of {day.snapshots_expected.toLocaleString()}
-                    </span>
+                    {day.snapshots_captured === null ? (
+                      <span className="muted">not counted</span>
+                    ) : (
+                      <>
+                        {day.snapshots_captured.toLocaleString()}{" "}
+                        <span className="muted">
+                          of {day.snapshots_expected.toLocaleString()}
+                        </span>
+                      </>
+                    )}
                   </td>
                   <td>
-                    <ShareInline share={day.coverage} />
+                    {day.coverage === null ? (
+                      <span className="muted">—</span>
+                    ) : (
+                      <ShareInline share={day.coverage} />
+                    )}
                   </td>
                   <td>{day.arrivals_derived.toLocaleString()}</td>
                 </tr>

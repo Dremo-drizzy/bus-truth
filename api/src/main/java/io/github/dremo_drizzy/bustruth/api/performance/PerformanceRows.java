@@ -1,6 +1,7 @@
 package io.github.dremo_drizzy.bustruth.api.performance;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -167,28 +168,36 @@ public final class PerformanceRows {
      * collector having been running, and this is the only endpoint that says when it
      * was not.
      *
-     * @param snapshotsCaptured distinct feed snapshots that reached the database
-     * @param snapshotsExpected how many a day of uninterrupted 20-second polling would
-     *                          produce
-     * @param coverage          captured as a share of expected
-     * @param arrivalsDerived   arrivals derived for that service date
-     * @param arrivalsMatched   of those, how many found a published time to compare
-     *                          against. Null when the on-time stage has not been run
-     *                          over the date, which is different from zero
-     * @param arrivalsUnmatched arrivals with no published time for that trip and stop
+     * @param snapshotsCaptured  distinct feed snapshots that reached the database, or
+     *                           null when the day was never counted — never zero for
+     *                           that, because zero would claim the recorder captured
+     *                           nothing
+     * @param snapshotsExpected  how many a day of uninterrupted 20-second polling would
+     *                           produce
+     * @param coverage           captured as a share of expected, null when not counted
+     * @param coverageComputedAt when the snapshot count was taken. Collection carries on
+     *                           after the count is copied anywhere, so a deployed copy is
+     *                           a snapshot that drifts from the truth; this is the date
+     *                           that says how far
+     * @param arrivalsDerived    arrivals derived for that service date
+     * @param arrivalsMatched    of those, how many found a published time to compare
+     *                           against. Null when the on-time stage has not been run
+     *                           over the date, which is different from zero
+     * @param arrivalsUnmatched  arrivals with no published time for that trip and stop
      * @param implausibleDelaysRefused arrivals whose delay exceeded twelve hours and
-     *                          were therefore counted and dropped rather than averaged:
-     *                          a bus is never twelve hours early, so the row is a
-     *                          service-date labelling fault, not a delay (ADR-019).
-     *                          Published for the same reason every percentage carries
-     *                          its count — a guard nobody can see is the same as no
-     *                          guard
+     *                           were therefore counted and dropped rather than averaged:
+     *                           a bus is never twelve hours early, so the row is a
+     *                           service-date labelling fault, not a delay (ADR-019).
+     *                           Published for the same reason every percentage carries
+     *                           its count — a guard nobody can see is the same as no
+     *                           guard
      */
     public record CoverageDay(
             @JsonProperty("service_date") LocalDate serviceDate,
-            @JsonProperty("snapshots_captured") int snapshotsCaptured,
+            @JsonProperty("snapshots_captured") Integer snapshotsCaptured,
             @JsonProperty("snapshots_expected") int snapshotsExpected,
             @JsonProperty("coverage") Share coverage,
+            @JsonProperty("coverage_computed_at") Instant coverageComputedAt,
             @JsonProperty("arrivals_derived") int arrivalsDerived,
             @JsonProperty("arrivals_matched") Integer arrivalsMatched,
             @JsonProperty("arrivals_unmatched") Integer arrivalsUnmatched,

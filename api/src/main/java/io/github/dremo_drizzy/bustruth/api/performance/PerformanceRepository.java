@@ -9,6 +9,7 @@ import io.github.dremo_drizzy.bustruth.api.performance.PerformanceRows.RouteRow;
 import io.github.dremo_drizzy.bustruth.api.performance.PerformanceRows.Stop;
 import io.github.dremo_drizzy.bustruth.api.performance.PerformanceRows.StopRow;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -421,45 +422,52 @@ public class PerformanceRepository {
     /**
      * The project's own collection record, per day.
      *
-     * <p>A full outer join, because the two halves fail independently: a day can have
-     * snapshots and no derived arrivals if detection has not been run over it, and —
-     * once the archive is replayed — arrivals exist only where snapshots do. Showing
-     * either side alone would hide one of those failures.
+     * <p>Snapshot counts come from {@code coverage_daily}, a stored figure, rather than
+     * being counted from {@code raw_vehicle_positions} on every request. The hosted
+     * database does not hold the raw table at all — it is 1.4 million rows that nothing
+     * else in the cloud reads — and counting from it made this endpoint fail with a 500
+     * on the deployed site. Coverage is a published figure, so it is stored as one,
+     * along with the date it was counted, which travels with every row.
      *
-     * <p>Snapshots are counted as distinct {@code first_feed_timestamp} values. The
-     * collector stores one feed timestamp per snapshot and skips snapshots whose
-     * contents have not changed, so this counts snapshots that reached the database —
-     * which is the number every other figure on the site depends on.
+     * <p>A full outer join, because the two halves fail independently: a day can have
+     * snapshots and no derived arrivals if detection has not been run over it, and a
+     * day can have arrivals and no coverage row if the count has not been refreshed
+     * since. Showing either side alone would hide one of those.
+     *
+     * <p>A day with no coverage row reports <b>null</b> snapshots, not zero. The old
+     * query coalesced it to zero, which on a page about this project's own gaps would
+     * have published "we recorded nothing" for a day that was simply never counted —
+     * the same false zero {@code ontime_quality} already refuses.
      */
     public List<CoverageDay> coverage(int expectedPerDay) {
         return jdbcClient.sql("""
-                        with captured as (
-                            select (vehicle_timestamp at time zone 'America/Halifax')::date as day,
-                                   count(distinct first_feed_timestamp) as snapshots
-                            from raw_vehicle_positions
-                            group by 1),
-                        derived as (
+                        with derived as (
                             select service_date as day, count(*) as arrivals
                             from arrival_events
                             group by 1)
-                        select coalesce(c.day, d.day) as day,
-                               coalesce(c.snapshots, 0) as snapshots,
+                        select coalesce(c.service_date, d.day) as day,
+                               c.snapshots_captured,
+                               c.computed_at,
                                coalesce(d.arrivals, 0) as arrivals,
                                -- Left joined, so a date the on-time stage has not run
                                -- over reports null rather than a misleading zero.
                                q.matched, q.unmatched, q.implausible_delays_refused
-                        from captured c
-                        full join derived d on d.day = c.day
-                        left join ontime_quality q on q.service_date = coalesce(c.day, d.day)
+                        from coverage_daily c
+                        full join derived d on d.day = c.service_date
+                        left join ontime_quality q
+                               on q.service_date = coalesce(c.service_date, d.day)
                         order by 1
                         """)
                 .query((rs, rowNum) -> {
-                    int captured = rs.getInt("snapshots");
+                    Integer captured = rs.getObject("snapshots_captured", Integer.class);
+                    OffsetDateTime computedAt =
+                            rs.getObject("computed_at", OffsetDateTime.class);
                     return new CoverageDay(
                             rs.getObject("day", LocalDate.class),
                             captured,
                             expectedPerDay,
-                            Share.of(captured, expectedPerDay),
+                            captured == null ? null : Share.of(captured, expectedPerDay),
+                            computedAt == null ? null : computedAt.toInstant(),
                             rs.getInt("arrivals"),
                             rs.getObject("matched", Integer.class),
                             rs.getObject("unmatched", Integer.class),

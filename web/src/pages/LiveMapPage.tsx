@@ -7,6 +7,7 @@ import type { GeoJSONSource } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { API_BASE } from "../apiBase";
+import { describeMoment } from "../moment";
 
 /**
  * Whether this build watches a live feed or shows one named minute.
@@ -92,35 +93,6 @@ type Status =
   | { kind: "no-data"; newestAgeSeconds: number | null }
   | { kind: "snapshot"; vehicles: number; snapshotAt: string }
   | { kind: "unreachable"; detail: string };
-
-/**
- * The moment, in words, for a reader rather than a log.
- *
- * Assembled from parts rather than handed to `toLocaleString`, for two reasons. The
- * ordering would otherwise follow the browser's locale — en-CA renders "October 6,
- * 2026" while every date written on this site reads "6 October 2026" — and a label the
- * test suite asserts should not depend on which ICU version the browser shipped with.
- *
- * Always Halifax time, because the moment belongs to the agency's clock and not the
- * reader's.
- */
-function describeMoment(isoTimestamp: string): string {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone: "America/Halifax",
-  }).formatToParts(new Date(isoTimestamp));
-
-  const part = (type: Intl.DateTimeFormatPartTypes): string =>
-    parts.find((candidate) => candidate.type === type)?.value ?? "";
-
-  return `${part("weekday")} ${part("day")} ${part("month")} ${part("year")}, ${part("hour")}:${part("minute")}`;
-}
 
 function ageSeconds(isoTimestamp: string, now: number): number {
   return Math.max(0, (now - Date.parse(isoTimestamp)) / 1000);

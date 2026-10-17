@@ -268,6 +268,17 @@ test("the map names the minute it is showing, and does not claim to be live", as
   await expect(page.getByRole("heading", { name: /the network, one minute/i })).toBeVisible();
 });
 
+test("the method page says when the coverage counts were taken", async ({ page }) => {
+  await serveApi(page);
+  await page.goto("/about");
+
+  // The counts are stored, not recounted per visit, so a deployed copy goes stale.
+  // The date in the fixture is 15:38 UTC on 17 October 2026, a Saturday in Halifax.
+  await expect(page.getByTestId("coverage-counted-at")).toHaveText(
+    /taken on Saturday 17 October 2026\./,
+  );
+});
+
 test("the method page states the licence and that this is not official", async ({ page }) => {
   await serveApi(page);
   await page.goto("/about");

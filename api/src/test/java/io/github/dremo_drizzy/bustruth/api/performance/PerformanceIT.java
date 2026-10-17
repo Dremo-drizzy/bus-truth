@@ -41,6 +41,10 @@ class PerformanceIT {
 
     private static final LocalDate DAY_ONE = LocalDate.of(2026, 10, 9);
     private static final LocalDate DAY_TWO = LocalDate.of(2026, 10, 10);
+    /** Arrivals derived, but never counted for coverage. */
+    private static final LocalDate DAY_THREE = LocalDate.of(2026, 10, 11);
+    /** When the stored snapshot counts were taken; published with every row. */
+    private static final Instant COUNTED_AT = Instant.parse("2026-10-15T14:30:00Z");
     private static final String FEED = "2026_08_August_20260806";
 
     /** The service day is the agency's, and the by-hour buckets are local. */
@@ -84,10 +88,10 @@ class PerformanceIT {
                     primary key (trip_id, service_date, stop_sequence))
                 """).update();
         jdbcClient.sql("""
-                create table if not exists raw_vehicle_positions (
-                    vehicle_id text not null, vehicle_timestamp timestamptz not null,
-                    first_feed_timestamp timestamptz not null,
-                    primary key (vehicle_id, vehicle_timestamp))
+                create table if not exists coverage_daily (
+                    service_date date primary key,
+                    snapshots_captured integer not null,
+                    computed_at timestamptz not null default clock_timestamp())
                 """).update();
         jdbcClient.sql("""
                 create table if not exists gtfs_feed_versions (
@@ -119,7 +123,7 @@ class PerformanceIT {
                 """).update();
 
         jdbcClient.sql("truncate table ontime_events, ontime_quality, arrival_events, "
-                + "raw_vehicle_positions, gtfs_routes, gtfs_stops, gtfs_feed_versions").update();
+                + "coverage_daily, gtfs_routes, gtfs_stops, gtfs_feed_versions").update();
 
         jdbcClient.sql("""
                 insert into gtfs_feed_versions (feed_version, loaded_at, source_sha256, source_bytes)
@@ -172,11 +176,13 @@ class PerformanceIT {
                         """)
                 .param("date", DAY_ONE).param("feed", FEED).update();
 
-        // Collection record: two days, one of them thin.
+        // Collection record: two days counted, one of them thin, and a third with
+        // arrivals derived but no count stored — which must read as null, not zero.
         snapshots(DAY_ONE, 300);
         snapshots(DAY_TWO, 50);
         derivedArrival("trip-1-0", DAY_ONE);
         derivedArrival("trip-1-1", DAY_ONE);
+        derivedArrival("trip-1-2", DAY_THREE);
     }
 
     @Test
@@ -403,6 +409,9 @@ class PerformanceIT {
                 // 4,320 snapshots is a full day at one every 20 seconds.
                 .andExpect(jsonPath("$[0].snapshots_expected").value(4320))
                 .andExpect(jsonPath("$[0].coverage.percent").value(6.9))
+                // The date the count was taken travels with it: a deployed copy stops
+                // growing while collection carries on, and this says how stale it is.
+                .andExpect(jsonPath("$[0].coverage_computed_at").value(COUNTED_AT.toString()))
                 .andExpect(jsonPath("$[0].arrivals_derived").value(2))
                 // What the run refused is published, not just logged: a guard that
                 // drops two rows must be distinguishable from one dropping two
@@ -418,7 +427,16 @@ class PerformanceIT {
                 // And a day the on-time stage never ran over reports null, not zero —
                 // "we did not compare" is not "we compared and found nothing".
                 .andExpect(jsonPath("$[1].arrivals_matched").value(nullValue()))
-                .andExpect(jsonPath("$[1].implausible_delays_refused").value(nullValue()));
+                .andExpect(jsonPath("$[1].implausible_delays_refused").value(nullValue()))
+                // A day with arrivals but no stored count still appears — the full join
+                // keeps it — and says it was not counted rather than that nothing was
+                // captured.
+                .andExpect(jsonPath("$[2].service_date").value(DAY_THREE.toString()))
+                .andExpect(jsonPath("$[2].arrivals_derived").value(1))
+                .andExpect(jsonPath("$[2].snapshots_captured").value(nullValue()))
+                .andExpect(jsonPath("$[2].coverage").value(nullValue()))
+                .andExpect(jsonPath("$[2].coverage_computed_at").value(nullValue()))
+                .andExpect(jsonPath("$.length()").value(3));
     }
 
     @Test
@@ -536,20 +554,18 @@ class PerformanceIT {
                 .update();
     }
 
-    /** Distinct feed timestamps on a day, which is what coverage counts. */
+    /**
+     * A stored coverage count, as scripts/refresh_coverage_daily.sql writes it. The api
+     * no longer counts raw positions itself: the hosted database does not hold them.
+     */
     private void snapshots(LocalDate day, int count) {
-        for (int i = 0; i < count; i++) {
-            Instant at = day.atTime(12, 0).atZone(HALIFAX).toInstant()
-                    .plusSeconds(i * 20L);
-            jdbcClient.sql("""
-                            insert into raw_vehicle_positions
-                                (vehicle_id, vehicle_timestamp, first_feed_timestamp)
-                            values (:vehicle, :at, :at)
-                            on conflict do nothing
-                            """)
-                    .param("vehicle", "bus-" + day + "-" + i)
-                    .param("at", at.atOffset(ZoneOffset.UTC))
-                    .update();
-        }
+        jdbcClient.sql("""
+                        insert into coverage_daily (service_date, snapshots_captured, computed_at)
+                        values (:day, :count, :at)
+                        """)
+                .param("day", day)
+                .param("count", count)
+                .param("at", COUNTED_AT.atOffset(ZoneOffset.UTC))
+                .update();
     }
 }

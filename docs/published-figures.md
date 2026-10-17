@@ -156,6 +156,7 @@ standardised number is the fragile one; the raw 97.5% of 79 is what to quote.
 | snapshots replayed into the database | 20,980 | 1,134,110 rows written |
 | coverage, best day in the week | 78.9% | 3,408 of 4,320 expected snapshots, 4 Oct |
 | coverage, worst day in the week | **32.2%** | 1,390 of 4,320, 8 Oct — the day with no daytime arrivals |
+| coverage counts taken | **Saturday 17 October 2026** | stored in `coverage_daily`; served with every row as `coverage_computed_at` and named on the method page |
 
 ## The map's named minute
 
