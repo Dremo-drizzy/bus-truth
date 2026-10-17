@@ -381,13 +381,21 @@ tbody a:hover {
   min-height: 60vh;
 }
 
-/* Explicit width and height, not inset alone: maplibre-gl.css sets
-   .maplibregl-map { position: relative }, MapLibre adds that class to the container
-   at runtime, and because that stylesheet is imported after this one at equal
-   specificity it wins — so inset: 0 does nothing and the container collapses to
-   height 0. Measured in the browser: .map-wrap 921px tall, .map 0. Width and height
-   work under either position value. */
-.map {
+/* Two classes, not one, and that is the whole fix. MapLibre adds .maplibregl-map to
+   this element, and maplibre-gl.css sets .maplibregl-map { position: relative }. That
+   stylesheet arrives later, in the map's own lazily loaded chunk, so at equal
+   specificity it wins. Relative, the height: 100% below has nothing definite to
+   resolve against — .map-wrap is sized by flex and min-height, not by a height — so
+   it becomes auto, and an empty div is 0px tall. MapLibre then draws a 300px fallback
+   canvas into a box nobody can see, which is how the deployed map went blank with its
+   controls still showing.
+
+   .map-wrap > .map outranks .maplibregl-map whatever order the sheets load in, so the
+   element stays absolute and inset: 0 sizes it to the wrapper. Rejected: !important
+   (wins, but hides why), and importing maplibre-gl.css ahead of this file (it would
+   move the map's CSS into every page's bundle, and the order would still be one
+   refactor from breaking). The browser test "the map fills its space" measures it. */
+.map-wrap > .map {
   position: absolute;
   inset: 0;
   width: 100%;
