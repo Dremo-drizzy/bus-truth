@@ -126,6 +126,14 @@ services:
       - key: SPRING_FLYWAY_ENABLED
         value: "false"
 
+      # No collector writes to this database, so there is no live feed to serve.
+      # Off, /api/vehicles/live answers 503 with a problem document saying so, instead
+      # of reading raw_vehicle_positions — a table this deployment deliberately does
+      # not hold. Not an empty list: that would claim there are no buses. The map uses
+      # /api/vehicles/snapshot here instead. Defaults to true everywhere else.
+      - key: BUSTRUTH_API_LIVE_FEED_ENABLED
+        value: "false"
+
       # Which origin may call this API from a browser. One origin, never a wildcard
       # (see WebOriginConfig).
       #
