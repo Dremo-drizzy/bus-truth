@@ -86,6 +86,9 @@ type LiveResponse = {
  * `live`: a single state covering both would let a historical timestamp be rendered as
  * freshness, which is the one dishonest thing this map could do.
  */
+/** What setData accepts: positions as GeoJSON, ready to draw. */
+type VehicleData = Parameters<GeoJSONSource["setData"]>[0];
+
 type Status =
   | { kind: "loading" }
   | { kind: "live"; vehicles: number; newestAgeSeconds: number }
@@ -107,6 +110,39 @@ function describeAge(seconds: number | null): string {
 export default function LiveMapPage() {
   const container = useRef<HTMLDivElement | null>(null);
   const map = useRef<maplibregl.Map | null>(null);
+  // Whether the "vehicles" source exists yet. It is added in the map's load handler,
+  // which can fire before or after the first positions arrive — the order is a race
+  // between our API and the basemap's style server.
+  const vehiclesReady = useRef(false);
+  // Positions that arrived before the source existed, held for the load handler.
+  const pending = useRef<VehicleData | null>(null);
+
+  /**
+   * Put positions on the map. Exactly two paths: draw them now, or hold them for the
+   * load handler to draw. There is no third path that drops them.
+   *
+   * There was one. Every fetch used to end in `getSource("vehicles")?.setData(...)`,
+   * and when the response beat the style that optional chain found no source and did
+   * nothing, without an error. In live mode the next refresh 15 seconds later covered
+   * it up; in snapshot mode, which fetches once, the 290 dots never appeared. Measured:
+   * with the style delayed 3 seconds the map drew no dots at all.
+   */
+  function showVehicles(data: VehicleData) {
+    if (!vehiclesReady.current) {
+      pending.current = data;
+      return;
+    }
+    vehiclesSource().setData(data);
+  }
+
+  /** The source, which must exist once ready — a missing one is a bug, said loudly. */
+  function vehiclesSource(): GeoJSONSource {
+    const source = map.current?.getSource("vehicles") as GeoJSONSource | undefined;
+    if (!source) {
+      throw new Error("the vehicles source is missing after the map reported it ready");
+    }
+    return source;
+  }
   const [status, setStatus] = useState<Status>({ kind: "loading" });
 
   useEffect(() => {
@@ -160,12 +196,19 @@ export default function LiveMapPage() {
           ],
         },
       });
+
+      vehiclesReady.current = true;
+      if (pending.current !== null) {
+        vehiclesSource().setData(pending.current);
+        pending.current = null;
+      }
     });
 
     map.current = created;
     return () => {
       created.remove();
       map.current = null;
+      vehiclesReady.current = false;
     };
   }, []);
 
@@ -191,8 +234,7 @@ export default function LiveMapPage() {
         // Every dot is from the same minute, so they are all equally fresh: age zero,
         // which draws them at full opacity. The fade exists to show one bus going
         // stale against others, and inside a single minute there is nothing to show.
-        const source = map.current?.getSource("vehicles") as GeoJSONSource | undefined;
-        source?.setData({
+        showVehicles({
           type: "FeatureCollection",
           features: body.features.map((feature) => ({
             ...feature,
@@ -239,8 +281,7 @@ export default function LiveMapPage() {
           })),
         };
 
-        const source = map.current?.getSource("vehicles") as GeoJSONSource | undefined;
-        source?.setData(withAges);
+        showVehicles(withAges);
 
         if (newestAge === null || newestAge > PIPELINE_STALE_SECONDS) {
           // No data is arriving. Distinct from "no buses": the buses may be running

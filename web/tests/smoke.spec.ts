@@ -299,6 +299,75 @@ test("the map fills its space and fetches basemap tiles", async ({ page }) => {
   await tile;
 });
 
+/**
+ * Pixels on the map in the dots' fill colour (#1d4ed8), counted from a screenshot.
+ *
+ * Counted in the page because the suite has no image library, and adding one for a
+ * single assertion would be a new dependency.
+ */
+async function dotColouredPixels(page: Page): Promise<number> {
+  const png = (await page.locator(".map").screenshot()).toString("base64");
+  return page.evaluate(async (data) => {
+    const image = new Image();
+    image.src = `data:image/png;base64,${data}`;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext("2d")!;
+    context.drawImage(image, 0, 0);
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    let count = 0;
+    for (let i = 0; i < pixels.length; i += 4) {
+      if (
+        Math.abs(pixels[i] - 0x1d) < 25 &&
+        Math.abs(pixels[i + 1] - 0x4e) < 25 &&
+        Math.abs(pixels[i + 2] - 0xd8) < 25
+      ) {
+        count++;
+      }
+    }
+    return count;
+  }, png);
+}
+
+/**
+ * The dots are drawn even when the positions arrive before the map is ready.
+ *
+ * Snapshot mode fetches once, so if that response beat the basemap's style the
+ * positions used to be dropped without an error, and the hosted map showed 290
+ * vehicles in its status line and none on the map. The style is delayed here to force
+ * that order every time rather than whenever the style server happens to be slow.
+ *
+ * Snapshot mode only: its dots are all drawn at full opacity, so their colour is
+ * exact. Live dots fade with age and would make a colour count a guess. Both modes
+ * share the code path that was fixed.
+ */
+test("the map draws its dots even when the data beats the basemap", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "snapshot-mode", "full-opacity dots are snapshot mode's");
+  await serveApi(page);
+  await page.route("**/styles/liberty*", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 3_000));
+    await route.continue();
+  });
+  await page.goto("/");
+  await expect(page.locator(".status")).toContainText("290 vehicles");
+
+  // The floor sits above what the page shows in this colour with no dots at all. The
+  // notice card's heading — the date, in the same blue — measured ~1,770 pixels on
+  // its own, while 290 dots measured ~12,700 with the heading included. 5,000 is well
+  // clear of the first and well under the second, so a missing layer fails and a few
+  // dots hidden under the card or off the edge do not.
+  await expect
+    .poll(() => dotColouredPixels(page), {
+      message: "dot-coloured pixels on the map",
+      timeout: 15_000,
+    })
+    .toBeGreaterThan(5_000);
+});
+
 test("the map names the minute it is showing, and does not claim to be live", async ({
   page,
 }, testInfo) => {
