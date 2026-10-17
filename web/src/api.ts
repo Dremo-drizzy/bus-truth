@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { API_BASE } from "./apiBase";
+
 /**
  * The api, typed, plus the one hook every page uses to call it.
  *
@@ -152,26 +154,6 @@ export class ApiError extends Error {
     super(message);
   }
 }
-
-/**
- * Where the API lives.
- *
- * Empty in development and in any deployment that serves the site and the API from one
- * origin — behind the Vite proxy or nginx, `/api/...` resolves to the same host and
- * there is no CORS in play. Hosting the site as a static site and the API as a separate
- * service gives them two hostnames, so the build is handed the API's origin instead.
- *
- * The host can only inject a bare hostname, so a value without a scheme is normalised
- * rather than rejected: a deployment should not break because a generated value had no
- * `https://` on the front. A trailing slash is trimmed so the joined path never
- * contains `//api`.
- */
-const API_BASE = ((raw: string | undefined): string => {
-  const value = (raw ?? "").trim();
-  if (value === "") return "";
-  const withScheme = value.startsWith("http") ? value : `https://${value}`;
-  return withScheme.replace(/\/+$/, "");
-})(import.meta.env.VITE_API_BASE_URL);
 
 async function getJson<T>(path: string, signal: AbortSignal): Promise<T> {
   let response: Response;

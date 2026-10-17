@@ -6,6 +6,7 @@ import maplibregl from "maplibre-gl";
 import type { GeoJSONSource } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { API_BASE } from "../apiBase";
 
 /**
  * Whether this build watches a live feed or shows one named minute.
@@ -20,19 +21,6 @@ import "maplibre-gl/dist/maplibre-gl.css";
  * exactly as before — including all three of the states below, which are correct there
  * and simply unreachable on the hosted site.
  */
-/**
- * Where the API lives, same rule as api.ts: empty means same-origin, a bare hostname
- * gets https:// and a trailing slash is trimmed. Repeated here rather than imported
- * because this page predates the helper and fetches directly — and a map pointing at
- * the wrong origin is the one failure that looks like "no buses are running".
- */
-const API_BASE = ((raw: string | undefined): string => {
-  const value = (raw ?? "").trim();
-  if (value === "") return "";
-  const withScheme = value.startsWith("http") ? value : `https://${value}`;
-  return withScheme.replace(/\/+$/, "");
-})(import.meta.env.VITE_API_BASE_URL);
-
 const MAP_MODE: "live" | "snapshot" =
   import.meta.env.VITE_MAP_MODE === "snapshot" ? "snapshot" : "live";
 
