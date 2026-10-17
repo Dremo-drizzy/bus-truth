@@ -59,7 +59,7 @@ public class LiveVehiclesController {
      * derived tables, so {@code /live} is permanently empty there and a map showing
      * "no recent data" for ever reads as broken rather than honest. This answers with
      * a named historical moment instead — 290 vehicles at 17:08 on 6 October 2026, the
-     * worst hour of the worst day in the published week.
+     * busiest minute of the network's least punctual hour.
      *
      * <p>It never pretends to be live. The response carries {@code snapshot_at} and no
      * freshness fields at all, and the page labels itself with the date and time in

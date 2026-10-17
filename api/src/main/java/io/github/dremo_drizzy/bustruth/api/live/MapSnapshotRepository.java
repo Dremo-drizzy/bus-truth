@@ -12,11 +12,18 @@ import org.springframework.stereotype.Repository;
  *
  * <p>The minute is <b>17:08 local on Tuesday 6 October 2026</b>, chosen by
  * {@code scripts/pick_map_snapshot.sql}: 290 distinct vehicles, more than any other
- * minute of any 17:00 hour in the published week. 17:00 is the network's worst hour
- * (45.3% on time against 79.4% at 06:00) and 6 October its worst day (48.7%), so the
- * map shows Halifax Transit at its least punctual hour of its least punctual day —
- * which is what the findings are about — and, being the fullest minute available, also
- * the busiest it will ever look.
+ * minute of any 17:00 hour in the published week. The hour is the claim — 17:00 runs
+ * 45.3% on time against 79.4% at 06:00, computed across every day at once, so it does
+ * not depend on which days were watched. The map therefore shows Halifax Transit at
+ * its least punctual hour, which is what the findings are about, and being the fullest
+ * minute available it is also the busiest the map will ever look.
+ *
+ * <p><b>The day is deliberately not claimed.</b> 6 October did record the week's lowest
+ * on-time share, but day-to-day comparison is confounded by uneven coverage — one day
+ * of the week has no observed arrivals at all between 07:00 and 18:59, and each day's
+ * share of the evening peak ranges from 0% to 29.8% — so this project publishes the
+ * hourly pattern and not the daily one. Describing this minute as "the worst day" would
+ * assert exactly the comparison the README refuses to make.
  *
  * <p>The table holds one row per vehicle and the same {@code snapshot_at} on every
  * row, so the moment the page names comes from the data rather than from a constant

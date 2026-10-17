@@ -338,9 +338,9 @@ export default function LiveMapPage() {
             <strong>{describeMoment(status.snapshotAt)}</strong>
             <small>
               {status.vehicles} vehicles, as the agency reported them in that one minute
-              — the busiest minute of 17:00, the network&rsquo;s worst hour, on its worst
-              day of the published week. This is history, not a live feed: nothing is
-              collecting positions for the hosted site.
+              — the busiest minute of 17:00, which is the network&rsquo;s least punctual
+              hour. This is history, not a live feed: nothing is collecting positions for
+              the hosted site.
             </small>
           </div>
         )}

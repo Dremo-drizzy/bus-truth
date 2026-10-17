@@ -157,6 +157,15 @@ standardised number is the fragile one; the raw 97.5% of 79 is what to quote.
 | coverage, best day in the week | 78.9% | 3,408 of 4,320 expected snapshots, 4 Oct |
 | coverage, worst day in the week | **32.2%** | 1,390 of 4,320, 8 Oct — the day with no daytime arrivals |
 
+## The map's named minute
+
+| figure | value | note |
+|---|---|---|
+| the moment shown | **Tuesday 6 October 2026, 17:08** local | labelled on the page in words |
+| vehicles in it | **290** | the most of any minute of any 17:00 hour in the week |
+| why that hour | 17:00 runs 45.3% on time against 79.4% at 06:00 | computed across all days, so independent of which days were watched |
+| why not "the worst day" | 6 October recorded the week's lowest share, **but day-to-day comparison is confounded** | the day is not part of the claim |
+
 ## Figures that are *not* published, and why
 
 | | why not |

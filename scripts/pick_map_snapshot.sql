@@ -5,12 +5,18 @@
 --   psql -h localhost -p 55432 -U bustruth -d bustruth -f scripts/pick_map_snapshot.sql
 --
 -- WHICH MINUTE, AND WHY. 17:08 local on Tuesday 6 October 2026 carried 290 distinct
--- vehicles, more than any other minute of any 17:00 hour in the published week. The
--- hour matters: 17:00 is the worst hour on the network (45.3% on time against 79.4% at
--- 06:00), and 6 October is the worst day of the week (48.7%). So the map shows Halifax
--- Transit at its least punctual hour of its least punctual day, which is what the
--- findings on this site are about — and it is the fullest minute available, so it is
--- also the busiest the map will ever look.
+-- vehicles, more than any other minute of any 17:00 hour in the published week.
+--
+-- The hour is the reason: 17:00 is the least punctual hour on the network, 45.3% on
+-- time against 79.4% at 06:00, and that figure is computed across every day at once so
+-- it does not depend on which days happened to be watched. The map therefore shows
+-- Halifax Transit at its worst hour, which is what the findings are about, and being
+-- the fullest minute available it is also the busiest the map will ever look.
+--
+-- The DAY is not part of the claim. 6 October recorded the week's lowest on-time share,
+-- but day-to-day comparison is confounded by uneven coverage, so this project does not
+-- publish it — see the README. The minute was chosen for its hour and its vehicle
+-- count, and any other busy 17:00 minute in the week would have served.
 --
 -- Changing the minute means changing it here and in MapSnapshotRepository's javadoc,
 -- and re-running this. The label the site shows is derived from snapshot_at, so it

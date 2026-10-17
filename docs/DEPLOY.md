@@ -242,8 +242,7 @@ All nine must be `200`. The first will be slow if the service was asleep.
 `/api/vehicles/live` returning an empty feature collection is **correct**, and the
 hosted map does not use it: nothing in the cloud writes live positions. The map asks
 `/api/vehicles/snapshot` instead and draws one named minute — 290 vehicles at 17:08 on
-Tuesday 6 October 2026, the busiest minute of the network's worst hour on its worst day
-of the published week.
+Tuesday 6 October 2026, the busiest minute of the network's least punctual hour.
 
 That is a choice rather than a fallback. A live endpoint quietly answering with a
 fortnight-old snapshot would be the only dishonest thing on this site, so the
