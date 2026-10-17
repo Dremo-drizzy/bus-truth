@@ -31,8 +31,9 @@ databases:
     plan: free
     # Virginia: this is a Halifax transit site for Canadian viewers, and Virginia is
     # the closest region Render offers — about 1,100 km away against 6,000 for
-    # Frankfurt. Every service here uses the same region so that the API reaches the
-    # database over Render's private network rather than the public internet.
+    # Frankfurt. The database and the API share this region so that the API reaches the
+    # database over Render's private network rather than the public internet. The static
+    # site has no region because it is served from the CDN.
     region: virginia
 
 services:
@@ -140,7 +141,11 @@ services:
   - type: web
     name: bus-truth-web
     runtime: static
-    region: virginia
+    # No region, deliberately: Render serves static sites from its CDN, so they have
+    # no region to set and the Blueprint validator rejects the key outright. Do not add
+    # it back. The latency argument below belongs to the API and the database, which do
+    # have regions and must share one.
+    #
     # Everything frontend lives in web/, so Render builds from there and the paths
     # below are relative to it.
     rootDir: web
