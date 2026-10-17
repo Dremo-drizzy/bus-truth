@@ -1,5 +1,8 @@
 # 011 — Skip publishing a feed whose content has not changed
 
+> **NEEDS DANIEL'S REVIEW** — written by Claude Code. The reasoning here is not yet
+> the author's own, and the amendment requires every Claude-written record to say so.
+
 Context: the collector polls each feed every 20 seconds and publishes one Kafka message per
 entity. Most polls return the same information as the last one, so most of those messages
 say nothing new. The first attempt compared the feed header timestamp and skipped a poll

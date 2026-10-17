@@ -1,0 +1,129 @@
+# Bus Truth on one small VPS: PostgreSQL, the collector, the API, and the site.
+#
+#   docker compose -f infra/docker-compose.prod.yml up -d --build
+#
+# This file is not infra/docker-compose.yml with different values, and the difference
+# is the point. The development file publishes PostgreSQL on 55432 so that psql and
+# the Java modules can reach it from the host. Here nothing publishes a database port
+# at all.
+#
+# ONE PORT IS PUBLISHED: 80, by the web container. The API and the database are
+# reachable only over the private compose network, so neither can be hit from the
+# internet even if its own authentication were misconfigured. The previous version of
+# this project published 5432 and an unauthenticated Kafka UI on 8080; both were
+# reachable by anyone who found the host.
+#
+# Credentials come from the environment, never from this file. On the host, put them
+# in .env beside the repo and keep that file 600.
+
+name: bus-truth
+
+services:
+
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    # No `ports:` key. Deliberate, and the single most important line in the file —
+    # or rather, the single most important line that is absent from it. The collector
+    # and api reach this database as host "postgres" on the compose network.
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      # Where pg_dump writes, so the backups land on the host filesystem and can be
+      # copied off it.
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  collector:
+    build:
+      context: ..
+      dockerfile: infra/collector.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        # Not just "started": Flyway runs on the collector's startup, and against a
+        # database still initialising it fails and the container restarts in a loop.
+        condition: service_healthy
+    env_file:
+      # Passed through by Docker, so the path is relative to this file and the values
+      # never reach the host shell. Compose's own ${...} interpolation is avoided on
+      # purpose: it reads a .env beside this compose file, not the repo root one, and
+      # silently substitutes empty strings when it finds none.
+      - ../.env
+    environment:
+      # The only settings that differ from local development: the database is a
+      # service name on the private network rather than localhost:55432.
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      BUSTRUTH_COLLECTOR_ARCHIVE_ROOT: /data/raw
+    volumes:
+      # The archive is the irreplaceable asset: everything else in the system is
+      # derived from it and can be rebuilt by replaying it. A bind mount, so it is
+      # visible on the host and included in whatever backs the host up.
+      - ./archive:/data/raw
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/api.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    # Not published either. nginx proxies to it over the compose network.
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/web.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      # The only door into this stack. Put a TLS terminator in front of it before
+      # pointing a domain here; see docs/DEPLOY.md.
+      - "80:80"
+
+  # A nightly pg_dump, kept for a fortnight.
+  #
+  # The database is derived data and could be rebuilt from the archive, but rebuilding
+  # a week takes hours of replay, and a backup that exists is worth more than a
+  # recovery procedure that is only theoretical.
+  backup:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ../.env
+    volumes:
+      - ./backups:/backups
+      - ./backup.sh:/backup.sh:ro
+    entrypoint: ["/bin/sh", "/backup.sh"]
+
+volumes:
+  postgres-data:

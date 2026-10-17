@@ -1,5 +1,8 @@
 # 004 — At-least-once delivery with idempotent inserts
 
+> **NEEDS DANIEL'S REVIEW** — written by Claude Code. The reasoning here is not yet
+> the author's own, and the amendment requires every Claude-written record to say so.
+
 Context: Kafka sits between the collector and the database (ADR-002), so a message can be
 delivered more than once — a consumer rebalance, or a crash between writing a row and
 committing the offset, both end with the same message arriving again. Something has to

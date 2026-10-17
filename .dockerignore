@@ -1,0 +1,26 @@
+# What never belongs in a build context.
+#
+# data/ first and for a reason: it holds 150,000+ archived snapshots and several
+# gigabytes. Docker copies the whole context to the daemon before reading the
+# Dockerfile, so without this line every image build would spend minutes shipping the
+# archive nowhere — and the archive is the one irreplaceable thing in this repo.
+data/
+
+# Secrets. The images read configuration from the environment at run time.
+.env
+*/application-local.yml
+
+# Build output, rebuilt inside the image anyway.
+target/
+*/target/
+node_modules/
+*/node_modules/
+dist/
+*/dist/
+
+# History and tooling the build has no use for.
+.git/
+.github/
+.idea/
+.vscode/
+scratchpad/

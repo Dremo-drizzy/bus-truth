@@ -114,6 +114,19 @@ Revisit if:
 
 ## Current stage
 
-**Phase A · Stage 4 — Live map. Scope frozen here.** Arrival detection, the
-trip-updates loader, the static GTFS loader and the dbt marts are not being built;
-see the README's "what I would do next".
+**Phase R · Stage R8 — cloud and ship.** Governed by `docs/BUILD-BRIEF.md` and
+`docs/BUILD-BRIEF-AMENDMENT.md`; where they disagree the amendment wins.
+
+Done: R0 (fresh repo) · R1 (batch, no queue) · R2 (static GTFS loaded) · R3 (trip-id
+join rule) · R4 (arrival detection, and why 17.5% is its ceiling) · R5 (on-time
+events) · R6 (six API endpoints) · R7 (Vite + React, five pages) · R8 (deployment
+built and validated — **not deployed**: the host is Daniel's choice, see
+`docs/DEPLOY.md`).
+
+R9 (prediction accuracy) stays out of scope.
+
+Everything marked **NEEDS DANIEL'S REVIEW** is waiting on him, and the markers are the
+to-do list for the curriculum phase: the arrival rule and the four constants (ADR-014),
+the trip-id join (ADR-013), the schedule match (ADR-015), the streaming-to-batch
+decision (ADR-012), the README findings section, and the method page text.
+`docs/defence-notes.md` has 40 questions and no answers, deliberately.

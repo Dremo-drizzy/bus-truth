@@ -4,7 +4,6 @@ import io.github.dremo_drizzy.bustruth.common.ArrivalEvent;
 import io.github.dremo_drizzy.bustruth.common.VehiclePosition;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -46,9 +45,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class PositionBasedDetector implements ArrivalDetector {
-
-    /** The service day is the agency's, and Halifax is not UTC. */
-    private static final ZoneId HALIFAX = ZoneId.of("America/Halifax");
 
     /** The modified-trip marker: 4659595_1 joins the schedule as 4659595 (ADR-013). */
     private static final Pattern TRIP_SUFFIX = Pattern.compile("_\\d+$");
@@ -162,23 +158,12 @@ public class PositionBasedDetector implements ArrivalDetector {
     /**
      * The agency's service date, which is what the schedule is keyed on.
      *
-     * <p>The feed usually sends it as "yyyyMMdd" and that is taken as authoritative:
-     * a trip running at 00:30 belongs to the previous service day, and only the agency
-     * knows that. When it is absent, the date is computed in America/Halifax rather
-     * than UTC — in UTC a 21:00 Halifax departure already belongs to tomorrow.
+     * <p>Delegated to {@link ServiceDay}, which trusts the feed's own
+     * {@code start_date} except after midnight, where it was measured to contradict
+     * the agency's published schedule on 2,660 arrivals.
      */
     private static LocalDate serviceDate(VehiclePosition position) {
-        String sent = position.startDate();
-        if (sent != null && sent.length() == 8) {
-            try {
-                return LocalDate.of(Integer.parseInt(sent.substring(0, 4)),
-                        Integer.parseInt(sent.substring(4, 6)),
-                        Integer.parseInt(sent.substring(6, 8)));
-            } catch (NumberFormatException ignored) {
-                // Fall through to deriving it.
-            }
-        }
-        return position.timestamp().atZone(HALIFAX).toLocalDate();
+        return ServiceDay.of(position);
     }
 
     @Override

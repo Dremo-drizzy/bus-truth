@@ -178,21 +178,38 @@ class PositionBasedDetectorTest {
     }
 
     @Test
-    void arrivalMomentChoosesWhichPositionTimesTheArrival() throws IOException {
+    void arrivalMomentPicksAnEndOfTheStopsReportingWindow() throws IOException {
         List<VehiclePosition> trail = Trails.load("ordinary-trail.json");
 
-        List<ArrivalEvent> first = new PositionBasedDetector(DetectionSettings.defaults())
-                .detect(trail);
-        List<ArrivalEvent> last = new PositionBasedDetector(new DetectionSettings(
-                DetectionSettings.ArrivalMoment.LAST_BEFORE_ADVANCE,
+        List<ArrivalEvent> windowStart = detectWith(
+                DetectionSettings.ArrivalMoment.FIRST_SIGHTING, trail);
+        List<ArrivalEvent> windowEnd = detectWith(
+                DetectionSettings.ArrivalMoment.LAST_BEFORE_ADVANCE, trail);
+
+        // The same arrivals either way: the setting moves the timestamps, never which
+        // stops were reached.
+        assertThat(windowStart).hasSameSizeAs(windowEnd);
+        assertThat(windowStart).isNotEqualTo(windowEnd);
+
+        // The direction is the whole argument. The feed holds one stop sequence for
+        // minutes, so each stop is a window of positions; the window's end can only be
+        // at or after its start, never before. Measured against the 597 windows where
+        // the agency itself reported STOPPED_AT, the end is a median 61s late and the
+        // start a median 544s early, which is why the end is the default (ADR-014).
+        for (int i = 0; i < windowStart.size(); i++) {
+            assertThat(windowEnd.get(i).observedArrivalAt())
+                    .as("arrival %d at stop %s", i, windowStart.get(i).stopId())
+                    .isAfterOrEqualTo(windowStart.get(i).observedArrivalAt());
+        }
+        assertThat(DetectionSettings.defaults().arrivalMoment())
+                .isEqualTo(DetectionSettings.ArrivalMoment.LAST_BEFORE_ADVANCE);
+    }
+
+    private static List<ArrivalEvent> detectWith(
+            DetectionSettings.ArrivalMoment moment, List<VehiclePosition> trail) {
+        return new PositionBasedDetector(new DetectionSettings(moment,
                 Duration.ofSeconds(-60), Duration.ofSeconds(300), Duration.ofSeconds(120)))
                 .detect(trail);
-
-        assertThat(first).hasSameSizeAs(last);
-        // Both are defensible answers to different questions — "when did it get there"
-        // against "when did it leave" — so the constant has to be a decision, not a
-        // detail. For a bus that waits at a stop they differ.
-        assertThat(first).isNotEqualTo(last);
     }
 
     private static long countTransitions(List<VehiclePosition> trail) {
