@@ -40,6 +40,15 @@ public class DetectionRun {
             throw new IllegalArgumentException("to (" + to + ") is before from (" + from + ")");
         }
 
+        // The settings, every run, before anything else. They decide what the project
+        // publishes, and a run that does not state them lets a stale configuration
+        // value pass unnoticed — which is exactly what happened: application.yml
+        // pinned the old arrival moment and quietly overrode the code's default for a
+        // full week's run.
+        log.info("settings: arrival moment {}, on-time window {}s to +{}s, max trail gap {}s",
+                settings.arrivalMoment(), settings.onTimeEarly().toSeconds(),
+                settings.onTimeLate().toSeconds(), settings.maxTrailGap().toSeconds());
+
         int cleared = repository.deleteRange(from, to);
         log.info("cleared {} existing arrivals for {} .. {}", cleared, from, to);
 
@@ -75,32 +84,35 @@ public class DetectionRun {
     }
 
     /**
-     * One trail per vehicle per trip per service date.
+     * One trail per vehicle per trip per service day.
      *
      * <p>Grouping by vehicle alone would splice two trips together and read the
      * handover as a sequence jumping backwards; grouping by trip alone would splice
-     * two buses running the same trip id on different days. The service date is in the
+     * two buses running the same trip id on different days. The service day is in the
      * key because the same trip id runs again tomorrow.
+     *
+     * <p>Both the filter and the key use {@link ServiceDay}, not the feed's raw
+     * {@code start_date}. That matters for more than tidiness: a post-midnight trip
+     * the feed stamps with the following calendar date belongs to the previous service
+     * day, so judging membership on the raw value would pull it into the wrong run —
+     * and since a run only clears the range it is rebuilding, it would emit rows
+     * outside its own delete range and leave them to go stale.
      */
     private static Map<TrailKey, List<VehiclePosition>> groupIntoTrails(
             List<VehiclePosition> positions, LocalDate day) {
         Map<TrailKey, List<VehiclePosition>> trails = new LinkedHashMap<>();
         for (VehiclePosition position : positions) {
-            // Only positions belonging to the day being rebuilt, judged by the
-            // agency's own start_date where it sent one.
-            String sent = position.startDate();
-            boolean belongsToDay = sent == null || sent.isBlank()
-                    || sent.equals(day.toString().replace("-", ""));
-            if (!belongsToDay) {
+            LocalDate serviceDay = ServiceDay.of(position);
+            if (!serviceDay.equals(day)) {
                 continue;
             }
             trails.computeIfAbsent(
-                    new TrailKey(position.vehicleId(), position.tripId(), sent),
+                    new TrailKey(position.vehicleId(), position.tripId(), serviceDay),
                     key -> new ArrayList<>()).add(position);
         }
         return trails;
     }
 
-    private record TrailKey(String vehicleId, String tripId, String startDate) {
+    private record TrailKey(String vehicleId, String tripId, LocalDate serviceDay) {
     }
 }

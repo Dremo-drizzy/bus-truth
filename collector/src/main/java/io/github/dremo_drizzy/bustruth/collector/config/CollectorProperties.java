@@ -30,11 +30,30 @@ public record CollectorProperties(
         Feed alerts) {
 
     /**
-     * One feed's source. There is no destination to configure any more: where a
-     * feed's records go is decided by its poller's store() method, in code.
+     * One feed's source, and whether this process collects it at all.
      *
-     * @param url the GTFS-Realtime endpoint
+     * <p>There is no destination to configure: where a feed's records go is decided by
+     * its poller's store() method, in code.
+     *
+     * @param url     the GTFS-Realtime endpoint
+     * @param enabled whether to poll it here, default true. The flag exists because
+     *                the host and the laptop collect different feeds — trip-update
+     *                snapshots average 202 kB against 3.8 kB for positions, so
+     *                archiving them on a 160 GB host fills it in about five months,
+     *                and that feed stays on the laptop until the archive can be
+     *                written to object storage (ADR-018). The poller is switched off
+     *                by @ConditionalOnProperty reading this same key, so a disabled
+     *                feed costs nothing at runtime rather than running a scheduled
+     *                no-op.
      */
-    public record Feed(URI url) {
+    public record Feed(URI url, Boolean enabled) {
+
+        public Feed {
+            enabled = enabled == null || enabled;
+        }
+
+        public boolean isEnabled() {
+            return Boolean.TRUE.equals(enabled);
+        }
     }
 }
