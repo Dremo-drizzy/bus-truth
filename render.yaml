@@ -126,14 +126,22 @@ services:
       - key: SPRING_FLYWAY_ENABLED
         value: "false"
 
-      # Which origin may call this API from a browser. Taken from the static site
-      # below, so it is correct without anybody looking it up, and it is one origin
-      # rather than a wildcard — see WebOriginConfig.
+      # Which origin may call this API from a browser. One origin, never a wildcard
+      # (see WebOriginConfig).
+      #
+      # A LITERAL, and it has to be. This was wired with `fromService: property: host`,
+      # which returns Render's INTERNAL networking name — "bus-truth-web", with no
+      # domain. That is the address one service uses to reach another privately; it is
+      # not what a browser sends. So the allow-list held "bus-truth-web" while real
+      # browsers sent "Origin: https://bus-truth-web.onrender.com", every request was
+      # refused, and the page reported the API as unreachable.
+      #
+      # Render has no Blueprint property for a service's PUBLIC url, so there is
+      # nothing to reference — the value is written out. It is a public hostname, not a
+      # secret, so it belongs in the file. No trailing slash: the header is compared as
+      # a literal string.
       - key: BUSTRUTH_API_WEB_ORIGIN
-        fromService:
-          type: web
-          name: bus-truth-web
-          property: host
+        value: https://bus-truth-web.onrender.com
 
   # ---------------------------------------------------------------------------------
   # The site. A static build, so there is no server to pay for and nothing to patch.
@@ -155,17 +163,23 @@ services:
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     envVars:
-      # The API's origin, baked into the bundle at build time. Render injects the
-      # hostname without a scheme; the frontend normalises that (see api.ts).
+      # The API's public origin, baked into the bundle at build time.
       #
-      # Unset, the site would fetch /api/... from its own origin and every request
-      # would 404 against the static host — which is the failure this variable exists
-      # to prevent.
+      # A LITERAL, for the same reason as BUSTRUTH_API_WEB_ORIGIN above and with the
+      # same symptom seen live: wired with `fromService: property: host` this became
+      # "bus-truth-api", Render's internal networking name. The browser then tried
+      # https://bus-truth-api/api/coverage, a hostname that does not exist on the
+      # public internet, and the fetch failed before leaving the machine — "Failed to
+      # fetch" rather than any HTTP status.
+      #
+      # `property: host` is for service-to-service calls inside Render and must never
+      # be used for a value a browser sees. There is no Blueprint property for the
+      # public url, so this is written out.
+      #
+      # Unset, the site would fetch /api/... from its own origin and 404 against the
+      # static host — which is the failure this variable exists to prevent.
       - key: VITE_API_BASE_URL
-        fromService:
-          type: web
-          name: bus-truth-api
-          property: host
+        value: https://bus-truth-api.onrender.com
 
       # The map shows one named minute rather than watching a live feed, because
       # nothing collects positions for this deployment: the restore carries the derived
