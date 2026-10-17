@@ -121,6 +121,28 @@ context is built. Local development is untouched: without the variable nothing f
 the `POSTGRES_HOST`/`POSTGRES_PORT` defaults still point at the compose database on
 55432.
 
+### The deployed API serves a subset, deliberately
+
+**NEEDS DANIEL'S REVIEW** — written by Claude Code from the reviewer's ruling.
+
+The cloud database holds no `raw_vehicle_positions`, and nothing writes to it. Two
+endpoints read that table, and both answered 500 on the first deployment — found by the
+nine-endpoint check, not by a test. They are handled differently because they are
+different kinds of answer:
+
+| endpoint | on Render | why |
+|---|---|---|
+| `/api/vehicles/live` | **503**, `application/problem+json`, by configuration (`BUSTRUTH_API_LIVE_FEED_ENABLED=false`) | there is no live feed here. An empty list would claim there are no buses; a 500 would claim something broke. The body names `/api/vehicles/snapshot`, the endpoint that does answer, and the database is never queried. Documented in `/v3/api-docs`. |
+| `/api/coverage` | **200**, from `coverage_daily` (V7) | coverage is a published figure, so it is stored as one: counted locally by `scripts/refresh_coverage_daily.sql` and restored with the other derived tables. Each row carries `coverage_computed_at`, and the method page names that day in words, so the copy says how stale it is. |
+
+Rejected: restoring an empty `raw_vehicle_positions` so the queries would succeed. That
+turns a 500 into a confident false answer — zero buses, zero snapshots — which is worse
+than the error it replaces.
+
+The other seven endpoints read only derived tables and behave identically in both
+places. The flag defaults to true, so local development with a running collector is
+unchanged.
+
 ### The hard requirement, on this host
 
 PostgreSQL must not be reachable from the public internet. On Render that is not an

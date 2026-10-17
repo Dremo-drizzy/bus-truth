@@ -86,21 +86,27 @@ The cloud database starts empty **and the API cannot create its own schema**: Fl
 belongs to the collector, which is not deployed. The restore brings the tables and the
 figures together.
 
-Four sets of tables go up. Raw positions do not — 1.4 million rows that nothing in the
-cloud reads.
+Five sets of tables go up. Raw positions do not — 1.4 million rows that nothing in the
+cloud reads. The two things that were computed from them on request, the map and the
+coverage table, are computed here first and travel as small tables of their own.
 
 ```bash
 cd ~/bus-truth                      # wherever the repo lives
 export PGPASSWORD=$(grep '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)
 
 # First, the one minute the hosted map draws. Without this the map has nothing to
-# show: the cloud has no collector, so /api/vehicles/live is empty there for ever.
+# show: the cloud has no collector, so it has no live feed (see step 8).
 psql -h localhost -p 55432 -U bustruth -d bustruth -f scripts/pick_map_snapshot.sql
+
+# Then the coverage counts, stored with the moment they were taken. /api/coverage reads
+# this table rather than counting raw positions, and the method page publishes the
+# date, so the copy in the cloud says how stale it is.
+psql -h localhost -p 55432 -U bustruth -d bustruth -f scripts/refresh_coverage_daily.sql
 
 pg_dump -h localhost -p 55432 -U bustruth -d bustruth \
   --no-owner --no-privileges --clean --if-exists \
   -t 'gtfs_*' -t arrival_events -t ontime_events -t ontime_quality \
-  -t map_snapshot_positions \
+  -t map_snapshot_positions -t coverage_daily \
   -f bustruth-derived.sql
 
 ls -lh bustruth-derived.sql          # expect about 48 MB
@@ -205,10 +211,12 @@ worth nothing without the failed connection beside it.
 
 ## 7. Secrets
 
-**There are none to set.** Every value the API needs comes either from the database
-Render created (`DATABASE_URL`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`) or
-from the other service (`BUSTRUTH_API_WEB_ORIGIN`), and `render.yaml` wires all of them
-with `fromDatabase` and `fromService`.
+**There are none to set.** The database values (`DATABASE_URL`, `POSTGRES_DB`,
+`POSTGRES_USER`, `POSTGRES_PASSWORD`) come from the database Render created, wired with
+`fromDatabase`. Everything else is a literal in `render.yaml` because none of it is
+secret: the two public origins (`BUSTRUTH_API_WEB_ORIGIN`, `VITE_API_BASE_URL` — literals
+because `fromService` only offers the internal hostname) and
+`BUSTRUTH_API_LIVE_FEED_ENABLED=false`.
 
 If you later add something secret — an API key, a password on the processor — declare it
 in `render.yaml` as `sync: false` and set the value in **Dashboard → service →
@@ -237,12 +245,31 @@ for p in \
 done
 ```
 
-All nine must be `200`. The first will be slow if the service was asleep.
+Expect **eight `200`s and one `503`**. The first request will be slow if the service
+was asleep.
 
-`/api/vehicles/live` returning an empty feature collection is **correct**, and the
-hosted map does not use it: nothing in the cloud writes live positions. The map asks
-`/api/vehicles/snapshot` instead and draws one named minute — 290 vehicles at 17:08 on
-Tuesday 6 October 2026, the busiest minute of the network's least punctual hour.
+The `503` is `/api/vehicles/live`, and it is **correct**. Nothing in the cloud writes
+live positions, so `render.yaml` sets `BUSTRUTH_API_LIVE_FEED_ENABLED=false`, and the
+endpoint answers `503 Service Unavailable` with an `application/problem+json` body
+saying this deployment serves a historical snapshot and has no live feed — and that
+this is not the same as there being no buses. It never queries the database. The
+response is documented in `/v3/api-docs`, so nobody has to call it to find out.
+
+Not an empty feature collection: `200` with no vehicles would say "we looked and there
+are no buses", which is false. Not a `500`, which is what it answered before this was
+configured: that says something broke, when the deployment is doing what it was set up
+to do. Check the body as well as the code:
+
+```bash
+curl -s "$API/api/vehicles/live"
+# {"detail":"This deployment serves a historical snapshot and has no live feed: ...",
+#  "status":503,"title":"No live feed on this deployment",...,
+#  "snapshot":"/api/vehicles/snapshot"}
+```
+
+The hosted map does not use `/live`. It asks `/api/vehicles/snapshot` and draws one
+named minute — 290 vehicles at 17:08 on Tuesday 6 October 2026, the busiest minute of
+the network's least punctual hour.
 
 That is a choice rather than a fallback. A live endpoint quietly answering with a
 fortnight-old snapshot would be the only dishonest thing on this site, so the
@@ -261,7 +288,7 @@ Open the static site URL and check each renders numbers rather than an error:
 | `/routes` | the overview (on time, by hour, by service date) and the ranked table |
 | `/routes/1` | two charts and a worst-stops table |
 | `/stops/8640` | Mumford Terminal, with a by-route table |
-| `/about` | the method text and a coverage table with real dates |
+| `/about` | the method text, a coverage table with real dates, and a sentence naming the day the counts were taken |
 
 **Then the test that catches the mistake this deployment is most likely to make:**
 
@@ -319,7 +346,9 @@ above 99% coverage. **This deployment is not that.** The collector runs on your 
 so the measurement stays local:
 
 ```bash
-# leave the collector running for a day, then:
+# leave the collector running for a day, then recount — /api/coverage serves the stored
+# count, not a live one, so without this step it shows the old figures:
+psql -h localhost -p 55432 -U bustruth -d bustruth -f scripts/refresh_coverage_daily.sql
 curl -s localhost:8084/api/coverage | tail -5
 ```
 
