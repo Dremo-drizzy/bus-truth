@@ -80,3 +80,6 @@ application-local.yml
 # The collector's own scratch archive. Unanchored, because a relative
 # archive-dir lands under whichever module the process was started from.
 dev-archive/
+
+# Local working notes, not published
+.private/

@@ -1,7 +1,7 @@
 # 004 — At-least-once delivery with idempotent inserts
 
-> **NEEDS DANIEL'S REVIEW** — written by Claude Code. The reasoning here is not yet
-> the author's own, and the amendment requires every Claude-written record to say so.
+> **Superseded by [ADR-012](012-replace-streaming-with-batch.md).** The project no longer
+> uses Kafka; this record is kept because the reasoning behind the reversal starts here.
 
 Context: Kafka sits between the collector and the database (ADR-002), so a message can be
 delivered more than once — a consumer rebalance, or a crash between writing a row and

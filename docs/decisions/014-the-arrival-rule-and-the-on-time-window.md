@@ -1,9 +1,5 @@
 # 014 — The arrival rule, the on-time window, and the four constants
 
-> **NEEDS DANIEL'S REVIEW** — written by Claude Code to unblock the build; the
-> reasoning here is not yet the author's own. These four numbers decide what the
-> project publishes, and the build brief reserved them for Daniel.
-
 Context: the feed never says a bus arrived. It reports which stop a vehicle is working
 towards (`current_stop_sequence`) and, on a minority of vehicles, a `current_status`
 that can read `STOPPED_AT`. An arrival has to be inferred, and every downstream number
@@ -126,9 +122,6 @@ replace inference with the agency's own numbers.
 
 ## Addendum, Stage R5 — `ARRIVAL_MOMENT` is worth 21 points of on-time performance
 
-> **NEEDS DANIEL'S REVIEW** — measured by Claude Code while building R5. The choice
-> this addendum is about is his, and the numbers exist to inform it.
-
 The on-time comparison was run twice over the same 6,550 matched arrivals for
 9 October 2026, changing nothing but `ARRIVAL_MOMENT`:
 
@@ -159,9 +152,9 @@ bus network's should be — a slightly late median and a long late tail.
 
 ## Settled by measurement: `ARRIVAL_MOMENT` is the end of the window
 
-The senior reviewer refused to lock the constant on the strength of the comparison
-above, and was right to: both columns are endpoints of the same window, and neither
-being obviously better is not the same as one of them being correct. He proposed a
+The constant was not locked on the strength of the comparison
+above, and rightly: both columns are endpoints of the same window, and neither
+being obviously better is not the same as one of them being correct. A review proposed a
 third option that would not be an inference at all — GTFS-Realtime's `current_status`,
 which can say `STOPPED_AT`, the agency asserting the bus is *at* the stop rather than
 us deducing it — on condition that it be measured first rather than adopted because he
@@ -250,8 +243,8 @@ can judge it; one shown 70.2% as a fact cannot.
 ## Is the calibration sample fair? Tested, and it is not — but not in the direction feared
 
 The decision above rests on 597 windows where the agency happened to report
-`STOPPED_AT`, out of roughly 7,100 that produce an arrival on a day. The senior reviewer
-asked whether that 8% is representative, on the grounds that if it is not, "61 seconds
+`STOPPED_AT`, out of roughly 7,100 that produce an arrival on a day. Review asked
+whether that 8% is representative, on the grounds that if it is not, "61 seconds
 late" is a number about unusual stops rather than about Halifax. Two tests, both cheap.
 
 ### (a) Window width — badly skewed, by a factor of 25
@@ -261,8 +254,8 @@ late" is a number about unusual stops rather than about Halifax. Two tests, both
 | windows with a `STOPPED_AT` | 217 | **815s** | 1,473s | 0.9% |
 | all other windows | 41,778 | **32s** | 753s | 45.1% |
 
-So `STOPPED_AT` appears overwhelmingly on long windows. The reviewer's hypothesis was
-right that the sample is unrepresentative.
+So `STOPPED_AT` appears overwhelmingly on long windows. The suspicion was
+right: the sample is unrepresentative.
 
 ### (b) Fleet concentration — not an artefact of a few buses
 

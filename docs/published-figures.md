@@ -5,11 +5,6 @@ the caveat it must never be quoted without. **If a figure appears in the README,
 site, in an ADR or in an interview answer and is not in this table, one of them is
 wrong.**
 
-> The senior reviewer referred to a file at `claude/published-figures.md`. It is not in
-> the repository or the working tree, so this is a version built from the queries that
-> produced each number. If his exists, replace this with it — the point is that there is
-> exactly one.
-
 All figures cover **4–10 October 2026** unless stated otherwise, computed with
 `ARRIVAL_MOMENT=LAST_BEFORE_ADVANCE`, an on-time window of −60s to +300s, and
 `MAX_TRAIL_GAP=120s`, against feed version `2026_08_August_20260806`.

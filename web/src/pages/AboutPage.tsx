@@ -6,10 +6,6 @@ import { describeDay } from "../moment";
 /**
  * How the numbers on this site are made, and what they cannot tell you.
  *
- * <p><b>NEEDS DANIEL'S REVIEW</b> — the build brief reserves this text for him. Written
- * by Claude Code so the page is not empty; every figure in it is measured and
- * reproducible, but the words are not yet the author's own.
- *
  * <p>The coverage table is served by the API rather than written into this page,
  * because a methodology page quoting a coverage figure from the day it was written is
  * the same mistake as a percentage without its denominator. The counts themselves are

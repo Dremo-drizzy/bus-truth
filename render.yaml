@@ -5,7 +5,7 @@
 # It declares three things and nothing else: the site, the API, and a Postgres
 # database. There is deliberately no collector, no loader, no cron job and no
 # persistent disk, because nothing in the cloud writes to data/ — the archive lives on
-# Daniel's machine and the cloud only ever reads a copy of the derived tables.
+# the local machine and the cloud only ever reads a copy of the derived tables.
 #
 # Two consequences of that worth knowing before you apply it:
 #
