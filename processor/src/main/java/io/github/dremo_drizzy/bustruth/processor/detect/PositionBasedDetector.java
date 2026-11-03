@@ -14,10 +14,6 @@ import org.springframework.stereotype.Component;
 /**
  * Derives arrivals from the stop sequence a vehicle reports.
  *
- * <p><b>NEEDS DANIEL'S REVIEW</b> — this rule is the heart of the project and the
- * build brief reserved it for him. Written by Claude Code to unblock the build; the
- * reasoning here is not yet the author's own.
- *
  * <h2>Why the sequence and not the status</h2>
  *
  * The feed never says "arrived". It offers two hints. {@code currentStatus} can say

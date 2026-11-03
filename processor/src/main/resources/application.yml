@@ -19,8 +19,8 @@ server:
 
 bustruth:
   processor:
-    # NEEDS DANIEL'S REVIEW — the four judgement calls, at the build brief's suggested
-    # values. These decide what the project publishes.
+    # The four judgement calls in arrival detection. These decide what the project
+    # publishes.
     #
     # The feed holds one stop sequence for minutes, so each stop is reported as a
     # WINDOW of positions. LAST_BEFORE_ADVANCE takes that window's end,

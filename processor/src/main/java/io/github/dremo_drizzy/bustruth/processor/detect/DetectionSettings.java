@@ -7,10 +7,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * The judgement calls in arrival detection, named and configurable rather than buried
  * in expressions.
  *
- * <p><b>NEEDS DANIEL'S REVIEW</b> — the values below are the build brief's suggested
- * starting points, written by Claude Code to unblock the build. They are the four
- * numbers that decide what this project publishes, and they are his to set.
- *
  * @param arrivalMoment which position marks the arrival. The feed holds the same stop
  *                      sequence for minutes at a time, so every stop arrives as a
  *                      <em>window</em> of positions rather than one: FIRST_SIGHTING
@@ -38,7 +34,7 @@ public record DetectionSettings(
         Duration onTimeLate,
         Duration maxTrailGap) {
 
-    /** The brief's suggested starting values, with the measured arrival moment. */
+    /** The default values, with the measured arrival moment. */
     public static DetectionSettings defaults() {
         return new DetectionSettings(
                 ArrivalMoment.LAST_BEFORE_ADVANCE,

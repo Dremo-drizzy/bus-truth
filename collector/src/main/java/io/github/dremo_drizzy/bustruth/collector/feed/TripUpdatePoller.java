@@ -66,7 +66,7 @@ public class TripUpdatePoller extends FeedPoller<TripUpdate> {
      *
      * <p>Trip updates are archived but not loaded. The tables are designed and sized —
      * about 6.1M rows a day with the right dedupe key — and loading them only
-     * pays off once prediction accuracy is built; see Stage R9 of the build brief.
+     * pays off once prediction accuracy is built; see "What is not built" in the README.
      */
     @Override
     protected void store(List<TripUpdate> records) {

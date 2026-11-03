@@ -1,5 +1,8 @@
 # 002 — Kafka between the collector and the database
 
+> **Superseded by [ADR-012](012-replace-streaming-with-batch.md).** The project no longer
+> uses Kafka; this record is kept because the reasoning behind the reversal starts here.
+
 Context: the collector polls the Halifax feeds every 20 seconds. Halifax never re-sends
 anything, so anything missed is gone permanently. The database will not always be ready to
 take a write: it can be full, slow, restarting, or in the middle of a migration.

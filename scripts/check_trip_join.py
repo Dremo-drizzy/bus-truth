@@ -118,11 +118,11 @@ def main() -> None:
             note = f"  base={base}" if base != trip_id else ""
             print(f"  {trip_id:<18} {positions:>7,} positions{note}")
 
-    # The gate from the build brief's amendment: below this, the detector would be
+    # The join-rate gate: below this, the detector would be
     # built on a join that silently loses trips.
     if joinable_ids_pct < 90:
         print(f"\nSTOP: only {joinable_ids_pct:.2f}% of live trip ids join the schedule "
-              f"after stripping the suffix. The brief's threshold is 90%.")
+              f"after stripping the suffix. The threshold is 90%.")
         sys.exit(1)
     print(f"\nAbove the 90% threshold: safe to build arrival detection on this join.")
 
