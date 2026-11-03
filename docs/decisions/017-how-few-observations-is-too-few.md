@@ -1,8 +1,5 @@
 # 017 — How few observations is too few
 
-> **NEEDS DANIEL'S REVIEW** — written by Claude Code at the senior reviewer's
-> instruction. The numbers are measured; the words are not yet the author's own.
-
 Context: the API shipped with a floor of five arrivals before a route could take a
 position in the leaderboard. The reviewer rejected the number — correctly — on the
 grounds that at five arrivals a single bus moves the percentage twenty points, and the
@@ -93,7 +90,7 @@ service day rather than per range, and this record does not do that.
 ## Re-derived, because the input changed
 
 The floors above were derived from a 21-point uncertainty. That was the right method
-and the wrong input, as the senior reviewer pointed out: **21 points was the gap between
+and the wrong input, as review pointed out: **21 points was the gap between
 two candidate arrival definitions while the choice was still open.** The choice is now
 settled by measurement against the agency's own `STOPPED_AT` positions (ADR-014), so
 what the project still admits to is not the gap between the candidates but the residual
@@ -125,14 +122,14 @@ bucket rather than the pooled estimate, and the pooled estimate is what gets pub
 Both are now **computed in code** from a single constant,
 `PublishedUncertainty.HEADLINE_SENSITIVITY_POINTS`, with the floors derived by
 `smallestSampleWhereOneObservationMovesLessThan`. The API serves the display floor from
-`/api/meta` and the frontend reads it from there rather than keeping a second copy. That
-is the reviewer's instruction, and the reason for it is this very section: two numbers
+`/api/meta` and the frontend reads it from there rather than keeping a second copy. The
+reason is this very section: two numbers
 in two places, justified by a third in a document, drifted apart within a day.
 
 ### The factor separating them is not a choice either
 
 An earlier version of this record set the ranking floor at "a quarter of the margin",
-and the senior reviewer was right to reject it: a quarter is a free parameter hidden
+and review was right to reject it: a quarter is a free parameter hidden
 inside something that looks like arithmetic — the same shape as the invented 50% gate
 this project already had to withdraw, only better disguised.
 

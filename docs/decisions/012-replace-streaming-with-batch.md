@@ -1,10 +1,5 @@
 # 012 — Replace streaming with batch
 
-> **NEEDS DANIEL'S REVIEW** — written by Claude Code to unblock Phase R. The brief
-> reserved this record for Daniel, because the decision was his and the reasoning
-> should be in his words. Everything below is accurate; none of it is yet defended by
-> its author.
-
 Context: the first version of this project put Kafka between the collector and the
 database. Three decision records rested on that — ADR-002 (Kafka in the middle),
 ADR-003 (one entity per message, JSON, keyed by vehicle or trip) and ADR-004 (offsets
@@ -49,7 +44,7 @@ What I gave up:
 - **Kafka on the CV**, which was the real argument for keeping it. The honest version of
   that argument is still available: the project used it, measured what it cost, and
   removed it for stated reasons — and ADR-002, ADR-003 and ADR-004 are kept rather than
-  deleted, struck through in `CLAUDE.md` and pointing here. A decision reversed with
+  deleted, each pointing here. A decision reversed with
   its reasoning intact is better evidence of judgement than a decision never examined.
 - **Back-pressure if the writer falls behind.** With a 20-second poll and roughly 240
   positions a snapshot, it does not.

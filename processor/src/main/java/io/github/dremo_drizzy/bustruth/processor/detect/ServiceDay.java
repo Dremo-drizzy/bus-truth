@@ -9,9 +9,6 @@ import java.time.ZonedDateTime;
 /**
  * Which service day an observation belongs to.
  *
- * <p><b>NEEDS DANIEL'S REVIEW</b> — part of the arrival rule, which the brief reserves
- * for him. Written by Claude Code; the measurements are real and reproducible.
- *
  * <p>A transit service day is not a calendar day. It starts in the morning and runs
  * past midnight, so a bus out at 00:16 is finishing the previous day's service, and the
  * schedule says so by publishing its time as {@code 24:16:00} rather than

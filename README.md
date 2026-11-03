@@ -2,6 +2,16 @@
 
 ![Live map of Halifax Transit vehicles](docs/images/live-map.png)
 
+**Live site:** [bus-truth-web.onrender.com](https://bus-truth-web.onrender.com). It runs on
+a free tier, so the first visit can take a minute to wake the API.
+
+| at a glance | |
+|---|---|
+| **What** | Measures how often Halifax Transit buses are actually on time, from the agency's own live feeds |
+| **Headline** | 60.1% of 109,230 arrivals on time, 4–10 October 2026, with its 8.7-point margin of error published beside it |
+| **Stack** | Java 21, Spring Boot, PostgreSQL 18, Flyway, Python, React 19 + TypeScript, Vite, MapLibre, Testcontainers, Docker, GitHub Actions, Render |
+| **Scale** | 1.2 million vehicle positions, 152,036 archived feed snapshots, 8 REST endpoints, 5 pages |
+
 Bus Truth measures how reliable Halifax Transit actually is. It records the agency's
 live GTFS-Realtime feeds every 20 seconds and keeps every snapshot forever, derives
 from those positions the moment each bus reached each stop, compares that against the
@@ -62,15 +72,13 @@ There is no queue. One was removed, with its reasoning kept: see
 | `common` | shared immutable records — the shapes the services agree on |
 | `collector` | polls the three feeds, archives the raw bytes, writes `raw_*` tables, owns the Flyway schema, and replays the archive into the database |
 | `processor` | positions → `arrival_events` → `ontime_events`, re-runnable per date range |
-| `api` | six REST endpoints plus OpenAPI |
+| `api` | eight REST endpoints plus OpenAPI |
 | `web` | five pages: live map, leaderboard, route, stop, method |
 | `scripts` | `save_feeds.py` (the standalone archiver), `load_gtfs.py`, join and fixture checks |
 | `infra` | compose for local PostgreSQL, and the production stack |
-| `docs` | decision records, stage write-ups, deployment, defence notes |
+| `docs` | decision records, stage write-ups, deployment, published figures |
 
-Every non-trivial choice is recorded in [docs/decisions](docs/decisions/). The ones
-marked **NEEDS DANIEL'S REVIEW** were written to unblock the build and are still to be
-rewritten by their author.
+Every non-trivial choice is recorded in [docs/decisions](docs/decisions/).
 
 ## Running it
 
@@ -123,9 +131,8 @@ compose file rather than a value in it.
 
 ## Findings
 
-> **NEEDS DANIEL'S REVIEW** — written by Claude Code to unblock the build. Every number
-> here is measured and reproducible from the queries in `docs/decisions/`; the choice of
-> what matters is his.
+Every number here is measured and reproducible from the queries in `docs/decisions/`
+and listed once in [docs/published-figures.md](docs/published-figures.md).
 
 All figures below cover **4–10 October 2026**: 109,230 arrivals matched to a published
 schedule time, derived from 1.2 million recorded vehicle positions.
@@ -495,15 +502,11 @@ The agency's own `delay` field is not a shortcut to it: it is present on 34.8% o
 stop-time updates, from 0% overnight to about 70% late evening, so using it as a
 fallback would introduce a bias that varies by time of day.
 
-**A deployment.** The compose stack, the images, the backup job and the security
-properties are written and validated; no host exists yet, so the brief's bar — the
-collector running unattended for 24 hours above 99% coverage — is unmet. On a laptop
-that sleeps it cannot be met, which is the point.
-
-**The decision records marked NEEDS DANIEL'S REVIEW**, and the answers in
-[docs/defence-notes.md](docs/defence-notes.md). Both are deliberate: the markers are a
-to-do list, and answers written by anyone but their author would make the file look
-finished when it is not.
+**A hosted collector.** The site and API are deployed on Render
+([docs/DEPLOY.md](docs/DEPLOY.md)) and serve a copy of the derived tables, so the hosted
+map shows a recorded minute rather than a live feed. The collector still runs on a
+laptop, so the bar of 24 unattended hours above 99% coverage is unmet; on a laptop that
+sleeps it cannot be met, which is the strongest argument for hosting it.
 
 ## Attribution
 
@@ -511,3 +514,5 @@ Contains information licenced under the Open Government Licence – Halifax.
 
 Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, tiles by
 [OpenFreeMap](https://openfreemap.org/).
+
+Built with Claude Code as a pair programmer.

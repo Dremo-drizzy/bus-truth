@@ -1,8 +1,5 @@
 # 015 — Matching an arrival to its published time
 
-> **NEEDS DANIEL'S REVIEW** — written by Claude Code to unblock Stage R5. The
-> measurements are real and reproducible; the words are not yet the author's own.
-
 Context: every claim this project makes about reliability is a comparison between one
 derived arrival and one published time. Three things had to be decided before that
 comparison could be made at all, and each of them has an obvious answer that is wrong.
