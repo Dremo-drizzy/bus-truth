@@ -1,8 +1,5 @@
 # 013 — Joining live trip ids to the published schedule
 
-> **NEEDS DANIEL'S REVIEW** — written by Claude Code to unblock the build; the
-> reasoning here is not yet the author's own.
-
 Context: every metric in this project rests on matching a trip id from the realtime
 feed to a row in `gtfs_trips`. Live ids sometimes carry an `_N` suffix — `4659595_1`,
 `4660053_3` — from the agency's trip-modification extension, and not one of the 9,239

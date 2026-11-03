@@ -15,7 +15,7 @@ import tools.jackson.databind.ObjectMapper;
  *
  * <p>Real bytes rather than hand-built protobuf messages, because the point of these
  * tests is what Halifax actually sends — including the parts nobody would invent,
- * like trip updates carrying no trip_id (CLAUDE.md rule 7).
+ * like trip updates carrying no trip_id.
  */
 public final class Fixtures {
 

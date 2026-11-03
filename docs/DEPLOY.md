@@ -3,8 +3,11 @@
 Written to be followed in six months having forgotten all of this. Everything in
 `render.yaml` is created by Render; everything in this file is done by hand, in order.
 
-**Nothing has been deployed yet.** Steps 1–10 are the whole job — about 40 minutes, of
-which 30 is waiting for a restore.
+**Deployed on 17 October 2026** at [bus-truth-web.onrender.com](https://bus-truth-web.onrender.com),
+API at [bus-truth-api.onrender.com](https://bus-truth-api.onrender.com/api/coverage).
+Steps 1–10 are how it was done — about 40 minutes, of which 30 is waiting for a restore.
+The free database **expires on 16 November 2026** and must be renewed every 30 days:
+see [Renewing the free database](#renewing-the-free-database-every-30-days).
 
 ## What you are building
 
@@ -339,9 +342,34 @@ To upgrade either, change only its `plan:` in `render.yaml` and re-apply the blu
 
 ---
 
+## Renewing the free database every 30 days
+
+Render's free PostgreSQL expires 30 days after it is created and is deleted 14 days
+after that. The current one, `bus-truth-db`, **expires on 16 November 2026** and would be
+deleted on **30 November 2026**. Nothing irreplaceable is in it: every table is rebuilt
+from the local database, so renewing is a re-run of steps 3–5 against a new database.
+About 20 minutes, most of it the restore. Put the next date in a calendar each time.
+
+1. **Dump locally first**, exactly as in step 4 (the two `psql -f` scripts, then
+   `pg_dump`). Do this before touching the cloud, so the site is down for minutes, not
+   hours.
+2. **Delete the expiring database** (Dashboard → `bus-truth-db` → Settings → Delete).
+   A workspace can hold only one free database, so the new one cannot be created first.
+   The site shows errors from here until step 5.
+3. **Create a new free PostgreSQL** with the same name, `bus-truth-db`, in the same
+   region (Virginia), so `render.yaml`'s `fromDatabase` references still resolve. If the
+   API does not pick it up, open the blueprint and choose **Sync**.
+4. **Restore** through the new External URL (step 4's `psql ... -f bustruth-derived.sql`)
+   and run the step 4 count check.
+5. **Restart the API** (step 5), then check `/api/coverage` and the five pages (steps 8–9).
+6. **Close the database to the internet again** (step 6): a new database starts open.
+7. Note the new expiry date, shown on the database's page, at the top of this file.
+
+The alternative is the paid database plan, which removes the expiry; see step 10.
+
 ## Afterwards: the 24-hour coverage check
 
-The brief's last unmet requirement is the collector running unattended for 24 hours
+The last unmet requirement is the collector running unattended for 24 hours
 above 99% coverage. **This deployment is not that.** The collector runs on your laptop,
 so the measurement stays local:
 

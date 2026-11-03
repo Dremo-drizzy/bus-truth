@@ -1,8 +1,5 @@
 # 018 — Where the archive lives once it is hosted
 
-> **NEEDS DANIEL'S REVIEW** — written by Claude Code. The ruling to keep collecting all
-> three feeds is the senior reviewer's; the scope estimate and the fallback are mine.
-
 Context: hosting the collector means the archive lands on a rented disk instead of a
 laptop, and the arithmetic does not fit. Measured on the current archive:
 
@@ -32,7 +29,7 @@ Options considered:
 
 Decision: **C now, B as soon as it is affordable in time. A is rejected.**
 
-Why A is rejected — the reviewer's ruling, and it is right: trip updates are the
+Why A is rejected: trip updates are the
 agency's own *predictions*, and they are the only possible basis for R9, the question
 of how well Halifax predicts itself. **October 2026's predictions cannot be collected in
 December.** Disk is replaceable; that data is not. Nothing is deleted and nothing is
@@ -59,7 +56,7 @@ not, and the difference is the whole estimate:
 4. **Tests.** A fake S3 means either an in-memory stub or another Testcontainers image.
 
 Estimate: **a day and a half to two days**, most of it in (3) and (4), not in the
-upload. That is over the reviewer's one-day threshold, and the deadline is 25 October.
+upload. That is over the one-day budget, and the deadline is 25 October.
 A storage-tiering project ten days out is exactly the trade this project should not
 make.
 
@@ -67,7 +64,7 @@ make.
 
 - The host collects and archives **vehicle positions and alerts**, and writes positions
   to PostgreSQL as now. ~55 MB of archive a day, so its disk is a non-issue.
-- **Trip updates keep being collected on Daniel's laptop**, by the same collector with
+- **Trip updates keep being collected on a laptop**, by the same collector with
   the other two feeds switched off, into the same `data/raw` layout. Coverage there will
   be whatever a laptop manages — the measured history is 73.7%, worst day 42.4% — and
   that is the honest cost of this decision: a partial record of the agency's
@@ -87,7 +84,7 @@ What I gave up:
   proud of. The honest version: the constraint was measured, the trade was named, and
   the irreplaceable data kept being collected.
 
-Revisit: **after 27 October**, on the senior reviewer's ruling. B is a day and a half
+Revisit: **after 27 October**. B is a day and a half
 out of the nine remaining before then, it has a known blocker, and — the deciding point
 — **it moves no published number.** Deferring it is the whole decision: the scope, the
 estimate and the blocker are the deliverable here, not the code. Whenever there is a

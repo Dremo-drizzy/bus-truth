@@ -1,13 +1,18 @@
-// maplibre-gl 5 exposes its API on the default export only: the named exports exist
-// in the type declarations but are undefined at runtime, so importing them compiles
-// and then throws "not a constructor" in the browser. Types are imported separately
-// because `import type` is erased.
-import maplibregl from "maplibre-gl";
+// maplibre-gl 6 is an ES module with named exports and no default export, so the API
+// is imported as a namespace. Types are imported separately because `import type` is
+// erased.
+import * as maplibregl from "maplibre-gl";
+// Version 6 loads its web worker from a URL next to the library file. Once Vite bundles
+// the library that file is not there, so the worker is emitted as its own asset and its
+// URL is handed to MapLibre before any map is created.
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import type { GeoJSONSource } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { API_BASE } from "../apiBase";
 import { describeMoment } from "../moment";
+
+maplibregl.setWorkerUrl(maplibreWorkerUrl);
 
 /**
  * Whether this build watches a live feed or shows one named minute.

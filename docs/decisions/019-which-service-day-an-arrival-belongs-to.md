@@ -1,8 +1,5 @@
 # 019 — Which service day an arrival belongs to
 
-> **NEEDS DANIEL'S REVIEW** — part of the arrival rule, which the brief reserves for
-> Daniel. Written by Claude Code; every figure below is measured and reproducible.
-
 Context: a transit service day is not a calendar day. It starts in the morning and runs
 past midnight, which is why the published schedule gives a late-night departure as
 `24:32:00` rather than `00:32:00`. Until this record, the project took the feed's own

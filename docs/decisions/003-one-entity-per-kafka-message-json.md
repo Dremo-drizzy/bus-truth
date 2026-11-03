@@ -1,5 +1,8 @@
 # 003 — One entity per Kafka message, as JSON
 
+> **Superseded by [ADR-012](012-replace-streaming-with-batch.md).** The project no longer
+> uses Kafka; this record is kept because the reasoning behind the reversal starts here.
+
 Context: each poll of a realtime feed returns one protobuf blob containing hundreds of
 entities — one per vehicle, or one per trip. Before the collector could publish anything,
 two things had to be settled: how much goes in a single Kafka message, and in what format.

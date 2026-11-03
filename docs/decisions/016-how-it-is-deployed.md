@@ -1,13 +1,5 @@
 # 016 — How it is deployed
 
-> **NEEDS DANIEL'S REVIEW** — written by Claude Code; the reasoning is not yet the
-> author's own.
->
-> **The host choice is Daniel's and is not made here.** The brief leaves it to him on
-> the day; `docs/DEPLOY.md` sets out both options and recommends one. What this record
-> fixes is the shape of the deployment, which is a security question rather than a
-> preference.
-
 Context: the streaming version's compose file published PostgreSQL on 5432 and an
 unauthenticated Kafka UI on 8080. On a laptop behind a router that was merely untidy.
 On a public VPS it would have been a breach within hours: anyone who found the host
@@ -73,7 +65,7 @@ its own firewall rules rather than the absence of a published port.
 
 ## Amendment: Render, not a VPS, and what the free tier costs
 
-Daniel's decision, and it changes the host rather than the shape. The compose stack and
+This changes the host rather than the shape. The compose stack and
 the Hetzner plan stay in the repository because they still describe how to run the whole
 system — including the collector — on one machine. What is deployed is narrower:
 
@@ -122,8 +114,6 @@ the `POSTGRES_HOST`/`POSTGRES_PORT` defaults still point at the compose database
 55432.
 
 ### The deployed API serves a subset, deliberately
-
-**NEEDS DANIEL'S REVIEW** — written by Claude Code from the reviewer's ruling.
 
 The cloud database holds no `raw_vehicle_positions`, and nothing writes to it. Two
 endpoints read that table, and both answered 500 on the first deployment — found by the

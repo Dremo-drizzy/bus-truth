@@ -12,9 +12,7 @@ import org.springframework.stereotype.Repository;
 public class LivePositionRepository {
 
     /**
-     * Daniel's query, unchanged.
-     *
-     * <p>{@code distinct on (vehicle_id)} with {@code order by vehicle_id,
+     * {@code distinct on (vehicle_id)} with {@code order by vehicle_id,
      * vehicle_timestamp desc} is the Postgres idiom for "one row per group, the
      * newest": the ordering decides which row survives, so the two clauses have to
      * agree or the result is arbitrary.
