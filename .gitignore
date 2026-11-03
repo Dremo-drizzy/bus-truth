@@ -83,3 +83,4 @@ dev-archive/
 
 # Local working notes, not published
 .private/
+.claude/
