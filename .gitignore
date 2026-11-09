@@ -84,3 +84,10 @@ dev-archive/
 # Local working notes, not published
 .private/
 .claude/
+
+# The ~50 MB restore dump that renew-dump.sh rebuilds before each database
+# renewal. Derived from the local database, so committing it would put a copy of
+# the measurements in git that goes stale the moment the processor re-runs, and
+# push the repository past GitHub's size warning. Named exactly, not *.sql:
+# the Flyway migrations are .sql and must stay tracked.
+bustruth-derived.sql
