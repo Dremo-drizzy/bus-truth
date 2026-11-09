@@ -8,9 +8,9 @@ a free tier, so the first visit can take a minute to wake the API.
 | at a glance | |
 |---|---|
 | **What** | Measures how often Halifax Transit buses are actually on time, from the agency's own live feeds |
-| **Headline** | 60.1% of 109,230 arrivals on time, 4–10 October 2026, with its 8.7-point margin of error published beside it |
+| **Headline** | 60.1% of 109,230 arrivals on time, 4–10 October 2026, published beside a 17.5-point definitional gap and an 8.7-point calibration margin |
 | **Stack** | Java 21, Spring Boot, PostgreSQL 18, Flyway, Python, React 19 + TypeScript, Vite, MapLibre, Testcontainers, Docker, GitHub Actions, Render |
-| **Scale** | 1.2 million vehicle positions, 152,036 archived feed snapshots, 8 REST endpoints, 5 pages |
+| **Scale** | 1.2 million vehicle positions, 224,011 archived feed snapshots, 9 REST endpoints, 5 pages |
 
 Bus Truth measures how reliable Halifax Transit actually is. It records the agency's
 live GTFS-Realtime feeds every 20 seconds and keeps every snapshot forever, derives
@@ -36,10 +36,16 @@ reported as missed service.
 
 Two further honest limits, both measured and both below in [data
 quality](#data-quality): the published figure moves **17.5 percentage points** on our own
-definition of the moment of arrival — a different 17.5 from the coverage share above,
-unfortunately — and carries an **8.7-point** margin of error once that definition was
-settled. The two data sources also disagree about stop numbering on **21.5%** of
-arrivals.
+definition of the moment of arrival, and carries an **8.7-point** margin of error once
+that definition was settled. The two data sources also disagree about stop numbering on
+**21.5%** of arrivals.
+
+> **Two different 17.5s appear in this README, and they are unrelated quantities.** The
+> **17.5%** above is a *share* — how many scheduled stop-events have an observed
+> arrival. The **17.5 points** here is a *difference* — how far the published
+> percentage moves between two definitions of arriving. Same digits, different things.
+> Throughout this file the share is written with a per-cent sign and the difference is
+> written as "points".
 
 **And the figure worth reading first:** the buses themselves vary by more than any of
 that — 21.3 points between the best and worst day of the week, 34.1 between the best and
@@ -72,7 +78,7 @@ There is no queue. One was removed, with its reasoning kept: see
 | `common` | shared immutable records — the shapes the services agree on |
 | `collector` | polls the three feeds, archives the raw bytes, writes `raw_*` tables, owns the Flyway schema, and replays the archive into the database |
 | `processor` | positions → `arrival_events` → `ontime_events`, re-runnable per date range |
-| `api` | eight REST endpoints plus OpenAPI |
+| `api` | nine REST endpoints plus OpenAPI |
 | `web` | five pages: live map, leaderboard, route, stop, method |
 | `scripts` | `save_feeds.py` (the standalone archiver), `load_gtfs.py`, join and fixture checks |
 | `infra` | compose for local PostgreSQL, and the production stack |
@@ -80,62 +86,18 @@ There is no queue. One was removed, with its reasoning kept: see
 
 Every non-trivial choice is recorded in [docs/decisions](docs/decisions/).
 
-## Running it
-
-Requires Docker, JDK 21 and Node 24.
-
-```bash
-cp .env.example .env                  # then set a local password
-docker compose -f infra/docker-compose.yml up -d --wait
-
-# PostgreSQL is published on 55432, not 5432 — see docs/stages/stage-3.md
-psql -h localhost -p 55432 -U bustruth -d bustruth
-
-export POSTGRES_PASSWORD=...          # no password has a default, anywhere
-
-./mvnw -pl common -am install -DskipTests
-./mvnw -f collector/pom.xml spring-boot:run      # :8081 — polls, archives, migrates
-python scripts/load_gtfs.py                      # the published schedule
-./mvnw -f api/pom.xml spring-boot:run            # :8084
-
-cd web && npm ci && npm run dev                  # :5173, /api proxied to :8084
-```
-
-Deriving the measurements for a date range, from positions already collected:
-
-```bash
-./mvnw -pl common,processor -am package -DskipTests
-java -jar processor/target/processor-0.1.0-SNAPSHOT.jar     --server.port=0 --from=2026-10-04 --to=2026-10-10     # detection, then on-time
-```
-
-If the database is emptier than the archive — which it will be, if collection ran
-before the database did — replay the archive through the live write path:
-
-```bash
-./mvnw -pl common,collector -am package -DskipTests
-java -jar collector/target/collector-0.1.0-SNAPSHOT.jar     --bustruth.collector.polling-enabled=false     --backfill-from=2026-10-04 --backfill-to=2026-10-10
-```
-
-The site is at `http://localhost:5173`, the API at `http://localhost:8084/api/coverage`,
-and its OpenAPI document at `http://localhost:8084/v3/api-docs`.
-
-Tests: `./mvnw verify` runs everything, including integration tests that start a real
-PostgreSQL 18 through Testcontainers, so Docker must be running. Any test that boots
-the Spring context must set `bustruth.collector.polling-enabled=false` — otherwise the
-pollers fetch live data and write rows underneath the test's own assertions, which is
-how CI once failed with 159 rows before a replay and 233 after.
-
-Deploying it: [docs/DEPLOY.md](docs/DEPLOY.md). PostgreSQL publishes no port there, and
-[ADR-016](docs/decisions/016-how-it-is-deployed.md) says why that is a property of the
-compose file rather than a value in it.
-
 ## Findings
 
 Every number here is measured and reproducible from the queries in `docs/decisions/`
 and listed once in [docs/published-figures.md](docs/published-figures.md).
 
-All figures below cover **4–10 October 2026**: 109,230 arrivals matched to a published
-schedule time, derived from 1.2 million recorded vehicle positions.
+All figures below cover **4–10 October 2026**: **109,230 arrivals matched to a
+published schedule time**, derived from 1.2 million recorded vehicle positions. Four
+arrival counts appear in this README and they are not interchangeable — **113,841**
+derived over 3–10 October, **112,951** of those matched to a published time (99.2%),
+**109,230** whose service date falls inside 4–10 October, which is the headline
+denominator, and **109,584** from the earlier derivation used for the definition
+comparison below.
 
 ### 1. The buses vary more than the methodology does
 
@@ -240,20 +202,32 @@ counter is named `stopsUnobserved` for that reason.
 
 ### Collection coverage
 
-Collection has run since **24 September 2026** and is ongoing. The archive holds
-**152,036 realtime snapshots** across the three feeds plus **22 daily captures** of the
-static schedule.
+Collection has run since **24 September 2026** and is ongoing. As last counted the
+archive holds **224,011 realtime snapshots** across the three feeds — roughly **16 GB**,
+94% of it trip updates, growing about 910 MB a day — plus daily captures of the static
+schedule. The 152,036 quoted in
+[ADR-012](docs/decisions/012-replace-streaming-with-batch.md) is that record's own as-of
+figure and is left as it was written.
 
 Coverage is **incomplete and uneven**, and that is stated rather than hidden: the
 archiver runs on a laptop, so it stops when the machine sleeps or is closed.
 
-| | vehicle positions |
+Two coverage figures are published and they measure different spans. Both are given,
+rather than one standing in for the other.
+
+| the whole archive, vehicle positions | |
 |---|---|
 | days captured | 22 (24 September – 15 October 2026) |
 | snapshots | 50,925+ |
 | coverage against a continuous 20-second capture | **73.7%** |
 | best day | 99.9% |
 | worst day | 42.4% |
+
+| the published week, 4–10 October 2026 | |
+|---|---|
+| best day | **78.9%** — 3,408 of 4,320 expected snapshots, 4 Oct |
+| worst day | **32.2%** — 1,390 of 4,320, 8 Oct, the day with no daytime arrivals |
+| counted | Saturday 17 October 2026, stored in `coverage_daily` and served with every row |
 
 Gaps are not interpolated or filled. A missing snapshot is simply absent, and the
 detector refuses to derive arrivals across one — without that rule a sleeping laptop
@@ -377,6 +351,21 @@ The same week, derived both ways, changing nothing else:
 Both stay published, permanently, because a reader who knows the figure is
 definition-sensitive can judge it and one shown 58.4% as a bare fact cannot.
 
+> **Why this table says 58.4% and the headline says 60.1%.** The two definitions were
+> compared on an earlier derivation of the same week, which matched 109,584 arrivals and
+> put the end-of-window figure at 58.4%. The headline comes from the current derivation,
+> which matches 109,230 and puts it at 60.1%; the change between them is
+> [ADR-019](docs/decisions/019-which-service-day-an-arrival-belongs-to.md), which repaired
+> 2,657 arrivals labelled with the wrong service day. The comparison is internally
+> consistent — 58.4 – 40.9 = 17.5 — and it is a *difference* measured on
+> identical rows with one setting changed, which survives a re-derivation far better than
+> either level does. **Re-deriving the 17.5 and the 8.7 against the current run is
+> outstanding work**, and it matters because the observation floors below are computed
+> from the 8.7. Until it is done this README quotes both margins at the levels they were
+> actually measured at, rather than subtracting them from a headline they were never
+> measured against: that subtraction would publish 19.2 and 10.4, two numbers nobody
+> measured.
+
 That is not a coin-flip, though. GTFS-Realtime has a field, `current_status`, which can say
 `STOPPED_AT` — the agency asserting a bus is *at* a stop rather than us inferring it.
 Halifax populates it on **0.40%** of positions, far too few to build the measurement
@@ -388,8 +377,9 @@ on, but enough to judge the two candidate definitions against:
 | start of window | 544s early |
 
 **The remaining bias is named, not corrected.** Removing that 61 seconds from every
-arrival in the week would move the published figure from 58.4% to **49.7% — 8.7
-points.**
+arrival in the week moves that derivation's figure from 58.4% to **49.7% — 8.7
+points.** (Measured against the 58.4%, not against the 60.1% headline — see the note
+above.)
 
 The two margins mean different things and both are published:
 
@@ -422,8 +412,11 @@ Two honest limits on that calibration, both measured:
   seconds is published because it is the figure that can be checked, and it is
   conservative for a typical stop rather than optimistic.
 
-It is **not** a handful of buses: 234 of the 366 vehicles ever seen report `STOPPED_AT`
-at least once, so this is the fleet, not one firmware version.
+It is **not** a handful of buses. Across the whole archive, **234 of the 366 vehicles
+ever seen (64%)** report `STOPPED_AT` at least once, so the field comes from the fleet
+rather than from one firmware version. That is a different question from how many report
+it at any one moment, which is covered in [two further measured
+limits](#two-further-measured-limits) below.
 
 **And the reconciliation, which matters more than either number:** the two definitions
 sit at opposite ends of a window that is often minutes wide, yet the median delay
@@ -472,13 +465,65 @@ See [ADR-015](docs/decisions/015-matching-an-arrival-to-its-published-time.md).
   underscore. Stripping the suffix recovers the join in every observed case, and those
   arrivals are marked with lower confidence because the recovery rests on an
   unverified assumption. See [ADR-013](docs/decisions/013-trip-id-join-rule.md).
-- **`currentStatus`, which would say `STOPPED_AT`, is present on 11 of 69 vehicles.**
-  It is the field arrival detection would ideally use, and a rule built on it would
-  measure which buses report it rather than how the service ran — which is why
-  detection reads the stop sequence instead (ADR-014).
+- **`currentStatus` is present on only a minority of vehicles at any one moment: 11 of
+  69 in the snapshot it was first measured on, and 12.42% of 966,775 positions across
+  the archive.** It is the field arrival detection would ideally use, and a rule built on
+  it would measure which buses report it rather than how the service ran — which is
+  why detection reads the stop sequence instead (ADR-014). This is not in tension with
+  the 64% figure above: that one asks whether a vehicle *ever* reports the field, this
+  one asks how many are reporting it *right now*.
 - **Service alerts are near-static**: the content of the alerts feed changed on 0 of
   180 consecutive polls, so it carries no signal at this sampling rate and is archived
   rather than analysed.
+
+## Running it
+
+Requires Docker, JDK 21 and Node 24.
+
+```bash
+cp .env.example .env                  # then set a local password
+docker compose -f infra/docker-compose.yml up -d --wait
+
+# PostgreSQL is published on 55432, not 5432 — see docs/stages/stage-3.md
+psql -h localhost -p 55432 -U bustruth -d bustruth
+
+export POSTGRES_PASSWORD=...          # no password has a default, anywhere
+
+./mvnw -pl common -am install -DskipTests
+./mvnw -f collector/pom.xml spring-boot:run      # :8081 — polls, archives, migrates
+python scripts/load_gtfs.py                      # the published schedule
+./mvnw -f api/pom.xml spring-boot:run            # :8084
+
+cd web && npm ci && npm run dev                  # :5173, /api proxied to :8084
+```
+
+Deriving the measurements for a date range, from positions already collected:
+
+```bash
+./mvnw -pl common,processor -am package -DskipTests
+java -jar processor/target/processor-0.1.0-SNAPSHOT.jar     --server.port=0 --from=2026-10-04 --to=2026-10-10     # detection, then on-time
+```
+
+If the database is emptier than the archive — which it will be, if collection ran
+before the database did — replay the archive through the live write path:
+
+```bash
+./mvnw -pl common,collector -am package -DskipTests
+java -jar collector/target/collector-0.1.0-SNAPSHOT.jar     --bustruth.collector.polling-enabled=false     --backfill-from=2026-10-04 --backfill-to=2026-10-10
+```
+
+The site is at `http://localhost:5173`, the API at `http://localhost:8084/api/coverage`,
+and its OpenAPI document at `http://localhost:8084/v3/api-docs`.
+
+Tests: `./mvnw verify` runs everything, including integration tests that start a real
+PostgreSQL 18 through Testcontainers, so Docker must be running. Any test that boots
+the Spring context must set `bustruth.collector.polling-enabled=false` — otherwise the
+pollers fetch live data and write rows underneath the test's own assertions, which is
+how CI once failed with 159 rows before a replay and 233 after.
+
+Deploying it: [docs/DEPLOY.md](docs/DEPLOY.md). PostgreSQL publishes no port there, and
+[ADR-016](docs/decisions/016-how-it-is-deployed.md) says why that is a property of the
+compose file rather than a value in it.
 
 ## What is not built
 

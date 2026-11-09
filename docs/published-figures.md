@@ -45,8 +45,18 @@ Thursday 8 October still has none.
 |---|---|---|---|
 | best–worst **day** spread | **21.3 points** | max−min over 7 days | not like-for-like with a systematic shift |
 | best–worst **hour** spread | **34.1 points** | max−min over 22 hours | 79.4% at 06:00 vs 45.3% at 17:00 |
-| definitional gap | **17.5 points** | systematic shift | 40.9% vs 60.1%, same data |
-| margin of error | **8.7 points** | systematic shift | 60.1% vs 49.7% de-biased |
+| definitional gap | **17.5 points** | systematic shift | 40.9% vs 58.4%, same data |
+| margin of error | **8.7 points** | systematic shift | 58.4% vs 49.7% de-biased |
+
+**Both of those rows compare 58.4%, not the 60.1% headline, and that is deliberate.**
+Both were measured on the derivation before ADR-019 repaired 2,657 service-day
+mislabels, which is what moved the headline from 58.4% to 60.1%. They are *differences*
+measured on identical rows with one setting changed, so they travel better than either
+level does — but they have not been re-derived since, and **the observation floors of
+12 and 23 are computed from this 8.7**. Re-deriving both against the current run is
+outstanding. Writing 60.1% into those cells, as this table previously did, implies
+margins of 19.2 and 10.4 points that nobody measured: **any row stating a difference
+must subtract to the difference it claims.**
 
 ## By service date
 
