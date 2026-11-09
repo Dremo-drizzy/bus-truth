@@ -355,11 +355,13 @@ test("the map draws its dots even when the data beats the basemap", async ({
   await page.goto("/");
   await expect(page.locator(".status")).toContainText("290 vehicles");
 
-  // The floor sits above what the page shows in this colour with no dots at all. The
-  // notice card's heading — the date, in the same blue — measured ~1,770 pixels on
-  // its own, while 290 dots measured ~12,700 with the heading included. 5,000 is well
-  // clear of the first and well under the second, so a missing layer fails and a few
-  // dots hidden under the card or off the edge do not.
+  // The floor sits above what the page shows in this colour with no dots at all, and
+  // that is now zero: the dated notice card used to float over the map and contributed
+  // ~1,770 pixels of this same blue to the screenshot, and it no longer overlaps the map
+  // at all. 290 dots measured ~12,700 with the card included, so what this assertion
+  // sees now is ~10,900 of pure dot. 5,000 stays as the floor because it is well under
+  // that and far above zero, so a missing layer fails and a few dots off the edge do
+  // not.
   await expect
     .poll(() => dotColouredPixels(page), {
       message: "dot-coloured pixels on the map",
