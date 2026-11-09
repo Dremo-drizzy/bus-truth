@@ -336,20 +336,23 @@ export default function LiveMapPage() {
         <span className="status">{summarise(status)}</span>
       </header>
 
+      {/* Above the map, not over it: this card is permanent on the hosted site, and
+          centred on the map it covered the peninsula. The two failure notices below
+          stay as overlays, because each explains the empty map behind it. */}
+      {status.kind === "snapshot" && (
+        <div className="notice moment" role="status">
+          <strong>{describeMoment(status.snapshotAt)}</strong>
+          <small>
+            {status.vehicles} vehicles, as the agency reported them in that one minute
+            — the busiest minute of 17:00, which is the network&rsquo;s least punctual
+            hour. This is history, not a live feed: nothing is collecting positions for
+            the hosted site.
+          </small>
+        </div>
+      )}
+
       <div className="map-wrap">
         <div className="map" ref={container} />
-
-        {status.kind === "snapshot" && (
-          <div className="notice moment" role="status">
-            <strong>{describeMoment(status.snapshotAt)}</strong>
-            <small>
-              {status.vehicles} vehicles, as the agency reported them in that one minute
-              — the busiest minute of 17:00, which is the network&rsquo;s least punctual
-              hour. This is history, not a live feed: nothing is collecting positions for
-              the hosted site.
-            </small>
-          </div>
-        )}
 
         {status.kind === "no-buses" && (
           <div className="notice quiet" role="status">

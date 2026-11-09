@@ -41,7 +41,7 @@ public class ProcessorCli implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments arguments) {
         if (!arguments.containsOption("from") || !arguments.containsOption("to")) {
-            log.info("no --from/--to given; POST /processor/run?from=&to= to derive arrivals");
+            log.info("no --from/--to given; pass --from=YYYY-MM-DD --to=YYYY-MM-DD to derive arrivals");
             return;
         }
         LocalDate from = LocalDate.parse(arguments.getOptionValues("from").getFirst());

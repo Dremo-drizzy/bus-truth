@@ -509,8 +509,23 @@ tbody a:hover {
 }
 
 /* The historical-moment notice. Deliberately not styled like the two failure
-   notices: this is the hosted site working as intended, not a warning. */
+   notices: this is the hosted site working as intended, not a warning.
+
+   And deliberately NOT floating over the map, which is the rest of this rule. The two
+   failure notices overlay the map because each one explains why the map underneath it
+   is empty, and a warning has to sit on the thing it is warning about. This one is
+   different: it is permanent on the hosted site, and a permanent card pinned to the top
+   centre of the map lands squarely on the Halifax peninsula — the densest part of the
+   network and the reason anyone opens this page. So it takes its own line above the map
+   instead. position: static also drops it out of the stacking context, which is why the
+   z-index and the centring transform from .notice are both unset here rather than
+   fought with. */
 .notice.moment {
+  position: static;
+  transform: none;
+  z-index: auto;
+  max-width: none;
+  margin: 0.75rem 1rem 0;
   color: var(--ink);
   background: var(--surface);
   border-color: var(--accent);

@@ -1,10 +1,9 @@
 package io.github.dremo_drizzy.bustruth.collector.feed;
 
+import com.google.transit.realtime.GtfsRealtime.FeedEntity;
 import com.google.transit.realtime.GtfsRealtime.FeedMessage;
 import io.github.dremo_drizzy.bustruth.collector.archive.RawArchiver;
 import io.github.dremo_drizzy.bustruth.collector.config.CollectorProperties;
-import io.github.dremo_drizzy.bustruth.collector.mapper.ServiceAlertMapper;
-import io.github.dremo_drizzy.bustruth.common.ServiceAlert;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.util.List;
@@ -12,7 +11,20 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-/** Polls the service alerts feed. */
+/**
+ * Polls the service alerts feed, and archives it without modelling it.
+ *
+ * <p>There is no {@code ServiceAlert} record and no mapper any more. The feed's content
+ * changed on 0 of 180 consecutive polls, nothing queries it, and nothing planned will:
+ * decoding every snapshot into typed records only to drop them was work done for no
+ * reader. The raw bytes still reach the archive on every poll, through the same template
+ * method as the other two feeds, so the history stays unbroken and a future consumer can
+ * be built from the archive rather than from a live feed it was not there to watch.
+ *
+ * <p>The type parameter is the protobuf's own {@link FeedEntity} rather than a domain
+ * record, which is the honest statement of what this feed is here: archived, not
+ * modelled. The record is in git if it is ever wanted back.
+ */
 @Component
 // Polling is on unless switched off. A test that boots this application does not
 // want three schedulers fetching live data and writing rows underneath its
@@ -27,18 +39,15 @@ import org.springframework.stereotype.Component;
         name = {"bustruth.collector.polling-enabled",
                 "bustruth.collector.alerts.enabled"},
         matchIfMissing = true)
-public class ServiceAlertPoller extends FeedPoller<ServiceAlert> {
+public class ServiceAlertPoller extends FeedPoller<FeedEntity> {
 
     private final CollectorProperties.Feed feed;
-    private final ServiceAlertMapper mapper;
 
     public ServiceAlertPoller(HttpClient httpClient,
                               RawArchiver archiver,
-                                CollectorProperties properties,
-                              ServiceAlertMapper mapper) {
+                              CollectorProperties properties) {
         super(httpClient, archiver, properties.httpTimeout());
         this.feed = properties.alerts();
-        this.mapper = mapper;
     }
 
     @Scheduled(fixedRateString = "${bustruth.collector.poll-interval}")
@@ -56,9 +65,16 @@ public class ServiceAlertPoller extends FeedPoller<ServiceAlert> {
         return feed.url();
     }
 
+    /**
+     * Hands the decoded entities straight back, unmapped.
+     *
+     * <p>Not an empty list: {@code pollOnce()} logs this count, and a log that said
+     * "mapped 0 records" of a snapshot that carried twelve alerts would be a log that
+     * lies. The count is real, the modelling is simply absent.
+     */
     @Override
-    protected List<ServiceAlert> map(FeedMessage message) {
-        return mapper.map(message);
+    protected List<FeedEntity> map(FeedMessage message) {
+        return message.getEntityList();
     }
 
     /**
@@ -68,7 +84,7 @@ public class ServiceAlertPoller extends FeedPoller<ServiceAlert> {
      * (content changed on 0% of 180 consecutive polls) and keeps the option open.
      */
     @Override
-    protected void store(List<ServiceAlert> records) {
+    protected void store(List<FeedEntity> records) {
         // Archived by FeedPoller before this point; nothing reads a database row.
     }
 }
